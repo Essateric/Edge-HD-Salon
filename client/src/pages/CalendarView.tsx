@@ -16,6 +16,7 @@ export default function CalendarView() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [selectedStylist, setSelectedStylist] = useState<Stylist | null>(null);
+  const [showServices, setShowServices] = useState(false);
   
   const formattedDate = format(currentDate, "h:mma d MMMM yyyy");
   
@@ -68,9 +69,16 @@ export default function CalendarView() {
     
     if (time) {
       setSelectedTimeSlot(time);
+      setShowServices(true); // Show services panel when a time slot is clicked
     }
     
     setIsBookingModalOpen(true);
+  };
+  
+  // Hide services panel when booking modal is closed
+  const handleCloseBookingModal = () => {
+    setIsBookingModalOpen(false);
+    setShowServices(false);
   };
   
   return (
@@ -85,10 +93,12 @@ export default function CalendarView() {
       />
       
       <div className="flex h-[calc(100vh-170px)] overflow-hidden">
-        {/* Services sidebar */}
-        <ServicesPanel 
-          services={services}
-        />
+        {/* Services sidebar - only show when a time slot is clicked */}
+        {showServices && (
+          <ServicesPanel 
+            services={services}
+          />
+        )}
         
         {/* Main calendar grid */}
         <div className="flex-1 overflow-x-auto">
@@ -109,7 +119,7 @@ export default function CalendarView() {
       
       <BookingModal 
         isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
+        onClose={handleCloseBookingModal}
         stylists={stylists}
         services={services}
         selectedDate={currentDate}
