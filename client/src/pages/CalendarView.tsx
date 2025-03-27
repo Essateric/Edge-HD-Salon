@@ -34,7 +34,7 @@ export default function CalendarView() {
   const { data: appointments = [] } = useQuery<Appointment[]>({
     queryKey: ['/api/appointments', format(currentDate, 'yyyy-MM-dd')],
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/appointments?date=${format(currentDate, 'yyyy-MM-dd')}`);
+      const res = await apiRequest(`/api/appointments?date=${format(currentDate, 'yyyy-MM-dd')}`, 'GET');
       return await res.json();
     }
   });

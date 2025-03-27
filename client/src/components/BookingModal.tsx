@@ -44,7 +44,7 @@ export default function BookingModal({
   
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointment: any) => {
-      const res = await apiRequest('POST', '/api/appointments', appointment);
+      const res = await apiRequest('/api/appointments', 'POST', appointment);
       return await res.json();
     },
     onSuccess: () => {
