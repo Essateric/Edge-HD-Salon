@@ -66,10 +66,10 @@ function App() {
   const [location] = useLocation();
   const isAuthRoute = location === '/login' || location === '/register';
 
-  // Redirect to login page by default
+  // Redirect to calendar view by default
   useEffect(() => {
     if (location === '/') {
-      // This will check auth and redirect appropriately
+      setLocation('/calendar');
     }
   }, [location]);
 

@@ -52,8 +52,8 @@ export default function RegisterPage() {
         description: 'You have been registered successfully.',
       });
       
-      // Redirect to appointments dashboard
-      setLocation('/appointments');
+      // Redirect to calendar view
+      setLocation('/calendar');
     },
     onError: (error: any) => {
       toast({

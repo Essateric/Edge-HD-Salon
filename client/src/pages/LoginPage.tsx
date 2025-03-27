@@ -46,8 +46,8 @@ export default function LoginPage() {
         description: 'You have been logged in successfully.',
       });
       
-      // Redirect to appointments dashboard
-      setLocation('/appointments');
+      // Redirect to calendar view
+      setLocation('/calendar');
     },
     onError: (error: any) => {
       toast({
