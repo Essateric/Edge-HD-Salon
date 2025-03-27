@@ -32,7 +32,7 @@ export default function AppointmentComponent({
   };
   
   // Calculate the height based on duration
-  // Assuming each hour is 48px in height (12px per 15 min)
+  // Assuming each hour is 120px in height (30px per 15 min)
   const getHeight = () => {
     const startTime = appointment.startTime;
     const endTime = appointment.endTime;
@@ -73,7 +73,7 @@ export default function AppointmentComponent({
         endMinute = parseInt(endMatch24[2]);
       } else {
         console.error("Failed to parse appointment time format", startTime, endTime);
-        return 48; // Default minimum height
+        return 60; // Default minimum height
       }
     }
     
@@ -87,8 +87,8 @@ export default function AppointmentComponent({
       durationInMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
     }
     
-    // Convert to pixels (12px per 15 minutes)
-    return Math.max(durationInMinutes * 12 / 15, 48); // Minimum height of 48px
+    // Convert to pixels (30px per 15 minutes)
+    return Math.max(durationInMinutes * 30 / 15, 60); // Minimum height of 60px
   };
   
   // Get appointment status label
