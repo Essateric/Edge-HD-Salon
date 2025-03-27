@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .time-slot {
+    @apply border-b border-border h-12;
+  }
+  
+  .appointment {
+    @apply rounded-md p-2 text-xs overflow-hidden transition-all duration-200 text-white cursor-pointer;
+  }
+  
+  .appointment:hover {
+    @apply transform -translate-y-0.5 shadow-md;
+  }
+  
+  .stylist-column {
+    @apply flex-shrink-0 border-r border-border min-w-[160px];
+  }
+
+  @media (max-width: 768px) {
+    .stylist-column {
+      @apply min-w-[120px];
+    }
+  }
+}
