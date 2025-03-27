@@ -441,7 +441,14 @@ export class MemStorage implements IStorage {
   
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
     const id = this.currentCustomerId++;
-    const newCustomer: Customer = { ...customer, id };
+    // Ensure all fields have at least null values
+    const newCustomer: Customer = { 
+      id, 
+      name: customer.name,
+      email: customer.email || null,
+      phone: customer.phone || null,
+      notes: customer.notes || null
+    };
     this.customers.set(id, newCustomer);
     return newCustomer;
   }
