@@ -22,9 +22,9 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <div className="h-full w-full flex flex-col bg-background text-foreground overflow-hidden">
         <AppHeader />
-        <main className="flex-1">
+        <main className="flex-1 h-[calc(100%-64px)] overflow-hidden">
           <Router />
         </main>
       </div>

@@ -10,10 +10,11 @@ export default function Home() {
   });
   
   return (
-    <div className="flex flex-col h-screen">
-      <AppHeader user={user} />
+    <div className="flex flex-col h-full w-full overflow-hidden">
       <NavigationBar activeView="calendar" />
-      <CalendarView />
+      <div className="flex-1 h-full overflow-hidden">
+        <CalendarView />
+      </div>
     </div>
   );
 }

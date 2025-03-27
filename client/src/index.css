@@ -7,6 +7,10 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    @apply w-full h-full overflow-hidden m-0 p-0;
+  }
+
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
@@ -26,12 +30,18 @@
   }
   
   .stylist-column {
-    @apply flex-shrink-0 border-r border-border min-w-[160px];
+    @apply flex-shrink-0 border-r border-border w-[160px];
   }
 
   @media (max-width: 768px) {
     .stylist-column {
-      @apply min-w-[120px];
+      @apply w-[120px];
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .stylist-column {
+      @apply w-[90px];
     }
   }
 }

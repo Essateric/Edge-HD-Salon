@@ -12,13 +12,16 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
   const [isHovered, setIsHovered] = useState(false);
   
   // Configure draggable
-  const {attributes, listeners, setNodeRef, transform} = useDraggable({
+  const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
     id: `appointment-${appointment.id}`,
     data: appointment,
   });
 
   const style = {
     transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 50 : 10,
+    opacity: isDragging ? 1 : undefined,
+    boxShadow: isDragging ? '0 10px 15px -3px rgba(0, 0, 0, 0.4)' : undefined,
   };
   
   // Calculate the height based on duration
