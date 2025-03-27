@@ -121,17 +121,81 @@ export type Customer = typeof customers.$inferSelect;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 
-// Users table (keeping from original schema for system users)
+// Roles table for permission management
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // e.g., admin, manager, stylist, receptionist, customer
+  description: text("description"),
+});
+
+export const insertRoleSchema = createInsertSchema(roles).pick({
+  name: true,
+  description: true,
+});
+
+// Permissions table for granular access control
+export const permissions = pgTable("permissions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // e.g., manage_stylists, view_appointments, etc.
+  description: text("description"),
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).pick({
+  name: true,
+  description: true,
+});
+
+// Role-Permission mapping for role-based access control
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  roleId: integer("role_id").notNull(),
+  permissionId: integer("permission_id").notNull(),
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).pick({
+  roleId: true,
+  permissionId: true,
+});
+
+// Enhanced Users table with roles and authentication details
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  roleId: integer("role_id").notNull().default(4), // Default to customer role
+  isActive: boolean("is_active").default(true),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow(),
+  customerId: integer("customer_id"), // Link to customer record if applicable
+  stylistId: integer("stylist_id"), // Link to stylist record if applicable
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
+  firstName: true,
+  lastName: true,
+  roleId: true,
+  customerId: true,
+  stylistId: true,
+});
+
+// Schema for login
+export const loginUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type Permission = typeof permissions.$inferSelect;
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type LoginUser = z.infer<typeof loginUserSchema>;

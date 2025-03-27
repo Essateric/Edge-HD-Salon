@@ -5,7 +5,10 @@ import {
   StylistServiceDuration, InsertStylistServiceDuration,
   Customer, InsertCustomer, 
   Appointment, InsertAppointment, 
-  User, InsertUser 
+  User, InsertUser,
+  Role, InsertRole,
+  Permission, InsertPermission,
+  RolePermission, InsertRolePermission
 } from "@shared/schema";
 import { add, format, parse } from "date-fns";
 
@@ -13,7 +16,33 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+  
+  // Role operations
+  getAllRoles(): Promise<Role[]>;
+  getRole(id: number): Promise<Role | undefined>;
+  getRoleByName(name: string): Promise<Role | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, role: Partial<InsertRole>): Promise<Role | undefined>;
+  deleteRole(id: number): Promise<boolean>;
+  
+  // Permission operations
+  getAllPermissions(): Promise<Permission[]>;
+  getPermission(id: number): Promise<Permission | undefined>;
+  getPermissionByName(name: string): Promise<Permission | undefined>;
+  createPermission(permission: InsertPermission): Promise<Permission>;
+  updatePermission(id: number, permission: Partial<InsertPermission>): Promise<Permission | undefined>;
+  deletePermission(id: number): Promise<boolean>;
+  
+  // Role-Permission operations
+  getAllRolePermissions(): Promise<RolePermission[]>;
+  getRolePermissionsByRole(roleId: number): Promise<RolePermission[]>;
+  getUserPermissions(userId: number): Promise<Permission[]>;
+  assignPermissionToRole(rolePermission: InsertRolePermission): Promise<RolePermission>;
+  removePermissionFromRole(roleId: number, permissionId: number): Promise<boolean>;
   
   // Stylist operations
   getAllStylists(): Promise<Stylist[]>;
@@ -71,6 +100,9 @@ export class MemStorage implements IStorage {
   private stylistServiceDurations: Map<number, StylistServiceDuration>;
   private customers: Map<number, Customer>;
   private appointments: Map<number, Appointment>;
+  private roles: Map<number, Role>;
+  private permissions: Map<number, Permission>;
+  private rolePermissions: Map<number, RolePermission>;
   
   private currentUserId: number;
   private currentStylistId: number;
@@ -79,6 +111,9 @@ export class MemStorage implements IStorage {
   private currentStylistServiceDurationId: number;
   private currentCustomerId: number;
   private currentAppointmentId: number;
+  private currentRoleId: number;
+  private currentPermissionId: number;
+  private currentRolePermissionId: number;
   
   constructor() {
     this.users = new Map();
@@ -88,6 +123,9 @@ export class MemStorage implements IStorage {
     this.stylistServiceDurations = new Map();
     this.customers = new Map();
     this.appointments = new Map();
+    this.roles = new Map();
+    this.permissions = new Map();
+    this.rolePermissions = new Map();
     
     this.currentUserId = 1;
     this.currentStylistId = 1;
@@ -96,12 +134,116 @@ export class MemStorage implements IStorage {
     this.currentStylistServiceDurationId = 1;
     this.currentCustomerId = 1;
     this.currentAppointmentId = 1;
+    this.currentRoleId = 1;
+    this.currentPermissionId = 1;
+    this.currentRolePermissionId = 1;
     
     // Seed data
     this.seedData();
   }
   
   private seedData() {
+    // Seed roles
+    const roles: InsertRole[] = [
+      { name: "admin", description: "Full system access" },
+      { name: "manager", description: "Manage stylists, services, and view all appointments" },
+      { name: "stylist", description: "View own schedule and manage own appointments" },
+      { name: "receptionist", description: "Book appointments and manage customers" },
+      { name: "customer", description: "Book own appointments" }
+    ];
+    
+    roles.forEach(role => this.createRole(role));
+    
+    // Seed permissions
+    const permissions: InsertPermission[] = [
+      { name: "manage_users", description: "Create, update, and delete users" },
+      { name: "manage_roles", description: "Create, update, and delete roles" },
+      { name: "manage_stylists", description: "Create, update, and delete stylists" },
+      { name: "manage_services", description: "Create, update, and delete services" },
+      { name: "manage_customers", description: "Create, update, and delete customers" },
+      { name: "view_all_appointments", description: "View all appointments in the system" },
+      { name: "manage_all_appointments", description: "Create, update, and delete any appointment" },
+      { name: "view_own_appointments", description: "View own appointments" },
+      { name: "manage_own_appointments", description: "Create, update, and delete own appointments" },
+      { name: "book_appointments", description: "Book appointments for customers" }
+    ];
+    
+    permissions.forEach(permission => this.createPermission(permission));
+    
+    // Assign permissions to roles - this will be done after both roles and permissions are created
+    setTimeout(() => {
+      // Admin gets all permissions
+      this.getPermissionsByName().then(permissionMap => {
+        this.getRoleByName("admin").then(adminRole => {
+          if (adminRole) {
+            Object.values(permissionMap).forEach(permission => {
+              this.assignPermissionToRole({
+                roleId: adminRole.id,
+                permissionId: permission.id
+              });
+            });
+          }
+        });
+        
+        // Manager role permissions
+        this.getRoleByName("manager").then(managerRole => {
+          if (managerRole) {
+            ["manage_stylists", "manage_services", "view_all_appointments", 
+             "manage_all_appointments", "manage_customers", "book_appointments"].forEach(permName => {
+              if (permissionMap[permName]) {
+                this.assignPermissionToRole({
+                  roleId: managerRole.id,
+                  permissionId: permissionMap[permName].id
+                });
+              }
+            });
+          }
+        });
+        
+        // Stylist role permissions
+        this.getRoleByName("stylist").then(stylistRole => {
+          if (stylistRole) {
+            ["view_own_appointments", "manage_own_appointments"].forEach(permName => {
+              if (permissionMap[permName]) {
+                this.assignPermissionToRole({
+                  roleId: stylistRole.id,
+                  permissionId: permissionMap[permName].id
+                });
+              }
+            });
+          }
+        });
+        
+        // Receptionist role permissions
+        this.getRoleByName("receptionist").then(receptionistRole => {
+          if (receptionistRole) {
+            ["view_all_appointments", "book_appointments", "manage_customers"].forEach(permName => {
+              if (permissionMap[permName]) {
+                this.assignPermissionToRole({
+                  roleId: receptionistRole.id,
+                  permissionId: permissionMap[permName].id
+                });
+              }
+            });
+          }
+        });
+        
+        // Customer role permissions
+        this.getRoleByName("customer").then(customerRole => {
+          if (customerRole) {
+            ["view_own_appointments", "book_appointments"].forEach(permName => {
+              if (permissionMap[permName]) {
+                this.assignPermissionToRole({
+                  roleId: customerRole.id,
+                  permissionId: permissionMap[permName].id
+                });
+              }
+            });
+          }
+        });
+      });
+    }, 100);
+    
     // Seed stylists
     const stylists: InsertStylist[] = [
       { name: "Martin", imageUrl: "https://randomuser.me/api/portraits/men/32.jpg" },
@@ -283,6 +425,18 @@ export class MemStorage implements IStorage {
     createAppt("Kerry Harris", 3, 4, "Dry Cut", "3:00 pm", 30);
   }
   
+  // Helper method for permissions by name
+  private async getPermissionsByName(): Promise<Record<string, Permission>> {
+    const permissions = await this.getAllPermissions();
+    const permissionMap: Record<string, Permission> = {};
+    
+    permissions.forEach(permission => {
+      permissionMap[permission.name] = permission;
+    });
+    
+    return permissionMap;
+  }
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
@@ -292,11 +446,169 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.username === username);
   }
   
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+  
   async createUser(user: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const newUser: User = { ...user, id };
+    const now = new Date();
+    
+    // Create a complete user record with default values for missing fields
+    const newUser: User = {
+      id,
+      username: user.username,
+      email: user.email,
+      password: user.password,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      roleId: user.roleId || 4, // Default to customer role (4)
+      isActive: true,
+      lastLogin: null,
+      createdAt: now,
+      customerId: user.customerId || null,
+      stylistId: user.stylistId || null
+    };
+    
     this.users.set(id, newUser);
     return newUser;
+  }
+  
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) return undefined;
+    
+    const updatedUser: User = { ...existingUser, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
+  }
+  
+  // Role operations
+  async getAllRoles(): Promise<Role[]> {
+    return Array.from(this.roles.values());
+  }
+  
+  async getRole(id: number): Promise<Role | undefined> {
+    return this.roles.get(id);
+  }
+  
+  async getRoleByName(name: string): Promise<Role | undefined> {
+    return Array.from(this.roles.values()).find(role => role.name === name);
+  }
+  
+  async createRole(role: InsertRole): Promise<Role> {
+    const id = this.currentRoleId++;
+    const newRole: Role = { 
+      ...role, 
+      id,
+      description: role.description || null 
+    };
+    this.roles.set(id, newRole);
+    return newRole;
+  }
+  
+  async updateRole(id: number, role: Partial<InsertRole>): Promise<Role | undefined> {
+    const existingRole = this.roles.get(id);
+    if (!existingRole) return undefined;
+    
+    const updatedRole: Role = { ...existingRole, ...role };
+    this.roles.set(id, updatedRole);
+    return updatedRole;
+  }
+  
+  async deleteRole(id: number): Promise<boolean> {
+    return this.roles.delete(id);
+  }
+  
+  // Permission operations
+  async getAllPermissions(): Promise<Permission[]> {
+    return Array.from(this.permissions.values());
+  }
+  
+  async getPermission(id: number): Promise<Permission | undefined> {
+    return this.permissions.get(id);
+  }
+  
+  async getPermissionByName(name: string): Promise<Permission | undefined> {
+    return Array.from(this.permissions.values()).find(permission => permission.name === name);
+  }
+  
+  async createPermission(permission: InsertPermission): Promise<Permission> {
+    const id = this.currentPermissionId++;
+    const newPermission: Permission = {
+      ...permission,
+      id, 
+      description: permission.description || null
+    };
+    this.permissions.set(id, newPermission);
+    return newPermission;
+  }
+  
+  async updatePermission(id: number, permission: Partial<InsertPermission>): Promise<Permission | undefined> {
+    const existingPermission = this.permissions.get(id);
+    if (!existingPermission) return undefined;
+    
+    const updatedPermission: Permission = { 
+      ...existingPermission, 
+      ...permission,
+      description: permission.description !== undefined ? (permission.description || null) : existingPermission.description
+    };
+    this.permissions.set(id, updatedPermission);
+    return updatedPermission;
+  }
+  
+  async deletePermission(id: number): Promise<boolean> {
+    return this.permissions.delete(id);
+  }
+  
+  // Role-Permission operations
+  async getAllRolePermissions(): Promise<RolePermission[]> {
+    return Array.from(this.rolePermissions.values());
+  }
+  
+  async getRolePermissionsByRole(roleId: number): Promise<RolePermission[]> {
+    return Array.from(this.rolePermissions.values())
+      .filter(rp => rp.roleId === roleId);
+  }
+  
+  async getUserPermissions(userId: number): Promise<Permission[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    // Get all role permissions for this user's role
+    const rolePermissions = await this.getRolePermissionsByRole(user.roleId);
+    if (rolePermissions.length === 0) return [];
+    
+    // Get the actual permissions
+    const permissions: Permission[] = [];
+    for (const rp of rolePermissions) {
+      const permission = await this.getPermission(rp.permissionId);
+      if (permission) permissions.push(permission);
+    }
+    
+    return permissions;
+  }
+  
+  async assignPermissionToRole(rolePermission: InsertRolePermission): Promise<RolePermission> {
+    const id = this.currentRolePermissionId++;
+    const newRolePermission: RolePermission = { ...rolePermission, id };
+    this.rolePermissions.set(id, newRolePermission);
+    return newRolePermission;
+  }
+  
+  async removePermissionFromRole(roleId: number, permissionId: number): Promise<boolean> {
+    // Find the role permission entry
+    const rolePermission = Array.from(this.rolePermissions.values())
+      .find(rp => rp.roleId === roleId && rp.permissionId === permissionId);
+    
+    if (!rolePermission) return false;
+    
+    // Remove it from the map
+    return this.rolePermissions.delete(rolePermission.id);
   }
   
   // Stylist operations
