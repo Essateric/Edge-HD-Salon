@@ -249,9 +249,15 @@ export default function CalendarView() {
       />
       
       <DndContext 
-        collisionDetection={closestCenter}
+        collisionDetection={pointerWithin}
         onDragEnd={handleDragEnd}
         modifiers={[restrictToVerticalAxis]}
+        measuring={{
+          droppable: {
+            strategy: 'rects',
+            frequency: 'optimized',
+          },
+        }}
       >
         <div className="flex flex-grow overflow-hidden h-[calc(100vh-130px)]">
           {/* Main calendar grid */}

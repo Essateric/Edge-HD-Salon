@@ -17,11 +17,13 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
     data: appointment,
   });
 
+  // Enhanced style with better drag visualization
   const style = {
     transform: CSS.Translate.toString(transform),
-    zIndex: isDragging ? 50 : 10,
-    opacity: isDragging ? 1 : undefined,
-    boxShadow: isDragging ? '0 10px 15px -3px rgba(0, 0, 0, 0.4)' : undefined,
+    zIndex: isDragging ? 100 : 10,
+    opacity: isDragging ? 0.85 : undefined,
+    boxShadow: isDragging ? '0 12px 20px -5px rgba(0, 0, 0, 0.5)' : undefined,
+    transition: !isDragging ? 'box-shadow 0.2s, opacity 0.2s, transform 0.1s' : undefined,
   };
   
   // Calculate the height based on duration
@@ -57,10 +59,14 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
       }}
       initial={{ opacity: 0.8 }}
       animate={{ 
-        opacity: isHovered ? 1 : 0.9,
-        y: isHovered ? -2 : 0,
+        opacity: isDragging ? 0.85 : (isHovered ? 1 : 0.9),
+        scale: isDragging ? 1.02 : (isHovered ? 1.01 : 1),
+        y: isHovered && !isDragging ? -2 : 0,
       }}
-      transition={{ duration: 0.2 }}
+      transition={{ 
+        duration: isDragging ? 0.05 : 0.2,
+        ease: isDragging ? "easeOut" : "easeInOut"
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

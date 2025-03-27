@@ -6,9 +6,8 @@ export default function AppHeader() {
   const [location] = useLocation();
   
   const navigateHome = () => {
-    if (location !== '/') {
-      window.location.href = '/';
-    }
+    // Always redirect to home regardless of current location
+    window.location.href = '/';
   };
   
   return (
@@ -28,12 +27,7 @@ export default function AppHeader() {
               <span>Calendar</span>
             </span>
           </Link>
-          <Link href="/appointments">
-            <span className={`flex items-center cursor-pointer ${location === '/appointments' ? 'text-[#B08D57] font-medium' : 'text-gray-400 hover:text-gray-200'} transition-colors`}>
-              <ClipboardList className="h-4 w-4 mr-2" />
-              <span>Appointments</span>
-            </span>
-          </Link>
+
           <Link href="/services">
             <span className={`flex items-center cursor-pointer ${location === '/services' ? 'text-[#B08D57] font-medium' : 'text-gray-400 hover:text-gray-200'} transition-colors`}>
               <Scissors className="h-4 w-4 mr-2" />
