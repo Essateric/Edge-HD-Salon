@@ -135,7 +135,7 @@ export default function AppointmentComponent({
           <div className="text-sm font-medium">
             {appointment.customerName || 'Unspecified'}
           </div>
-          <div className="text-xs mt-1 font-medium bg-white/10 px-1 py-0.5 rounded">
+          <div className="text-xs mt-1 font-semibold bg-white/20 px-2 py-1 rounded-md shadow-inner border border-white/20">
             {appointment.serviceName || 'No service specified'}
           </div>
           

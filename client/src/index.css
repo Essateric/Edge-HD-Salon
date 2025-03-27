@@ -38,15 +38,15 @@
   /* Vertical time lines */
   .time-slot::before {
     content: '';
-    @apply absolute top-0 left-0 w-full h-full pointer-events-none;
+    @apply absolute top-0 left-0 w-full h-full pointer-events-none z-20;
     background-image: repeating-linear-gradient(
       to bottom,
       transparent 0,
-      transparent 30px,
-      theme('colors.border') 30px,
+      transparent 29px,
+      theme('colors.border') 29px,
       theme('colors.border') 31px
     );
-    opacity: 0.3;
+    opacity: 0.6;
   }
   
   .appointment {
