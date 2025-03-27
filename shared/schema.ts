@@ -14,17 +14,41 @@ export const insertStylistSchema = createInsertSchema(stylists).pick({
   imageUrl: true,
 });
 
+// Service Categories table
+export const serviceCategories = pgTable("service_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+});
+
+export const insertServiceCategorySchema = createInsertSchema(serviceCategories).pick({
+  name: true,
+});
+
 // Services table
 export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  category: text("category").notNull(),
-  duration: integer("duration").notNull(), // in minutes
+  categoryId: integer("category_id").notNull(),
+  defaultDuration: integer("default_duration").notNull(), // in minutes
 });
 
 export const insertServiceSchema = createInsertSchema(services).pick({
   name: true,
-  category: true,
+  categoryId: true,
+  defaultDuration: true,
+});
+
+// Stylist service durations
+export const stylistServiceDurations = pgTable("stylist_service_durations", {
+  id: serial("id").primaryKey(),
+  stylistId: integer("stylist_id").notNull(),
+  serviceId: integer("service_id").notNull(),
+  duration: integer("duration").notNull(), // in minutes (can differ from default)
+});
+
+export const insertStylistServiceDurationSchema = createInsertSchema(stylistServiceDurations).pick({
+  stylistId: true,
+  serviceId: true,
   duration: true,
 });
 
@@ -76,8 +100,14 @@ export const insertAppointmentSchema = createInsertSchema(appointments).pick({
 export type InsertStylist = z.infer<typeof insertStylistSchema>;
 export type Stylist = typeof stylists.$inferSelect;
 
+export type InsertServiceCategory = z.infer<typeof insertServiceCategorySchema>;
+export type ServiceCategory = typeof serviceCategories.$inferSelect;
+
 export type InsertService = z.infer<typeof insertServiceSchema>;
 export type Service = typeof services.$inferSelect;
+
+export type InsertStylistServiceDuration = z.infer<typeof insertStylistServiceDurationSchema>;
+export type StylistServiceDuration = typeof stylistServiceDurations.$inferSelect;
 
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Customer = typeof customers.$inferSelect;

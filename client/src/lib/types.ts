@@ -4,16 +4,23 @@ export type Stylist = {
   imageUrl: string;
 };
 
-export type Service = {
-  id: number;
-  name: string;
-  category: string;
-  duration: number; // in minutes
-};
-
 export type ServiceCategory = {
   id: number;
   name: string;
+};
+
+export type Service = {
+  id: number;
+  name: string;
+  categoryId: number;
+  defaultDuration: number; // in minutes
+};
+
+export type StylistServiceDuration = {
+  id: number;
+  stylistId: number;
+  serviceId: number;
+  duration: number; // in minutes (can differ from default)
 };
 
 export type Appointment = {

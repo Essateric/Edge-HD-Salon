@@ -1,5 +1,6 @@
-import { PlusIcon, CalendarIcon, UsersIcon, BarChartIcon } from 'lucide-react';
+import { PlusIcon, CalendarIcon, UsersIcon, BarChartIcon, ScissorsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
 
 interface NavigationBarProps {
   activeView: string;
@@ -10,8 +11,8 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
     <div className="bg-white border-b border-gray-200 px-4">
       <div className="flex items-center justify-between">
         <div className="flex">
-          <a 
-            href="#" 
+          <Link 
+            href="/calendar" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'calendar' 
                 ? 'border-primary text-primary' 
@@ -20,9 +21,20 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
           >
             <CalendarIcon className="h-5 w-5 mr-2" />
             <span className={activeView === 'calendar' ? 'font-medium' : ''}>Calendar</span>
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            href="/services" 
+            className={`flex items-center px-4 py-3 border-b-2 ${
+              activeView === 'services' 
+                ? 'border-primary text-primary' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <ScissorsIcon className="h-5 w-5 mr-2" />
+            <span className={activeView === 'services' ? 'font-medium' : ''}>Services</span>
+          </Link>
+          <Link 
+            href="/clients" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'clients' 
                 ? 'border-primary text-primary' 
@@ -31,9 +43,9 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
           >
             <UsersIcon className="h-5 w-5 mr-2" />
             <span className={activeView === 'clients' ? 'font-medium' : ''}>Clients</span>
-          </a>
-          <a 
-            href="#" 
+          </Link>
+          <Link 
+            href="/reports" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'reports' 
                 ? 'border-primary text-primary' 
@@ -42,7 +54,7 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
           >
             <BarChartIcon className="h-5 w-5 mr-2" />
             <span className={activeView === 'reports' ? 'font-medium' : ''}>Reports</span>
-          </a>
+          </Link>
         </div>
         <div>
           <Button className="bg-primary text-white rounded-md px-4 py-2 flex items-center shadow-sm">

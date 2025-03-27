@@ -5,7 +5,9 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { 
   insertStylistSchema, 
+  insertServiceCategorySchema,
   insertServiceSchema, 
+  insertStylistServiceDurationSchema,
   insertCustomerSchema, 
   insertAppointmentSchema 
 } from "@shared/schema";
@@ -44,6 +46,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Service Categories routes
+  app.get('/api/service-categories', async (_req: Request, res: Response) => {
+    const categories = await storage.getAllServiceCategories();
+    res.json(categories);
+  });
+  
+  app.get('/api/service-categories/:id', async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const category = await storage.getServiceCategory(id);
+    
+    if (!category) {
+      return res.status(404).json({ message: 'Service category not found' });
+    }
+    
+    res.json(category);
+  });
+  
+  app.post('/api/service-categories', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertServiceCategorySchema.parse(req.body);
+      const category = await storage.createServiceCategory(validatedData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid category data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create service category' });
+    }
+  });
+  
+  app.put('/api/service-categories/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const categoryData = req.body;
+      
+      const updatedCategory = await storage.updateServiceCategory(id, categoryData);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: 'Service category not found' });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid category data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to update service category' });
+    }
+  });
+  
+  app.delete('/api/service-categories/:id', async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteServiceCategory(id);
+    
+    if (!success) {
+      return res.status(404).json({ message: 'Service category not found' });
+    }
+    
+    res.status(204).end();
+  });
+  
   // Services routes
   app.get('/api/services', async (_req: Request, res: Response) => {
     const services = await storage.getAllServices();
@@ -61,9 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(service);
   });
   
-  app.get('/api/services/category/:category', async (req: Request, res: Response) => {
-    const category = req.params.category;
-    const services = await storage.getServicesByCategory(category);
+  app.get('/api/services/category/:categoryId', async (req: Request, res: Response) => {
+    const categoryId = parseInt(req.params.categoryId);
+    const services = await storage.getServicesByCategory(categoryId);
     res.json(services);
   });
   
@@ -78,6 +141,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(500).json({ message: 'Failed to create service' });
     }
+  });
+  
+  app.put('/api/services/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const serviceData = req.body;
+      
+      const updatedService = await storage.updateService(id, serviceData);
+      
+      if (!updatedService) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      res.json(updatedService);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid service data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to update service' });
+    }
+  });
+  
+  app.delete('/api/services/:id', async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteService(id);
+    
+    if (!success) {
+      return res.status(404).json({ message: 'Service not found' });
+    }
+    
+    res.status(204).end();
+  });
+  
+  // Stylist Service Durations routes
+  app.get('/api/stylist-service-durations', async (req: Request, res: Response) => {
+    const stylistId = req.query.stylistId ? parseInt(req.query.stylistId as string) : undefined;
+    
+    let durations;
+    if (stylistId) {
+      durations = await storage.getStylistServiceDurationsByStylist(stylistId);
+    } else {
+      durations = await storage.getAllStylistServiceDurations();
+    }
+    
+    res.json(durations);
+  });
+  
+  app.get('/api/stylist-service-durations/:id', async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const duration = await storage.getStylistServiceDuration(id);
+    
+    if (!duration) {
+      return res.status(404).json({ message: 'Stylist service duration not found' });
+    }
+    
+    res.json(duration);
+  });
+  
+  app.get('/api/stylist-service-durations/stylist/:stylistId/service/:serviceId', async (req: Request, res: Response) => {
+    const stylistId = parseInt(req.params.stylistId);
+    const serviceId = parseInt(req.params.serviceId);
+    
+    const duration = await storage.getStylistServiceDurationByServiceAndStylist(serviceId, stylistId);
+    
+    if (!duration) {
+      return res.status(404).json({ message: 'Stylist service duration not found' });
+    }
+    
+    res.json(duration);
+  });
+  
+  app.post('/api/stylist-service-durations', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertStylistServiceDurationSchema.parse(req.body);
+      const duration = await storage.createStylistServiceDuration(validatedData);
+      res.status(201).json(duration);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid duration data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create stylist service duration' });
+    }
+  });
+  
+  app.put('/api/stylist-service-durations/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const durationData = req.body;
+      
+      const updatedDuration = await storage.updateStylistServiceDuration(id, durationData);
+      
+      if (!updatedDuration) {
+        return res.status(404).json({ message: 'Stylist service duration not found' });
+      }
+      
+      res.json(updatedDuration);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid duration data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to update stylist service duration' });
+    }
+  });
+  
+  app.delete('/api/stylist-service-durations/:id', async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteStylistServiceDuration(id);
+    
+    if (!success) {
+      return res.status(404).json({ message: 'Stylist service duration not found' });
+    }
+    
+    res.status(204).end();
   });
   
   // Customers routes
@@ -164,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Calculate end time based on duration
-      const appointmentDuration = duration || service.duration;
+      const appointmentDuration = duration || service.defaultDuration;
       
       // Create appointment object
       const appointmentData = {
