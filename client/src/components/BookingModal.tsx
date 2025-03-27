@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from "@/components/ui/card";
 import { apiRequest } from '@/lib/queryClient';
-import { Stylist, Service } from '@/lib/types';
+import { Stylist, Service, ServiceCategory } from '@/lib/types';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -36,11 +38,28 @@ export default function BookingModal({
   
   const [customer, setCustomer] = useState('');
   const [service, setService] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [serviceSelectionOpen, setServiceSelectionOpen] = useState(false);
   const [date, setDate] = useState(format(selectedDate, 'yyyy-MM-dd'));
   const [time, setTime] = useState(selectedTimeSlot || '10:00');
   const [stylist, setStylist] = useState(selectedStylist?.id.toString() || '');
   const [duration, setDuration] = useState('30');
   const [notes, setNotes] = useState('');
+  
+  // Fetch service categories
+  const { data: categories = [] } = useQuery<ServiceCategory[]>({
+    queryKey: ['/api/service-categories'],
+    enabled: isOpen
+  });
+  
+  // Group services by category
+  const servicesByCategory = services.reduce<Record<number, Service[]>>((acc, service) => {
+    if (!acc[service.categoryId]) {
+      acc[service.categoryId] = [];
+    }
+    acc[service.categoryId].push(service);
+    return acc;
+  }, {});
   
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointment: any) => {
