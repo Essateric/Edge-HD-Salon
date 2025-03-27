@@ -40,7 +40,7 @@ const authenticated = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Authorization middleware with permission check
-const hasPermission = (permissionName: string) => {
+const hasPermission = (permissionName: string | string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Check if user is authenticated
     if (!req.session || !req.session.userId) {
@@ -50,10 +50,11 @@ const hasPermission = (permissionName: string) => {
     // Get user permissions
     const permissions = await storage.getUserPermissions(req.session.userId);
     
-    // Check if user has the required permission
-    const hasPermission = permissions.some(p => p.name === permissionName);
+    // Check if user has at least one of the required permissions
+    const permissionNames = Array.isArray(permissionName) ? permissionName : [permissionName];
+    const hasRequiredPermission = permissions.some(p => permissionNames.includes(p.name));
     
-    if (hasPermission) {
+    if (hasRequiredPermission) {
       next();
     } else {
       res.status(403).json({ message: 'Forbidden - Insufficient permissions' });
@@ -559,8 +560,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.put('/api/appointments/:id', authenticated, hasPermission('manage_all_appointments'), async (req: Request, res: Response) => {
+  app.put('/api/appointments/:id', authenticated, async (req: Request, res: Response) => {
     try {
+      // Get user permissions to check for proper access
+      const userId = req.session.userId as number;
+      const permissions = await storage.getUserPermissions(userId);
+      
+      // Check if user has either 'manage_all_appointments' or 'book_appointments' permission
+      const hasRequiredPermission = permissions.some(p => 
+        p.name === 'manage_all_appointments' || p.name === 'book_appointments'
+      );
+      
+      if (!hasRequiredPermission) {
+        return res.status(403).json({ message: 'Forbidden - Insufficient permissions' });
+      }
+      
+      // Update the appointment if user has permission
       const id = parseInt(req.params.id);
       const appointmentData = req.body;
       
@@ -572,6 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedAppointment);
     } catch (error) {
+      console.error('Failed to update appointment:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Invalid appointment data', errors: error.errors });
       }
