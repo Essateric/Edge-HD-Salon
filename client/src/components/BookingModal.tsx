@@ -49,6 +49,7 @@ export default function BookingModal({
   const [selectedServices, setSelectedServices] = useState<SelectedServiceItem[]>([]);
   const [notes, setNotes] = useState('');
   const [activeTab, setActiveTab] = useState('customer');
+  const [activeStylist, setActiveStylist] = useState<Stylist | null>(selectedStylist);
   
   // Format date and time
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
@@ -129,7 +130,7 @@ export default function BookingModal({
         customerName: customer || 'Guest',
         serviceId: service.id,
         serviceName: service.name, // Include service name for display
-        stylistId: selectedStylist?.id || 1,
+        stylistId: selectedStylist?.id || stylists[0]?.id || 1,
         date: formattedDate,
         startTime: currentStartTime,
         duration: service.duration,
@@ -257,12 +258,25 @@ export default function BookingModal({
                 
                 <div className="space-y-2">
                   <Label htmlFor="stylist">Stylist</Label>
-                  <Input
+                  <select
                     id="stylist"
-                    value={selectedStylist?.name || "Unassigned"}
-                    readOnly
-                    className="bg-muted"
-                  />
+                    className="w-full px-3 py-2 border rounded-md"
+                    value={selectedStylist?.id || ""}
+                    onChange={(e) => {
+                      const stylistId = parseInt(e.target.value);
+                      const stylist = stylists.find(s => s.id === stylistId) || null;
+                      setActiveStylist(stylist);
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select a stylist
+                    </option>
+                    {stylists.map((stylist) => (
+                      <option key={stylist.id} value={stylist.id}>
+                        {stylist.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div className="flex justify-end">

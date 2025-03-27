@@ -7,6 +7,7 @@ interface CalendarToolbarProps {
   viewMode: ViewMode;
   onPrevious: () => void;
   onNext: () => void;
+  onToday?: () => void;
   onViewModeChange: (mode: ViewMode) => void;
   onNewBooking: () => void;
 }
@@ -16,6 +17,7 @@ export default function CalendarToolbar({
   viewMode, 
   onPrevious, 
   onNext, 
+  onToday,
   onViewModeChange,
   onNewBooking
 }: CalendarToolbarProps) {
@@ -39,7 +41,12 @@ export default function CalendarToolbar({
         </button>
       </div>
       <div className="mt-3 sm:mt-0 flex items-center space-x-2">
-        <button className="px-3 py-1 text-sm rounded-md border border-border hover:bg-muted">Today</button>
+        <button 
+          className="px-3 py-1 text-sm rounded-md border border-border hover:bg-muted"
+          onClick={onToday}
+        >
+          Today
+        </button>
         <div className="bg-muted rounded-md p-1 flex">
           <button 
             className={`px-3 py-1 text-sm ${viewMode === 'day' ? 'bg-background rounded shadow-sm' : 'hover:bg-background/50'}`}

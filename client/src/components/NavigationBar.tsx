@@ -27,7 +27,7 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/calendar" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'calendar' 
-                ? 'border-[#B08D57] text-[#B08D57]' 
+                ? 'border-[#B08D57] text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-semibold' 
                 : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
@@ -38,7 +38,7 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/services" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'services' 
-                ? 'border-[#B08D57] text-[#B08D57]' 
+                ? 'border-[#B08D57] text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-semibold' 
                 : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
@@ -49,7 +49,7 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/clients" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'clients' 
-                ? 'border-[#B08D57] text-[#B08D57]' 
+                ? 'border-[#B08D57] text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-semibold' 
                 : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
@@ -60,7 +60,7 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/reports" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'reports' 
-                ? 'border-[#B08D57] text-[#B08D57]' 
+                ? 'border-[#B08D57] text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-semibold' 
                 : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
@@ -71,7 +71,7 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
 
         {/* New Booking button */}
         <div>
-          <Button className="bg-[#B08D57] hover:bg-[#8B734A] text-white rounded-md px-4 py-2 flex items-center shadow-sm">
+          <Button className="bg-gradient-to-r from-[#D4B78E] via-[#B08D57] to-[#8B734A] hover:from-[#B08D57] hover:to-[#6A563B] text-white rounded-md px-4 py-2 flex items-center shadow-md border border-[#D4B78E]/30">
             <PlusIcon className="h-5 w-5 mr-1" />
             <span className="hidden sm:inline">New Booking</span>
           </Button>

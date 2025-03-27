@@ -30,7 +30,23 @@ export default function CalendarView() {
   const [showServices, setShowServices] = useState(false);
   const { toast } = useToast();
   
-  const formattedDate = format(currentDate, "h:mma d MMMM yyyy");
+  // Format date based on view mode
+  const getFormattedDate = () => {
+    switch (viewMode) {
+      case 'day':
+        return format(currentDate, "EEEE, d MMMM yyyy");
+      case 'week':
+        const startOfWeek = addDays(currentDate, -currentDate.getDay());
+        const endOfWeek = addDays(startOfWeek, 6);
+        return `${format(startOfWeek, "d MMM")} - ${format(endOfWeek, "d MMM yyyy")}`;
+      case 'month':
+        return format(currentDate, "MMMM yyyy");
+      default:
+        return format(currentDate, "d MMMM yyyy");
+    }
+  };
+  
+  const formattedDate = getFormattedDate();
   
   // Fetch stylists
   const { data: stylists = [] } = useQuery<Stylist[]>({
@@ -65,12 +81,40 @@ export default function CalendarView() {
     });
   }
   
-  const handlePreviousDay = () => {
-    setCurrentDate(subDays(currentDate, 1));
+  const handlePrevious = () => {
+    switch (viewMode) {
+      case 'day':
+        setCurrentDate(subDays(currentDate, 1));
+        break;
+      case 'week':
+        setCurrentDate(subDays(currentDate, 7));
+        break;
+      case 'month':
+        const prevMonth = new Date(currentDate);
+        prevMonth.setMonth(prevMonth.getMonth() - 1);
+        setCurrentDate(prevMonth);
+        break;
+    }
   };
   
-  const handleNextDay = () => {
-    setCurrentDate(addDays(currentDate, 1));
+  const handleNext = () => {
+    switch (viewMode) {
+      case 'day':
+        setCurrentDate(addDays(currentDate, 1));
+        break;
+      case 'week':
+        setCurrentDate(addDays(currentDate, 7));
+        break;
+      case 'month':
+        const nextMonth = new Date(currentDate);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        setCurrentDate(nextMonth);
+        break;
+    }
+  };
+  
+  const handleToday = () => {
+    setCurrentDate(new Date());
   };
   
   const handleNewBooking = (stylistId?: number, time?: string) => {
@@ -197,8 +241,9 @@ export default function CalendarView() {
       <CalendarToolbar 
         currentDate={formattedDate}
         viewMode={viewMode}
-        onPrevious={handlePreviousDay}
-        onNext={handleNextDay}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onToday={handleToday}
         onViewModeChange={setViewMode}
         onNewBooking={() => handleNewBooking()}
       />
@@ -212,14 +257,40 @@ export default function CalendarView() {
           {/* Main calendar grid */}
           <div className="flex-1 overflow-x-auto overflow-y-auto">
             <div className="min-w-max">
-              <StylistHeader stylists={stylists} />
+              {viewMode === 'day' && (
+                <>
+                  <StylistHeader stylists={stylists} />
+                  <TimeSlots 
+                    timeSlots={timeSlots}
+                    stylists={stylists}
+                    appointments={appointments}
+                    onTimeSlotClick={handleNewBooking}
+                    viewMode={viewMode}
+                  />
+                </>
+              )}
               
-              <TimeSlots 
-                timeSlots={timeSlots}
-                stylists={stylists}
-                appointments={appointments}
-                onTimeSlotClick={handleNewBooking}
-              />
+              {viewMode === 'week' && (
+                <>
+                  <StylistHeader stylists={stylists} />
+                  <TimeSlots 
+                    timeSlots={timeSlots}
+                    stylists={stylists}
+                    appointments={appointments}
+                    onTimeSlotClick={handleNewBooking}
+                    viewMode={viewMode}
+                  />
+                </>
+              )}
+              
+              {viewMode === 'month' && (
+                <div className="p-4 w-full h-full">
+                  <div className="bg-gray-100 p-4 rounded-lg text-center">
+                    <h3 className="text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-semibold mb-2">Month View Coming Soon</h3>
+                    <p className="text-gray-600">Month view is under development. Please use Day or Week view for now.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

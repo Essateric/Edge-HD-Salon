@@ -30,12 +30,14 @@ export const services = pgTable("services", {
   name: text("name").notNull(),
   categoryId: integer("category_id").notNull(),
   defaultDuration: integer("default_duration").notNull(), // in minutes
+  price: integer("price").notNull().default(0), // in pennies
 });
 
 export const insertServiceSchema = createInsertSchema(services).pick({
   name: true,
   categoryId: true,
   defaultDuration: true,
+  price: true,
 });
 
 // Stylist service durations
@@ -79,8 +81,10 @@ export const appointments = pgTable("appointments", {
   date: date("date").notNull(),
   startTime: text("start_time").notNull(),
   endTime: text("end_time").notNull(),
+  duration: integer("duration").notNull().default(30), // Duration in minutes
   notes: text("notes"),
   isConsultation: boolean("is_consultation").default(false),
+  status: text("status").default("pending"), // pending, confirmed, cancelled
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -93,8 +97,10 @@ export const insertAppointmentSchema = createInsertSchema(appointments).pick({
   date: true,
   startTime: true,
   endTime: true,
+  duration: true,
   notes: true,
   isConsultation: true,
+  status: true,
 });
 
 export type InsertStylist = z.infer<typeof insertStylistSchema>;

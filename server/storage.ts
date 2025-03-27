@@ -373,7 +373,11 @@ export class MemStorage implements IStorage {
   
   async createService(service: InsertService): Promise<Service> {
     const id = this.currentServiceId++;
-    const newService: Service = { ...service, id };
+    const newService: Service = { 
+      ...service, 
+      id,
+      price: service.price || 0 // Ensure price is set with a default of 0
+    };
     this.services.set(id, newService);
     return newService;
   }
@@ -544,10 +548,12 @@ export class MemStorage implements IStorage {
       serviceName: serviceName || "Unnamed Service",
       startTime: appointmentData.startTime,
       endTime: endTime || appointmentData.startTime,
+      duration: appointmentData.duration || 30, // Use provided duration or default to 30 minutes
       notes: appointmentData.notes || null,
       customerId: appointmentData.customerId || null,
       customerName: appointmentData.customerName || null,
       isConsultation: appointmentData.isConsultation || null,
+      status: appointmentData.status || "pending",
       createdAt: new Date()
     };
     

@@ -1,6 +1,6 @@
-import { format, parse } from 'date-fns';
+import { format, parse, startOfWeek, addDays } from 'date-fns';
 import { useDroppable } from '@dnd-kit/core';
-import { TimeSlot, Stylist, Appointment } from '@/lib/types';
+import { TimeSlot, Stylist, Appointment, ViewMode } from '@/lib/types';
 import AppointmentComponent from '@/components/Appointment';
 
 interface TimeSlotsProps {
@@ -8,13 +8,15 @@ interface TimeSlotsProps {
   stylists: Stylist[];
   appointments: Appointment[];
   onTimeSlotClick: (stylistId: number, time: string) => void;
+  viewMode?: ViewMode;
 }
 
 export default function TimeSlots({ 
   timeSlots, 
   stylists, 
   appointments,
-  onTimeSlotClick 
+  onTimeSlotClick,
+  viewMode = 'day'
 }: TimeSlotsProps) {
   // Function to get appointments for a specific time slot and stylist
   const getAppointmentsForTimeSlot = (time: string, stylistId: number) => {
@@ -40,7 +42,8 @@ export default function TimeSlots({
     return hour < 10;
   };
   
-  return (
+  // Day view - the default
+  const renderDayView = () => (
     <div className="relative">
       {timeSlots.map((slot) => (
         <div key={slot.time} className="flex time-slot">
@@ -100,4 +103,21 @@ export default function TimeSlots({
       ))}
     </div>
   );
+  
+  // Week view - for now, same as day view but with a message
+  const renderWeekView = () => (
+    <div className="relative">
+      <div className="mb-2 p-1 bg-gradient-to-r from-[#D4B78E]/10 to-[#8B734A]/10 rounded text-sm text-center">
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-medium">Week View</span>
+      </div>
+      {renderDayView()}
+    </div>
+  );
+  
+  // Render view based on viewMode
+  if (viewMode === 'week') {
+    return renderWeekView();
+  } else {
+    return renderDayView();
+  }
 }
