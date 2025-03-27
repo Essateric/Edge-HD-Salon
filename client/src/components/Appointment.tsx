@@ -6,11 +6,13 @@ import { ChevronUp, ChevronDown, Plus, Minus } from 'lucide-react';
 interface AppointmentProps {
   appointment: Appointment;
   onEditAppointment?: (appointment: Appointment) => void;
+  index?: number; // Added index prop for Draggable
 }
 
 export default function AppointmentComponent({ 
   appointment, 
-  onEditAppointment 
+  onEditAppointment,
+  index = 0 // Default to 0 if not provided 
 }: AppointmentProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -123,7 +125,7 @@ export default function AppointmentComponent({
   return (
     <Draggable 
       draggableId={`appointment-${appointment.id}`} 
-      index={0} // Fixed index to prevent disappearing when dragged
+      index={index} // Use the index parameter
     >
       {(provided, snapshot) => (
         <div
