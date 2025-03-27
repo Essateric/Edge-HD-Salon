@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, Trash2, ArrowLeft, Check, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -332,8 +332,11 @@ export default function BookingModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md md:max-w-2xl bg-black text-white border-amber-800/30">
+        <DialogContent className="sm:max-w-md md:max-w-2xl bg-black text-white border-amber-800/30" aria-describedby="booking-description">
           <DialogHeader className="border-b border-amber-800/30 pb-4">
+            <DialogDescription id="booking-description" className="sr-only">
+              Booking appointment form for Edge Salon
+            </DialogDescription>
             <DialogTitle className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="font-bold">EDGE</span>
