@@ -78,13 +78,13 @@ export default function TimeSlots({
   const renderDayView = () => (
     <div className="relative flex flex-col h-full">
       {timeSlots.map((slot) => (
-        <div key={slot.time} className="flex time-slot" style={{ minHeight: '48px' }}>
-          <div className="w-16 md:w-20 flex-shrink-0 border-r border-border text-right pr-2 text-xs text-muted-foreground py-1">
+        <div key={slot.time} className="flex time-slot" style={{ minHeight: '60px' }}>
+          <div className="w-16 md:w-24 flex-shrink-0 border-r border-border text-right pr-2 text-sm text-muted-foreground py-2 bg-background sticky left-0">
             <div className="h-full flex flex-col justify-between">
-              <span>{slot.formatted}</span>
-              <span className="hidden md:block">15</span>
-              <span>30</span>
-              <span className="hidden md:block">45</span>
+              <span className="font-medium">{slot.formatted}</span>
+              <span className="hidden md:block text-xs">15</span>
+              <span className="text-xs">30</span>
+              <span className="hidden md:block text-xs">45</span>
             </div>
           </div>
           
@@ -106,14 +106,14 @@ export default function TimeSlots({
                 <div 
                   ref={setNodeRef}
                   key={`${slot.time}-${stylist.id}`} 
-                  className={`stylist-column relative h-12 border-r border-border ${
+                  className={`stylist-column relative h-[60px] border-r border-b border-border ${
                     !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
                   } ${isOver ? 'bg-primary/20' : ''}`}
-                  style={{ width: getColumnWidth() }}
+                  style={{ width: getColumnWidth(), minWidth: '150px' }}
                   onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
                 >
                   {isOff ? (
-                    <div className="h-full bg-muted text-center text-xs text-muted-foreground pt-2">off</div>
+                    <div className="h-full bg-muted text-center text-sm text-muted-foreground pt-2 font-medium">off</div>
                   ) : (
                     timeSlotAppointments.length > 0 ? (
                       <div className="relative">
@@ -148,8 +148,8 @@ export default function TimeSlots({
                                 const minutesFromSlotStart = 
                                   (startHour - slotHour) * 60 + (startMinute - slotMinute);
                                 
-                                // Each 15 minutes is 12px in height
-                                topPosition = (minutesFromSlotStart * 12) / 15;
+                                // Each 15 minutes is 15px in height
+                                topPosition = (minutesFromSlotStart * 15) / 15;
                               }
                             } else {
                               // Try 24-hour format as fallback
@@ -169,7 +169,7 @@ export default function TimeSlots({
                                 } else {
                                   const minutesFromSlotStart = 
                                     (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                                  topPosition = (minutesFromSlotStart * 12) / 15;
+                                  topPosition = (minutesFromSlotStart * 15) / 15;
                                 }
                               }
                             }
@@ -185,8 +185,8 @@ export default function TimeSlots({
                                 // Top position is calculated based on start time relative to the time slot
                                 top: `${topPosition}px`,
                                 // Add horizontal offset for overlapping appointments (simple approach)
-                                left: index % 2 === 0 ? '0%' : '2%', 
-                                width: index % 2 === 0 ? '98%' : '98%',
+                                left: '2%', 
+                                width: '96%',
                                 zIndex: 10 + index
                               }}
                             >
@@ -200,8 +200,8 @@ export default function TimeSlots({
                       </div>
                     ) : (
                       <div className="h-full w-full flex items-center justify-center">
-                        <div className="text-xs text-muted-foreground border border-dashed border-muted-foreground rounded-sm w-3/4 h-3/4 flex items-center justify-center">
-                          <span>+</span>
+                        <div className="text-sm text-muted-foreground border-2 border-dashed border-muted-foreground/50 rounded-md w-5/6 h-5/6 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                          <span className="font-medium">+</span>
                         </div>
                       </div>
                     )

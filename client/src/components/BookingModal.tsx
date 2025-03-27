@@ -64,7 +64,8 @@ export default function BookingModal({
     return [];
   });
   const [notes, setNotes] = useState(editingAppointment?.notes || '');
-  const [activeTab, setActiveTab] = useState('customer');
+  // Set initial tab - if editing an appointment, start on 'details' tab
+  const [activeTab, setActiveTab] = useState(editingAppointment ? 'details' : 'customer');
   const [activeStylist, setActiveStylist] = useState<Stylist | null>(selectedStylist);
   
   // Format date and time
@@ -392,6 +393,48 @@ export default function BookingModal({
             
             <TabsContent value="details">
               <div className="space-y-4 py-4">
+                {/* Show appointment details when editing */}
+                {editingAppointment && (
+                  <div className="p-4 bg-muted/50 rounded-lg space-y-3 mb-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-lg">Appointment Details</h3>
+                      <div className={`px-2 py-1 rounded-md text-xs font-medium 
+                        ${editingAppointment.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
+                          editingAppointment.status === 'canceled' ? 'bg-red-100 text-red-800' : 
+                          editingAppointment.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
+                          'bg-gray-100 text-gray-800'}`}>
+                        {editingAppointment.status ? 
+                          editingAppointment.status.charAt(0).toUpperCase() + editingAppointment.status.slice(1) : 
+                          'Pending'}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Customer</p>
+                        <p className="font-medium">{editingAppointment.customerName || 'Unspecified'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Service</p>
+                        <p className="font-medium">{editingAppointment.serviceName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Time</p>
+                        <p className="font-medium">{editingAppointment.startTime} - {editingAppointment.endTime}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Duration</p>
+                        <p className="font-medium">{editingAppointment.duration || 'N/A'} {editingAppointment.duration ? 'mins' : ''}</p>
+                      </div>
+                      {editingAppointment.cost && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Price</p>
+                          <p className="font-medium">£{editingAppointment.cost}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
                   <Textarea
@@ -465,7 +508,7 @@ export default function BookingModal({
                           <div className="flex-1">
                             <div className="font-medium">{service.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {service.defaultDuration} min · £{service.price?.toFixed(2) || '0.00'}
+                              {service.defaultDuration} min · £{service.price ? service.price.toFixed(2) : '0.00'}
                             </div>
                           </div>
                           <Checkbox checked={isServiceSelected(service.id)} />
@@ -493,7 +536,7 @@ export default function BookingModal({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="font-medium">£{service.price.toFixed(2)}</div>
+                            <div className="font-medium">£{service.price?.toFixed(2) || '0.00'}</div>
                             <Button 
                               variant="ghost" 
                               size="icon"

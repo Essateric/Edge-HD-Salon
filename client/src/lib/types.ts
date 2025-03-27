@@ -14,6 +14,7 @@ export type Service = {
   name: string;
   categoryId: number;
   defaultDuration: number; // in minutes
+  price?: number;
 };
 
 export type StylistServiceDuration = {
@@ -35,6 +36,9 @@ export type Appointment = {
   endTime: string;
   notes: string;
   isConsultation: boolean;
+  status?: 'pending' | 'confirmed' | 'canceled' | 'completed';
+  duration?: number; // in minutes
+  cost?: number;
 };
 
 export type Customer = {

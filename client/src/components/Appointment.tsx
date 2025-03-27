@@ -91,6 +91,22 @@ export default function AppointmentComponent({
     return Math.max(durationInMinutes * 12 / 15, 48); // Minimum height of 48px
   };
   
+  // Get appointment status label
+  const getStatusLabel = () => {
+    if (appointment.status === 'confirmed') return 'CONF';
+    if (appointment.status === 'canceled') return 'CANC';
+    if (appointment.status === 'completed') return 'DONE';
+    return 'REQ';
+  };
+  
+  // Get status color
+  const getStatusColorClass = () => {
+    if (appointment.status === 'confirmed') return 'bg-green-600/30';
+    if (appointment.status === 'canceled') return 'bg-red-600/30';
+    if (appointment.status === 'completed') return 'bg-blue-600/30';
+    return 'bg-white/20';
+  };
+  
   // Handle click to edit appointment
   const handleClick = (e: React.MouseEvent) => {
     if (!isDragging && onEditAppointment) {
@@ -108,7 +124,7 @@ export default function AppointmentComponent({
         appointment.isConsultation 
           ? 'bg-gradient-to-br from-[#B08D57] via-[#8B734A] to-[#6A563B]' 
           : 'bg-gradient-to-br from-[#D4B78E] via-[#B08D57] to-[#8B734A]'
-      } text-white rounded shadow-md p-1 cursor-move`}
+      } text-white rounded shadow-md p-2 cursor-move`}
       style={{ 
         height: `${getHeight()}px`,
         ...style
@@ -132,15 +148,25 @@ export default function AppointmentComponent({
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
-      <div className="text-xs font-medium mb-1 flex justify-between">
-        <span className="bg-white/20 px-1 rounded text-[0.65rem]">
-          REQ
+      <div className="text-sm font-medium mb-1 flex justify-between">
+        <span className={`${getStatusColorClass()} px-1 rounded text-xs`}>
+          {getStatusLabel()}
         </span>
-        <span className="text-xs opacity-80">{appointment.startTime} - {appointment.endTime}</span>
+        <span className="text-sm">{appointment.startTime} - {appointment.endTime}</span>
       </div>
-      <div className="text-xs font-medium line-clamp-2">
-        {appointment.customerName || 'Unspecified'} - {appointment.serviceName}
+      <div className="text-sm font-medium">
+        {appointment.customerName || 'Unspecified'}
       </div>
+      <div className="text-xs mt-1 line-clamp-2 font-light">
+        {appointment.serviceName}
+      </div>
+      {isHovered && (
+        <div className="text-xs mt-1 pt-1 border-t border-white/20">
+          {appointment.notes && <div className="truncate">{appointment.notes}</div>}
+          <div>Duration: {appointment.duration || 'N/A'} {appointment.duration ? 'mins' : ''}</div>
+          <div>Cost: {appointment.cost ? `£${appointment.cost}` : 'N/A'}</div>
+        </div>
+      )}
     </motion.div>
   );
 }
