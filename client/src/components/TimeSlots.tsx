@@ -223,7 +223,8 @@ export default function TimeSlots({
                             </div>
                           )}
                           
-                          {provided.placeholder}
+                          {/* Placeholder for dragging - essential for react-beautiful-dnd to work correctly */}
+                          <div style={{ display: "none" }}>{provided.placeholder}</div>
                         </>
                       )}
                     </div>

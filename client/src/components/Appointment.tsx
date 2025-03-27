@@ -123,7 +123,7 @@ export default function AppointmentComponent({
   return (
     <Draggable 
       draggableId={`appointment-${appointment.id}`} 
-      index={appointment.id}
+      index={0} // Fixed index to prevent disappearing when dragged
     >
       {(provided, snapshot) => (
         <div
