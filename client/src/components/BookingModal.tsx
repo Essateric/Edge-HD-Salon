@@ -84,6 +84,20 @@ export default function BookingModal({
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
   const formattedTimeDisplay = selectedTimeSlot || '10:00 AM';
   
+  // Helper function to format duration in hours and minutes
+  const formatDuration = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours === 0) {
+      return `${mins} minutes`;
+    } else if (mins === 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      return `${hours} hour${hours > 1 ? 's' : ''} ${mins} minute${mins > 1 ? 's' : ''}`;
+    }
+  };
+  
   // Calculate total price and duration
   const totalPrice = selectedServices.reduce((total, service) => total + (service.price || 0), 0);
   const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
@@ -447,7 +461,7 @@ export default function BookingModal({
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Duration</p>
-                        <p className="font-medium">{editingAppointment.duration || 'N/A'} {editingAppointment.duration ? 'mins' : ''}</p>
+                        <p className="font-medium">{editingAppointment.duration ? formatDuration(editingAppointment.duration) : 'N/A'}</p>
                       </div>
                       {editingAppointment.cost && (
                         <div>
@@ -532,7 +546,7 @@ export default function BookingModal({
                           <div className="flex-1">
                             <div className="font-medium">{service.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {service.defaultDuration} min · £{service.price ? service.price.toFixed(2) : '0.00'}
+                              {formatDuration(service.defaultDuration)} · £{service.price ? service.price.toFixed(2) : '0.00'}
                             </div>
                           </div>
                           <Checkbox checked={isServiceSelected(service.id)} />
@@ -563,7 +577,7 @@ export default function BookingModal({
                               <span className="font-medium">£{service.price?.toFixed(2) || '0.00'}</span>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {service.duration} min
+                              {formatDuration(service.duration)}
                             </div>
                           </div>
                           <Button 
@@ -585,7 +599,7 @@ export default function BookingModal({
                       </div>
                       
                       <div className="text-sm text-muted-foreground">
-                        Total duration: {totalDuration} minutes
+                        Total duration: {formatDuration(totalDuration)}
                       </div>
                     </div>
                   )}
