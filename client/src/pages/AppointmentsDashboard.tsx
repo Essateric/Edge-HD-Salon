@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parse, isValid, addDays } from 'date-fns';
-import { Search, Calendar, CheckCircle, XCircle, RefreshCw, MoreHorizontal } from 'lucide-react';
+import { Search, Calendar, CheckCircle, XCircle, RefreshCw, MoreHorizontal, Edit } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,11 +12,14 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Appointment, Stylist, Service } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
+import BookingModal from '@/components/BookingModal';
 
 export default function AppointmentsDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -120,6 +123,14 @@ export default function AppointmentsDashboard() {
     setSelectedDate(new Date(appointment.date));
     setSelectedTime(appointment.startTime);
     setIsRescheduleModalOpen(true);
+  };
+  
+  // Handle editing an appointment with full details
+  const handleEditAppointment = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setSelectedDate(new Date(appointment.date));
+    setSelectedTime(appointment.startTime);
+    setIsBookingModalOpen(true);
   };
 
   // Handle confirming an appointment
@@ -282,6 +293,16 @@ export default function AppointmentsDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleEditAppointment(appointment)}
+                      title="Edit"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleConfirm(appointment)}
                       title="Confirm"
                     >
@@ -381,6 +402,18 @@ export default function AppointmentsDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* BookingModal for full editing */}
+      <BookingModal 
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        stylists={stylists}
+        services={services}
+        selectedDate={selectedDate || new Date()}
+        selectedTimeSlot={selectedTime}
+        selectedStylist={editingAppointment ? stylists.find(s => s.id === editingAppointment.stylistId) || null : null}
+        editingAppointment={editingAppointment}
+      />
     </div>
   );
 }

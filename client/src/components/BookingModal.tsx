@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest } from '@/lib/queryClient';
-import { Stylist, Service, ServiceCategory } from '@/lib/types';
+import { Stylist, Service, ServiceCategory, Appointment } from '@/lib/types';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ interface BookingModalProps {
   selectedDate: Date;
   selectedTimeSlot: string | null;
   selectedStylist: Stylist | null;
+  editingAppointment?: Appointment | null;
 }
 
 interface SelectedServiceItem {
@@ -39,15 +40,30 @@ export default function BookingModal({
   services,
   selectedDate,
   selectedTimeSlot,
-  selectedStylist
+  selectedStylist,
+  editingAppointment
 }: BookingModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [customer, setCustomer] = useState('');
+  const [customer, setCustomer] = useState(editingAppointment?.customerName || '');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedServices, setSelectedServices] = useState<SelectedServiceItem[]>([]);
-  const [notes, setNotes] = useState('');
+  const [selectedServices, setSelectedServices] = useState<SelectedServiceItem[]>(() => {
+    // Initialize with editing appointment service if available
+    if (editingAppointment && services) {
+      const service = services.find(s => s.id === editingAppointment.serviceId);
+      if (service) {
+        return [{
+          id: service.id,
+          name: service.name,
+          price: 0, // This will be fixed with proper price in future
+          duration: service.defaultDuration
+        }];
+      }
+    }
+    return [];
+  });
+  const [notes, setNotes] = useState(editingAppointment?.notes || '');
   const [activeTab, setActiveTab] = useState('customer');
   const [activeStylist, setActiveStylist] = useState<Stylist | null>(selectedStylist);
   
@@ -74,6 +90,7 @@ export default function BookingModal({
     return acc;
   }, {});
   
+  // Create appointment mutation
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointment: any) => {
       // Calculate end time based on start time and duration
@@ -101,6 +118,38 @@ export default function BookingModal({
     }
   });
   
+  // Update appointment mutation
+  const updateAppointmentMutation = useMutation({
+    mutationFn: async (appointment: any) => {
+      if (!editingAppointment?.id) {
+        throw new Error("No appointment ID for update");
+      }
+      
+      // Calculate end time based on start time and duration
+      const startTime = appointment.startTime;
+      const duration = appointment.duration;
+      
+      // Parse start time (HH:MM format)
+      const [hours, minutes] = startTime.split(':').map(Number);
+      
+      // Create date objects for start and end times
+      const startDate = new Date();
+      startDate.setHours(hours, minutes, 0, 0);
+      
+      const endDate = new Date(startDate.getTime() + duration * 60000);
+      const endTimeStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+      
+      // Add end time to the appointment data
+      const appointmentWithEndTime = {
+        ...appointment,
+        endTime: endTimeStr
+      };
+      
+      const res = await apiRequest(`/api/appointments/${editingAppointment.id}`, 'PUT', appointmentWithEndTime);
+      return await res.json();
+    }
+  });
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -114,51 +163,90 @@ export default function BookingModal({
       return;
     }
     
-    // Create multiple appointments - one for each service
-    let currentStartTime = selectedTimeSlot || '10:00';
-    let currentDateTime = new Date(`${formattedDate}T${currentStartTime}`);
-    
-    // Create a promise array to track all appointment creations
-    const appointmentPromises = selectedServices.map(async (service, index) => {
-      // For each service after the first one, the start time is the end time of the previous service
-      if (index > 0) {
-        currentDateTime = new Date(currentDateTime.getTime() + (selectedServices[index - 1].duration * 60000));
-        currentStartTime = currentDateTime.toTimeString().substring(0, 5);
-      }
+    // If editing an existing appointment
+    if (editingAppointment) {
+      // Only support editing the first service for now
+      const service = selectedServices[0];
       
+      // Get the appointment data
       const appointment = {
         customerName: customer || 'Guest',
         serviceId: service.id,
-        serviceName: service.name, // Include service name for display
-        stylistId: selectedStylist?.id || stylists[0]?.id || 1,
+        serviceName: service.name,
+        stylistId: selectedStylist?.id || editingAppointment.stylistId,
         date: formattedDate,
-        startTime: currentStartTime,
+        startTime: selectedTimeSlot || editingAppointment.startTime,
         duration: service.duration,
         notes: notes
       };
       
-      return createAppointmentMutation.mutateAsync(appointment);
-    });
-    
-    // Process all appointment creations
-    Promise.all(appointmentPromises)
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-        toast({
-          title: "Appointments created",
-          description: `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} scheduled successfully.`,
-        });
-        resetForm();
-        closeModal();
-      })
-      .catch((error) => {
-        toast({
-          title: "Error",
-          description: "Failed to create appointments. Please try again.",
-          variant: "destructive",
-        });
-        console.error(error);
+      // Update the appointment
+      updateAppointmentMutation.mutate(appointment, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+          toast({
+            title: "Appointment updated",
+            description: "The appointment has been successfully updated.",
+          });
+          resetForm();
+          closeModal();
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: "Failed to update appointment. Please try again.",
+            variant: "destructive",
+          });
+          console.error(error);
+        }
       });
+    } else {
+      // Create multiple appointments - one for each service
+      let currentStartTime = selectedTimeSlot || '10:00';
+      let currentDateTime = new Date(`${formattedDate}T${currentStartTime}`);
+      
+      // Create a promise array to track all appointment creations
+      const appointmentPromises = selectedServices.map(async (service, index) => {
+        // For each service after the first one, the start time is the end time of the previous service
+        if (index > 0) {
+          currentDateTime = new Date(currentDateTime.getTime() + (selectedServices[index - 1].duration * 60000));
+          currentStartTime = currentDateTime.toTimeString().substring(0, 5);
+        }
+        
+        const appointment = {
+          customerName: customer || 'Guest',
+          serviceId: service.id,
+          serviceName: service.name, // Include service name for display
+          stylistId: selectedStylist?.id || stylists[0]?.id || 1,
+          date: formattedDate,
+          startTime: currentStartTime,
+          duration: service.duration,
+          notes: notes
+        };
+        
+        return createAppointmentMutation.mutateAsync(appointment);
+      });
+      
+      // Process all appointment creations
+      Promise.all(appointmentPromises)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+          toast({
+            title: "Appointments created",
+            description: `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} scheduled successfully.`,
+          });
+          resetForm();
+          closeModal();
+        })
+        .catch((error) => {
+          toast({
+            title: "Error",
+            description: "Failed to create appointments. Please try again.",
+            variant: "destructive",
+          });
+          console.error(error);
+        });
+    }
   };
   
   const resetForm = () => {
@@ -222,7 +310,10 @@ export default function BookingModal({
             <DialogTitle className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="font-bold">EDGE</span>
-                <span>{formattedTimeDisplay} {format(selectedDate, 'dd MMMM yyyy')}</span>
+                <span>
+                  {editingAppointment ? 'Edit Appointment: ' : ''}
+                  {formattedTimeDisplay} {format(selectedDate, 'dd MMMM yyyy')}
+                </span>
               </div>
               <Button variant="ghost" size="icon" onClick={handleClose}>
                 <X className="h-4 w-4" />
@@ -435,9 +526,9 @@ export default function BookingModal({
                 </Button>
                 <Button 
                   onClick={handleSubmit}
-                  disabled={selectedServices.length === 0 || createAppointmentMutation.isPending}
+                  disabled={selectedServices.length === 0 || createAppointmentMutation.isPending || updateAppointmentMutation.isPending}
                 >
-                  Book Appointment
+                  {editingAppointment ? 'Update Appointment' : 'Book Appointment'}
                 </Button>
               </div>
             </TabsContent>

@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Clock, User, Settings } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
 import ServiceManager from "@/components/ServiceManager";
 import ServiceDurationManager from "@/components/ServiceDurationManager";
 
@@ -110,7 +109,6 @@ export default function ServicesPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <AppHeader user={{ initials: "A", name: "Admin" }} />
         <main className="container mx-auto p-4">
           <div className="flex items-center justify-center p-12">
             <p>Loading...</p>
@@ -122,7 +120,6 @@ export default function ServicesPage() {
   
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader user={{ initials: "A", name: "Admin" }} />
       
       <main className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
