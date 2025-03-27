@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Draggable } from 'react-beautiful-dnd';
 import { Appointment } from '@/lib/types';
 
@@ -104,28 +103,24 @@ export default function AppointmentComponent({
       index={appointment.id}
     >
       {(provided, snapshot) => (
-        <motion.div
+        <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`appointment absolute top-0 left-0 right-0 mx-1 ${
-            appointment.isConsultation 
-              ? 'bg-gradient-to-br from-[#B08D57] via-[#8B734A] to-[#6A563B]' 
-              : 'bg-gradient-to-br from-[#D4B78E] via-[#B08D57] to-[#8B734A]'
-          } text-white rounded shadow-md p-2 cursor-move`}
+          className={`appointment absolute top-0 left-0 right-0 mx-1 
+            ${
+              appointment.isConsultation 
+                ? 'bg-gradient-to-br from-[#B08D57] via-[#8B734A] to-[#6A563B]' 
+                : 'bg-gradient-to-br from-[#D4B78E] via-[#B08D57] to-[#8B734A]'
+            } 
+            text-white rounded shadow-md p-2 cursor-move transition-all
+            ${snapshot.isDragging ? 'opacity-90 shadow-xl scale-105 z-50' : 'opacity-85 hover:opacity-100 hover:shadow-lg'}
+            ${isHovered && !snapshot.isDragging ? 'transform -translate-y-0.5' : ''}
+          `}
           style={{ 
             height: `${getHeight()}px`,
-            ...provided.draggableProps.style
-          }}
-          initial={{ opacity: 0.8 }}
-          animate={{ 
-            opacity: snapshot.isDragging ? 0.9 : (isHovered ? 1 : 0.9),
-            scale: snapshot.isDragging ? 1.03 : (isHovered ? 1.01 : 1),
-            y: isHovered && !snapshot.isDragging ? -2 : 0,
-          }}
-          transition={{ 
-            duration: snapshot.isDragging ? 0.01 : 0.2,
-            ease: snapshot.isDragging ? "linear" : "easeInOut"
+            ...provided.draggableProps.style,
+            boxShadow: snapshot.isDragging ? '0 8px 16px rgba(0,0,0,0.2)' : ''
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -140,17 +135,23 @@ export default function AppointmentComponent({
           <div className="text-sm font-medium">
             {appointment.customerName || 'Unspecified'}
           </div>
-          <div className="text-xs mt-1 line-clamp-2 font-light">
-            {appointment.serviceName}
+          <div className="text-xs mt-1 font-medium bg-white/10 px-1 py-0.5 rounded">
+            {appointment.serviceName || 'No service specified'}
           </div>
-          {isHovered && (
+          
+          {/* Always show key details */}
+          <div className="text-xs mt-1 flex justify-between items-center">
+            <div>{appointment.duration || '0'} mins</div>
+            <div>{appointment.cost ? `£${appointment.cost}` : '£0'}</div>
+          </div>
+          
+          {/* Show additional details on hover */}
+          {isHovered && appointment.notes && (
             <div className="text-xs mt-1 pt-1 border-t border-white/20">
-              {appointment.notes && <div className="truncate">{appointment.notes}</div>}
-              <div>Duration: {appointment.duration || 'N/A'} {appointment.duration ? 'mins' : ''}</div>
-              <div>Cost: {appointment.cost ? `£${appointment.cost}` : 'N/A'}</div>
+              <div className="truncate">{appointment.notes}</div>
             </div>
           )}
-        </motion.div>
+        </div>
       )}
     </Draggable>
   );

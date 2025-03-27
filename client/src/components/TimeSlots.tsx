@@ -126,12 +126,7 @@ export default function TimeSlots({
                         </div>
                       ) : (
                         <>
-                          {/* 15 minute indicator lines */}
-                          <div className="absolute inset-0 pointer-events-none">
-                            <div className="h-[30px] w-full border-b border-dashed border-muted-foreground/10"></div>
-                            <div className="h-[30px] w-full border-b border-dashed border-muted-foreground/10"></div>
-                            <div className="h-[30px] w-full border-b border-dashed border-muted-foreground/10"></div>
-                          </div>
+                          {/* Time indicators are now handled by CSS */}
                           
                           {timeSlotAppointments.length > 0 ? (
                             <div className="relative">

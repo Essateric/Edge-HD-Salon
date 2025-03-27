@@ -200,8 +200,17 @@ export default function CalendarView() {
     });
   };
 
+  // Handle drag start event to apply initial styles
+  const handleDragStart = () => {
+    // Add a class to the body to style during dragging
+    document.body.classList.add('is-dragging');
+  };
+  
   // Handle drag end event
   const handleDragEnd = (result: DropResult) => {
+    // Remove dragging class
+    document.body.classList.remove('is-dragging');
+    
     if (!result.destination) return;
     
     const { draggableId, destination } = result;
@@ -229,6 +238,12 @@ export default function CalendarView() {
           return;
         }
         
+        // Show loading toast
+        toast({
+          title: "Moving appointment...",
+          description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
+        });
+        
         // Update the appointment with new stylist if no overlap
         updateAppointmentMutation.mutate({
           id: appointment.id,
@@ -250,7 +265,7 @@ export default function CalendarView() {
         onNewBooking={() => handleNewBooking()}
       />
       
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex flex-grow overflow-hidden h-[calc(100vh-130px)]">
           {/* Main calendar grid */}
           <div className="flex-1 overflow-x-auto overflow-y-auto">
