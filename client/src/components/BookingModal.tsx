@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { apiRequest } from '@/lib/queryClient';
 import { Stylist, Service, ServiceCategory } from '@/lib/types';
 
@@ -22,6 +23,13 @@ interface BookingModalProps {
   selectedDate: Date;
   selectedTimeSlot: string | null;
   selectedStylist: Stylist | null;
+}
+
+interface SelectedServiceItem {
+  id: number;
+  name: string;
+  price?: number;
+  duration: number;
 }
 
 export default function BookingModal({
@@ -37,13 +45,13 @@ export default function BookingModal({
   const queryClient = useQueryClient();
   
   const [customer, setCustomer] = useState('');
-  const [service, setService] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [serviceSelectionOpen, setServiceSelectionOpen] = useState(false);
-  const [date, setDate] = useState(format(selectedDate, 'yyyy-MM-dd'));
-  const [time, setTime] = useState(selectedTimeSlot || '10:00');
-  const [stylist, setStylist] = useState(selectedStylist?.id.toString() || '');
-  const [duration, setDuration] = useState('30');
+  const [selectedServices, setSelectedServices] = useState<SelectedServiceItem[]>([]);
+  const [date] = useState(format(selectedDate, 'yyyy-MM-dd'));
+  const [time] = useState(selectedTimeSlot || '10:00');
+  const [stylist] = useState(selectedStylist?.id.toString() || '');
+  const [totalDuration, setTotalDuration] = useState(0);
   const [notes, setNotes] = useState('');
   
   // Fetch service categories
