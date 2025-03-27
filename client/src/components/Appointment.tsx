@@ -30,7 +30,7 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
     <motion.div
       className={`appointment absolute top-0 left-0 right-0 mx-1 ${
         appointment.isConsultation ? 'bg-amber-500' : 'bg-green-500'
-      } text-white`}
+      } text-white rounded shadow-sm p-1 z-10`}
       style={{ 
         height: `${getHeight()}px` 
       }}

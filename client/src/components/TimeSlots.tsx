@@ -59,7 +59,7 @@ export default function TimeSlots({
             return (
               <div 
                 key={`${slot.time}-${stylist.id}`} 
-                className="stylist-column flex-shrink-0 border-r border-gray-200 relative"
+                className={`stylist-column flex-shrink-0 border-r border-gray-200 relative w-32 h-12 ${!isOff ? 'cursor-pointer hover:bg-green-50' : ''}`}
                 onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
               >
                 {isOff ? (
@@ -72,7 +72,13 @@ export default function TimeSlots({
                         appointment={appointment} 
                       />
                     ))
-                  ) : null
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <div className="text-xs text-gray-300 border border-dashed border-gray-200 rounded-sm w-3/4 h-3/4 flex items-center justify-center">
+                        <span>+</span>
+                      </div>
+                    </div>
+                  )
                 )}
               </div>
             );

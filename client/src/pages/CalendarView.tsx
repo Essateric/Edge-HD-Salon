@@ -69,16 +69,13 @@ export default function CalendarView() {
     
     if (time) {
       setSelectedTimeSlot(time);
-      setShowServices(true); // Show services panel when a time slot is clicked
     }
     
     setIsBookingModalOpen(true);
   };
   
-  // Hide services panel when booking modal is closed
   const handleCloseBookingModal = () => {
     setIsBookingModalOpen(false);
-    setShowServices(false);
   };
   
   return (
@@ -93,13 +90,6 @@ export default function CalendarView() {
       />
       
       <div className="flex h-[calc(100vh-170px)] overflow-hidden">
-        {/* Services sidebar - only show when a time slot is clicked */}
-        {showServices && (
-          <ServicesPanel 
-            services={services}
-          />
-        )}
-        
         {/* Main calendar grid */}
         <div className="flex-1 overflow-x-auto">
           <div className="min-w-max">
