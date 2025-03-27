@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest } from '@/lib/queryClient';
-import { Stylist, Service, ServiceCategory, Appointment } from '@/lib/types';
+import { Stylist, Service, ServiceCategory, Appointment, AppointmentService } from '@/lib/types';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -51,14 +51,26 @@ export default function BookingModal({
   const [selectedServices, setSelectedServices] = useState<SelectedServiceItem[]>(() => {
     // Initialize with editing appointment service if available
     if (editingAppointment && services) {
-      const service = services.find(s => s.id === editingAppointment.serviceId);
-      if (service) {
-        return [{
-          id: service.id,
-          name: service.name,
-          price: 0, // This will be fixed with proper price in future
-          duration: service.defaultDuration
-        }];
+      // If we're editing an existing appointment
+      if (editingAppointment.services && editingAppointment.services.length > 0) {
+        // If the appointment has specific services listed, use those
+        return editingAppointment.services.map((svc: AppointmentService) => ({
+          id: svc.id,
+          name: svc.name,
+          price: svc.price || 0,
+          duration: svc.duration || 30
+        }));
+      } else if (editingAppointment.serviceId) {
+        // Fallback to using the primary serviceId if no services array
+        const service = services.find(s => s.id === editingAppointment.serviceId);
+        if (service) {
+          return [{
+            id: service.id,
+            name: service.name,
+            price: service.price || 0,
+            duration: service.defaultDuration
+          }];
+        }
       }
     }
     return [];

@@ -24,6 +24,13 @@ export type StylistServiceDuration = {
   duration: number; // in minutes (can differ from default)
 };
 
+export type AppointmentService = {
+  id: number;
+  name: string;
+  price?: number;
+  duration: number;
+};
+
 export type Appointment = {
   id: number;
   customerId: number | null;
@@ -39,6 +46,7 @@ export type Appointment = {
   status?: 'pending' | 'confirmed' | 'canceled' | 'completed';
   duration?: number; // in minutes
   cost?: number;
+  services?: AppointmentService[]; // Multiple services for this appointment
 };
 
 export type Customer = {

@@ -62,16 +62,8 @@ export default function TimeSlots({
   
   // Calculate column width based on number of stylists
   const getColumnWidth = () => {
-    // Base width is 150px for 1-4 stylists
-    // For more stylists, we'll reduce the width proportionally
-    const baseWidth = 150;
-    const minWidth = 120; // Minimum width for narrow screens
-    
-    // On smaller screens, we'll use a smaller size
-    const isMobile = window.innerWidth < 768;
-    const defaultWidth = isMobile ? minWidth : baseWidth;
-    
-    return `${defaultWidth}px`;
+    // Equal width for all columns
+    return 'calc((100% - 20px) / ' + stylists.length + ')';
   };
   
   // Day view - the default
@@ -117,7 +109,7 @@ export default function TimeSlots({
                       className={`stylist-column relative h-[120px] border-r border-b border-border ${
                         !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
                       } ${snapshot.isDraggingOver ? 'bg-primary/20' : ''}`}
-                      style={{ width: getColumnWidth(), minWidth: '150px' }}
+                      style={{ width: getColumnWidth() }}
                       onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
                     >
                       {isOff ? (

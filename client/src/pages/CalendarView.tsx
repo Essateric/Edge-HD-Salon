@@ -262,11 +262,15 @@ export default function CalendarView() {
           title: "Moving appointment...",
           description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
         });
+        // Extract the time from droppableId (format: "stylist-{id}-slot-{time}")
+        const timeMatch = destination.droppableId.match(/slot-(.+)$/);
+        const newTime = timeMatch ? timeMatch[1] : null;
         
-        // Update the appointment with new stylist if no overlap
+        // Update the appointment with new stylist and time if no overlap
         updateAppointmentMutation.mutate({
           id: appointment.id,
-          stylistId
+          stylistId,
+          startTime: newTime || appointment.startTime // Use the new time if available, otherwise keep original
         });
       }
     }
