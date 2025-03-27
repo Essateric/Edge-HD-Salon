@@ -41,8 +41,23 @@ export default function CalendarView() {
   const formattedDate = getFormattedDate();
   
   // Fetch stylists
-  const { data: stylists = [] } = useQuery<Stylist[]>({
+  const { data: fetchedStylists = [] } = useQuery<Stylist[]>({
     queryKey: ['/api/stylists']
+  });
+  
+  // Ensure stylists are in the correct order matching the screenshot
+  const stylists = [...fetchedStylists].sort((a, b) => {
+    // Define the order we want based on the screenshot
+    const order = ["Martin", "Darren", "Annaliese", "Daisy", "Ryan", "Jasmine"];
+    const aIndex = order.indexOf(a.name);
+    const bIndex = order.indexOf(b.name);
+    
+    // If a name is not in the order array, put it at the end
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    
+    // Otherwise, sort by the index in the order array
+    return aIndex - bIndex;
   });
   
   // Fetch services
@@ -213,7 +228,11 @@ export default function CalendarView() {
     
     if (!result.destination) return;
     
-    const { draggableId, destination } = result;
+    const { draggableId, destination, source } = result;
+    
+    // If the source and destination are the same, no need to do anything
+    if (source.droppableId === destination.droppableId) return;
+    
     const appointmentId = parseInt(draggableId.replace('appointment-', ''));
     const appointment = appointments.find(appt => appt.id === appointmentId);
     

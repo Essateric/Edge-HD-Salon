@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Trash2, ArrowLeft, Check } from 'lucide-react';
+import { X, Trash2, ArrowLeft, Check, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -306,30 +306,42 @@ export default function BookingModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md md:max-w-2xl">
-          <DialogHeader className="border-b pb-4">
+        <DialogContent className="sm:max-w-md md:max-w-2xl bg-black text-white border-amber-800/30">
+          <DialogHeader className="border-b border-amber-800/30 pb-4">
             <DialogTitle className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="font-bold">EDGE</span>
                 <span>
-                  {editingAppointment ? 'Edit Appointment: ' : ''}
                   {formattedTimeDisplay} {format(selectedDate, 'dd MMMM yyyy')}
                 </span>
               </div>
-              <Button variant="ghost" size="icon" onClick={handleClose}>
+              <Button variant="ghost" size="icon" onClick={handleClose} className="text-white hover:bg-white/10">
                 <X className="h-4 w-4" />
               </Button>
             </DialogTitle>
           </DialogHeader>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="customer">Customer</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="services" className="relative">
+            <TabsList className="grid w-full grid-cols-3 bg-amber-950/20">
+              <TabsTrigger 
+                value="customer" 
+                className="data-[state=active]:bg-amber-800 data-[state=active]:text-white"
+              >
+                Customer
+              </TabsTrigger>
+              <TabsTrigger 
+                value="details" 
+                className="data-[state=active]:bg-amber-800 data-[state=active]:text-white"
+              >
+                Details
+              </TabsTrigger>
+              <TabsTrigger 
+                value="services" 
+                className="relative data-[state=active]:bg-amber-800 data-[state=active]:text-white"
+              >
                 Services
                 {selectedServices.length > 0 && (
-                  <span className="ml-1 rounded-full bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                  <span className="ml-1 rounded-full bg-white text-black text-xs px-2 py-0.5">
                     {selectedServices.length}
                   </span>
                 )}
@@ -458,34 +470,25 @@ export default function BookingModal({
             </TabsContent>
             
             <TabsContent value="services">
-              <div className="grid md:grid-cols-2 gap-4 py-4">
+              <div className="grid md:grid-cols-2 gap-6 py-4">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-medium">Choose Services</h3>
-                    {selectedCategoryId && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setSelectedCategoryId(null)}
-                        className="h-8 px-2"
-                      >
-                        <ArrowLeft className="h-4 w-4 mr-1" />
-                        Categories
-                      </Button>
-                    )}
-                  </div>
+                  <h3 className="text-lg font-semibold">Choose Services</h3>
                   
                   {!selectedCategoryId ? (
                     // Show categories
                     <div className="space-y-2">
-                      <Input 
-                        placeholder="Search categories..."
-                        className="mb-2"
-                      />
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Search categories..."
+                          className="pl-8 bg-black/5 border-0"
+                        />
+                      </div>
+                      
                       {categories.map(category => (
                         <div 
                           key={category.id}
-                          className="p-3 border rounded-md cursor-pointer hover:bg-accent"
+                          className="p-3 border border-amber-800/30 rounded-md cursor-pointer hover:bg-amber-50 hover:bg-opacity-10 bg-black/5"
                           onClick={() => handleCategorySelect(category.id)}
                         >
                           <div className="font-medium">{category.name}</div>
@@ -495,14 +498,23 @@ export default function BookingModal({
                   ) : (
                     // Show services in selected category
                     <div className="space-y-2">
-                      <Input 
-                        placeholder="Search services..."
-                        className="mb-2"
-                      />
+                      <div className="flex items-center gap-2 mb-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setSelectedCategoryId(null)}
+                          className="h-8 px-2 border-amber-800/30"
+                        >
+                          <ArrowLeft className="h-4 w-4 mr-1" />
+                          Back
+                        </Button>
+                        <h4>{categories.find(c => c.id === selectedCategoryId)?.name}</h4>
+                      </div>
+                      
                       {servicesByCategory[selectedCategoryId]?.map(service => (
                         <div 
                           key={service.id}
-                          className={`p-3 border rounded-md flex items-center justify-between cursor-pointer ${isServiceSelected(service.id) ? 'bg-primary/10 border-primary' : 'hover:bg-accent'}`}
+                          className={`p-3 border border-amber-800/30 rounded-md flex items-center justify-between cursor-pointer ${isServiceSelected(service.id) ? 'bg-amber-800/10 border-amber-800/50' : 'hover:bg-amber-50 hover:bg-opacity-10 bg-black/5'}`}
                           onClick={() => toggleServiceSelection(service)}
                         >
                           <div className="flex-1">
@@ -519,32 +531,37 @@ export default function BookingModal({
                 </div>
                 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Selected Services</h3>
+                  <h3 className="text-lg font-semibold">Selected Services</h3>
                   
                   {selectedServices.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No services selected
+                    <div className="text-center py-8 text-muted-foreground flex flex-col items-center justify-center h-[200px]">
+                      <div className="text-base">No services selected</div>
+                      <div className="text-sm text-muted-foreground mt-2">
+                        Select services from the left panel
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {selectedServices.map(service => (
-                        <div key={service.id} className="flex justify-between items-center p-3 border rounded-md">
+                        <div key={service.id} className="flex justify-between items-center p-3 border border-amber-800/30 rounded-md bg-black/5">
                           <div>
                             <div className="font-medium">{service.name}</div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>with {activeStylist?.name || selectedStylist?.name || 'Stylist'}</span>
+                              <span className="font-medium">£{service.price?.toFixed(2) || '0.00'}</span>
+                            </div>
                             <div className="text-sm text-muted-foreground">
                               {service.duration} min
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="font-medium">£{service.price?.toFixed(2) || '0.00'}</div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => removeService(service.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => removeService(service.id)}
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       ))}
                       
@@ -563,13 +580,18 @@ export default function BookingModal({
                 </div>
               </div>
               
-              <div className="flex justify-between mt-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setActiveTab('details')}>
+              <div className="flex justify-between mt-2 pt-4 border-t border-amber-800/30">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('details')}
+                  className="border-amber-800/30 text-white hover:bg-white/10"
+                >
                   Back
                 </Button>
                 <Button 
                   onClick={handleSubmit}
                   disabled={selectedServices.length === 0 || createAppointmentMutation.isPending || updateAppointmentMutation.isPending}
+                  className="bg-amber-600 hover:bg-amber-700 text-black font-medium"
                 >
                   {editingAppointment ? 'Update Appointment' : 'Book Appointment'}
                 </Button>

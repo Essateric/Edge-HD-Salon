@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 import { Appointment } from '@/lib/types';
+import { ChevronUp, ChevronDown, Plus, Minus } from 'lucide-react';
 
 interface AppointmentProps {
   appointment: Appointment;
@@ -12,6 +13,8 @@ export default function AppointmentComponent({
   onEditAppointment 
 }: AppointmentProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [sizeAdjustment, setSizeAdjustment] = useState(0); // in 15-minute increments
   
   // Calculate the height based on duration
   // Assuming each hour is 120px in height (30px per 15 min)
@@ -69,8 +72,11 @@ export default function AppointmentComponent({
       durationInMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
     }
     
+    // Apply size adjustment (each increment is 15 minutes)
+    const adjustedDuration = durationInMinutes + (sizeAdjustment * 15);
+    
     // Convert to pixels (30px per 15 minutes)
-    return Math.max(durationInMinutes * 30 / 15, 60); // Minimum height of 60px
+    return Math.max(adjustedDuration * 30 / 15, 60); // Minimum height of 60px
   };
   
   // Get appointment status label
@@ -95,6 +101,19 @@ export default function AppointmentComponent({
       e.stopPropagation();
       onEditAppointment(appointment);
     }
+  };
+
+  // Handle size adjustment
+  const adjustSize = (e: React.MouseEvent, increment: number) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setSizeAdjustment(prev => Math.max(prev + increment, -2)); // Prevent making too small
+  };
+  
+  // Toggle expanded view
+  const toggleExpanded = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
   };
   
   return (
@@ -135,7 +154,9 @@ export default function AppointmentComponent({
           <div className="text-sm font-medium">
             {appointment.customerName || 'Unspecified'}
           </div>
-          <div className="text-xs mt-1 font-semibold bg-white/20 px-2 py-1 rounded-md shadow-inner border border-white/20">
+          
+          {/* Service name with prominent display */}
+          <div className="text-xs mt-1 font-semibold bg-white/30 px-2 py-1 rounded-md shadow-inner border border-white/20">
             {appointment.serviceName || 'No service specified'}
           </div>
           
@@ -145,8 +166,53 @@ export default function AppointmentComponent({
             <div>{appointment.cost ? `£${appointment.cost}` : '£0'}</div>
           </div>
           
-          {/* Show additional details on hover */}
-          {isHovered && appointment.notes && (
+          {/* Expand/collapse button */}
+          <div 
+            className="absolute bottom-1 right-1 flex space-x-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="p-0.5 bg-white/20 rounded hover:bg-white/30 transition-colors"
+              onClick={toggleExpanded}
+            >
+              {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </button>
+          </div>
+          
+          {/* Size adjustment controls when expanded */}
+          {isExpanded && (
+            <div className="absolute top-1 right-1 flex flex-col space-y-1" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="p-0.5 bg-white/20 rounded hover:bg-white/30 transition-colors"
+                onClick={(e) => adjustSize(e, 1)}
+              >
+                <Plus size={12} />
+              </button>
+              <button
+                className="p-0.5 bg-white/20 rounded hover:bg-white/30 transition-colors"
+                onClick={(e) => adjustSize(e, -1)}
+              >
+                <Minus size={12} />
+              </button>
+            </div>
+          )}
+          
+          {/* Show additional details when expanded */}
+          {isExpanded && (
+            <div className="text-xs mt-2 pt-1 border-t border-white/20">
+              <div className="font-semibold mb-1">Service Details:</div>
+              <div className="ml-1">{appointment.serviceName}</div>
+              {appointment.notes && (
+                <>
+                  <div className="font-semibold mt-1 mb-1">Notes:</div>
+                  <div className="ml-1">{appointment.notes}</div>
+                </>
+              )}
+            </div>
+          )}
+          
+          {/* Show notes on hover when not expanded */}
+          {isHovered && !isExpanded && appointment.notes && (
             <div className="text-xs mt-1 pt-1 border-t border-white/20">
               <div className="truncate">{appointment.notes}</div>
             </div>
