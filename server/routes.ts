@@ -5,6 +5,7 @@ import { z } from "zod";
 import { format, add, parse } from "date-fns";
 import * as bcrypt from 'bcryptjs';
 import session from 'express-session';
+import { WebSocketServer, WebSocket } from 'ws';
 import { 
   insertStylistSchema, 
   insertServiceCategorySchema,
@@ -607,6 +608,180 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(204).end();
   });
 
+  // Stylist Schedule routes
+  app.get('/api/stylist-schedules', async (_req: Request, res: Response) => {
+    const schedules = await storage.getAllStylistSchedules();
+    res.json(schedules);
+  });
+  
+  app.get('/api/stylist-schedules/:id', async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const schedule = await storage.getStylistSchedule(id);
+    
+    if (!schedule) {
+      return res.status(404).json({ message: 'Stylist schedule not found' });
+    }
+    
+    res.json(schedule);
+  });
+  
+  app.get('/api/stylist-schedules/stylist/:stylistId', async (req: Request, res: Response) => {
+    const stylistId = parseInt(req.params.stylistId);
+    const schedules = await storage.getStylistSchedulesByStylist(stylistId);
+    res.json(schedules);
+  });
+  
+  app.get('/api/stylist-schedules/stylist/:stylistId/day/:dayOfWeek', async (req: Request, res: Response) => {
+    const stylistId = parseInt(req.params.stylistId);
+    const dayOfWeek = parseInt(req.params.dayOfWeek);
+    
+    const schedule = await storage.getStylistScheduleByDay(stylistId, dayOfWeek);
+    
+    if (!schedule) {
+      return res.status(404).json({ message: 'Stylist schedule not found for this day' });
+    }
+    
+    res.json(schedule);
+  });
+  
+  app.post('/api/stylist-schedules', authenticated, hasPermission('manage_stylists'), async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertStylistScheduleSchema.parse(req.body);
+      const schedule = await storage.createStylistSchedule(validatedData);
+      res.status(201).json(schedule);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid schedule data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create stylist schedule' });
+    }
+  });
+  
+  app.put('/api/stylist-schedules/:id', authenticated, hasPermission('manage_stylists'), async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const scheduleData = req.body;
+      
+      const updatedSchedule = await storage.updateStylistSchedule(id, scheduleData);
+      
+      if (!updatedSchedule) {
+        return res.status(404).json({ message: 'Stylist schedule not found' });
+      }
+      
+      res.json(updatedSchedule);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid schedule data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to update stylist schedule' });
+    }
+  });
+  
+  app.delete('/api/stylist-schedules/:id', authenticated, hasPermission('manage_stylists'), async (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteStylistSchedule(id);
+    
+    if (!success) {
+      return res.status(404).json({ message: 'Stylist schedule not found' });
+    }
+    
+    res.status(204).end();
+  });
+
   const httpServer = createServer(app);
+  
+  // Set up WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // WebSocket event handling
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    // Send a welcome message
+    ws.send(JSON.stringify({
+      type: 'connection',
+      message: 'Connected to Edge Salon WebSocket server'
+    }));
+    
+    // Handle messages from clients
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received message:', data);
+        
+        // Handle different message types
+        switch (data.type) {
+          case 'ping':
+            ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+            break;
+            
+          case 'subscribe':
+            // Could implement subscription to specific events
+            ws.send(JSON.stringify({ 
+              type: 'subscribed', 
+              channel: data.channel,
+              message: `Subscribed to ${data.channel}`
+            }));
+            break;
+            
+          default:
+            console.log('Unknown message type:', data.type);
+        }
+      } catch (error) {
+        console.error('Error processing message:', error);
+      }
+    });
+    
+    // Handle client disconnect
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+    });
+  });
+  
+  // Broadcast message to all connected clients
+  const broadcastToClients = (data: any) => {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(data));
+      }
+    });
+  };
+  
+  // Hook into appointment creation/updates to notify connected clients
+  const originalCreateAppointment = storage.createAppointment;
+  storage.createAppointment = async (...args) => {
+    const result = await originalCreateAppointment.apply(storage, args);
+    broadcastToClients({
+      type: 'appointment_created',
+      appointment: result
+    });
+    return result;
+  };
+  
+  const originalUpdateAppointment = storage.updateAppointment;
+  storage.updateAppointment = async (...args) => {
+    const result = await originalUpdateAppointment.apply(storage, args);
+    if (result) {
+      broadcastToClients({
+        type: 'appointment_updated',
+        appointment: result
+      });
+    }
+    return result;
+  };
+  
+  const originalDeleteAppointment = storage.deleteAppointment;
+  storage.deleteAppointment = async (...args) => {
+    const id = args[0];
+    const result = await originalDeleteAppointment.apply(storage, args);
+    if (result) {
+      broadcastToClients({
+        type: 'appointment_deleted',
+        appointmentId: id
+      });
+    }
+    return result;
+  };
+  
   return httpServer;
 }

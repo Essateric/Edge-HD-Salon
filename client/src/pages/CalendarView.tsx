@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
@@ -9,6 +9,7 @@ import TimeSlots from '@/components/TimeSlots';
 import BottomToolbar from '@/components/BottomToolbar';
 import BookingModal from '@/components/BookingModal';
 import { useToast } from '@/hooks/use-toast';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { Stylist, Appointment, Service, TimeSlot, ViewMode } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 
@@ -65,14 +66,71 @@ export default function CalendarView() {
     queryKey: ['/api/services']
   });
   
+  // Connect to WebSocket for real-time updates
+  const { lastMessage, connected } = useWebSocket();
+  
   // Fetch appointments for the current date
-  const { data: appointments = [] } = useQuery<Appointment[]>({
+  const { data: appointments = [], refetch: refetchAppointments } = useQuery<Appointment[]>({
     queryKey: ['/api/appointments', format(currentDate, 'yyyy-MM-dd')],
     queryFn: async () => {
       const res = await apiRequest(`/api/appointments?date=${format(currentDate, 'yyyy-MM-dd')}`, 'GET');
       return await res.json();
     }
   });
+  
+  // Handle WebSocket messages for real-time updates
+  useEffect(() => {
+    if (lastMessage) {
+      console.log('Received WebSocket message:', lastMessage);
+      
+      // Handle different message types
+      switch (lastMessage.type) {
+        case 'appointment_created':
+        case 'appointment_updated':
+        case 'appointment_deleted':
+          // Refresh appointments data
+          refetchAppointments();
+          
+          // Show appropriate toast message
+          if (lastMessage.type === 'appointment_created') {
+            toast({
+              title: "New appointment created",
+              description: "Calendar has been updated with a new booking.",
+              variant: "default",
+            });
+          } else if (lastMessage.type === 'appointment_updated') {
+            toast({
+              title: "Appointment updated",
+              description: "An appointment has been modified.",
+              variant: "default",
+            });
+          } else if (lastMessage.type === 'appointment_deleted') {
+            toast({
+              title: "Appointment removed",
+              description: "An appointment has been cancelled.",
+              variant: "default",
+            });
+          }
+          break;
+          
+        case 'connection':
+          console.log('Connected to WebSocket server');
+          break;
+          
+        default:
+          console.log('Unhandled WebSocket message type:', lastMessage.type);
+      }
+    }
+  }, [lastMessage, refetchAppointments, toast]);
+  
+  // Show connection status indicator
+  useEffect(() => {
+    if (connected) {
+      console.log('WebSocket connection established');
+    } else {
+      console.log('WebSocket disconnected');
+    }
+  }, [connected]);
   
   // Generate time slots from 9am to 7pm
   const timeSlots: TimeSlot[] = [];
