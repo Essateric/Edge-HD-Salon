@@ -37,12 +37,55 @@ export default function AppointmentComponent({
     const startTime = appointment.startTime;
     const endTime = appointment.endTime;
     
-    // Parse times to hours and minutes
-    const [startHour, startMinute] = startTime.match(/(\d+):(\d+)/)?.slice(1).map(Number) || [0, 0];
-    const [endHour, endMinute] = endTime.match(/(\d+):(\d+)/)?.slice(1).map(Number) || [0, 0];
+    let startHour = 0, startMinute = 0, startPeriod = '';
+    let endHour = 0, endMinute = 0, endPeriod = '';
+    
+    // Parse 12-hour format times (e.g., "1:00 pm")
+    const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
+    const startMatch12 = startTime.match(match12Hr);
+    const endMatch12 = endTime.match(match12Hr);
+    
+    if (startMatch12 && endMatch12) {
+      startHour = parseInt(startMatch12[1]);
+      startMinute = parseInt(startMatch12[2]);
+      startPeriod = startMatch12[3].toLowerCase();
+      
+      endHour = parseInt(endMatch12[1]);
+      endMinute = parseInt(endMatch12[2]);
+      endPeriod = endMatch12[3].toLowerCase();
+      
+      // Convert to 24-hour format
+      if (startPeriod === 'pm' && startHour < 12) startHour += 12;
+      if (startPeriod === 'am' && startHour === 12) startHour = 0;
+      if (endPeriod === 'pm' && endHour < 12) endHour += 12;
+      if (endPeriod === 'am' && endHour === 12) endHour = 0;
+    } else {
+      // Parse 24-hour format times (e.g., "13:00")
+      const match24Hr = /(\d+):(\d+)/;
+      const startMatch24 = startTime.match(match24Hr);
+      const endMatch24 = endTime.match(match24Hr);
+      
+      if (startMatch24 && endMatch24) {
+        startHour = parseInt(startMatch24[1]);
+        startMinute = parseInt(startMatch24[2]);
+        
+        endHour = parseInt(endMatch24[1]);
+        endMinute = parseInt(endMatch24[2]);
+      } else {
+        console.error("Failed to parse appointment time format", startTime, endTime);
+        return 48; // Default minimum height
+      }
+    }
     
     // Calculate duration in minutes
-    const durationInMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
+    let durationInMinutes;
+    
+    // Handle cases where end time is on the next day
+    if (endHour < startHour || (endHour === startHour && endMinute < startMinute)) {
+      durationInMinutes = ((24 + endHour) - startHour) * 60 + (endMinute - startMinute);
+    } else {
+      durationInMinutes = (endHour - startHour) * 60 + (endMinute - startMinute);
+    }
     
     // Convert to pixels (12px per 15 minutes)
     return Math.max(durationInMinutes * 12 / 15, 48); // Minimum height of 48px
@@ -65,7 +108,7 @@ export default function AppointmentComponent({
         appointment.isConsultation 
           ? 'bg-gradient-to-br from-[#B08D57] via-[#8B734A] to-[#6A563B]' 
           : 'bg-gradient-to-br from-[#D4B78E] via-[#B08D57] to-[#8B734A]'
-      } text-white rounded shadow-md p-1 z-10 cursor-move`}
+      } text-white rounded shadow-md p-1 cursor-move`}
       style={{ 
         height: `${getHeight()}px`,
         ...style

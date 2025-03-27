@@ -268,7 +268,7 @@ export default function CalendarView() {
         <div className="flex flex-grow overflow-hidden h-[calc(100vh-130px)]">
           {/* Main calendar grid */}
           <div className="flex-1 overflow-x-auto overflow-y-auto">
-            <div className="min-w-max">
+            <div className="min-w-max h-full">
               {viewMode === 'day' && (
                 <>
                   <StylistHeader stylists={stylists} />

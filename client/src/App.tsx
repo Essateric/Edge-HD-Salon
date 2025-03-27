@@ -63,7 +63,7 @@ function Router() {
 }
 
 function App() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const isAuthRoute = location === '/login' || location === '/register';
 
   // Redirect to calendar view by default
