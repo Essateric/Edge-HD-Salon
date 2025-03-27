@@ -11,6 +11,7 @@ import {
   RolePermission, InsertRolePermission
 } from "@shared/schema";
 import { add, format, parse } from "date-fns";
+import * as bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations
@@ -423,6 +424,31 @@ export class MemStorage implements IStorage {
     createAppt("Carolynn Illingworth", 1, 2, "Blow Dry", "3:00 pm", 30);
     createAppt("Naomi Ayres", 2, 1, "Cut & Blow Dry", "3:00 pm", 60);
     createAppt("Kerry Harris", 3, 4, "Dry Cut", "3:00 pm", 30);
+    
+    // Seed users
+    const adminPassword = bcrypt.hashSync("admin123", 10);
+    const adminUser: InsertUser = {
+      username: "shabnam",
+      email: "essateric@gmail.com",
+      password: adminPassword,
+      firstName: "Shabnam",
+      lastName: "Essa",
+      roleId: 1, // Admin role
+    };
+    this.createUser(adminUser);
+    
+    // Add another user with stylist role
+    const stylistPassword = bcrypt.hashSync("stylist123", 10);
+    const stylistUser: InsertUser = {
+      username: "martin",
+      email: "martin@theedgesalon.com",
+      password: stylistPassword,
+      firstName: "Martin",
+      lastName: "Stylist",
+      roleId: 3, // Stylist role
+      stylistId: 1 // Link to first stylist
+    };
+    this.createUser(stylistUser);
   }
   
   // Helper method for permissions by name
