@@ -256,28 +256,40 @@ export default function BookingModal({
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="stylist">Stylist</Label>
-                  <select
-                    id="stylist"
-                    className="w-full px-3 py-2 border rounded-md"
-                    value={selectedStylist?.id || ""}
-                    onChange={(e) => {
-                      const stylistId = parseInt(e.target.value);
-                      const stylist = stylists.find(s => s.id === stylistId) || null;
-                      setActiveStylist(stylist);
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select a stylist
-                    </option>
-                    {stylists.map((stylist) => (
-                      <option key={stylist.id} value={stylist.id}>
-                        {stylist.name}
+                {/* Only show stylist selector if no stylist is pre-selected */}
+                {!selectedStylist && (
+                  <div className="space-y-2">
+                    <Label htmlFor="stylist">Stylist</Label>
+                    <select
+                      id="stylist"
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={activeStylist?.id || ""}
+                      onChange={(e) => {
+                        const stylistId = parseInt(e.target.value);
+                        const stylist = stylists.find(s => s.id === stylistId) || null;
+                        setActiveStylist(stylist);
+                      }}
+                    >
+                      <option value="" disabled>
+                        Select a stylist
                       </option>
-                    ))}
-                  </select>
-                </div>
+                      {stylists.map((stylist) => (
+                        <option key={stylist.id} value={stylist.id}>
+                          {stylist.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {/* Show selected stylist as text if pre-selected */}
+                {selectedStylist && (
+                  <div className="space-y-2">
+                    <Label>Selected Stylist</Label>
+                    <div className="px-3 py-2 border rounded-md bg-muted">
+                      {selectedStylist.name}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex justify-end">
                   <Button onClick={() => setActiveTab('details')}>
