@@ -141,7 +141,29 @@ export default function CalendarView() {
   
   // Handle appointment edit
   const handleEditAppointment = (appointment: Appointment) => {
-    setEditingAppointment(appointment);
+    console.log("Editing appointment:", appointment);
+    
+    // Fetch the complete appointment details if needed
+    if (!appointment.services || appointment.services.length === 0) {
+      // If services are not available, we need to create a default one from the main service
+      if (appointment.serviceId && appointment.serviceName) {
+        const enrichedAppointment = {
+          ...appointment,
+          services: [{
+            id: appointment.serviceId,
+            name: appointment.serviceName,
+            price: appointment.cost || 0,
+            duration: appointment.duration || 30
+          }]
+        };
+        setEditingAppointment(enrichedAppointment);
+      } else {
+        setEditingAppointment(appointment);
+      }
+    } else {
+      setEditingAppointment(appointment);
+    }
+    
     setSelectedStylist(stylists.find(s => s.id === appointment.stylistId) || null);
     setSelectedTimeSlot(appointment.startTime);
     setIsBookingModalOpen(true);
@@ -263,8 +285,10 @@ export default function CalendarView() {
           description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
         });
         // Extract the time from droppableId (format: "stylist-{id}-slot-{time}")
-        const timeMatch = destination.droppableId.match(/slot-(.+)$/);
-        const newTime = timeMatch ? timeMatch[1] : null;
+        // The time format could be like "10:00" or "10:00 AM"
+        const timeMatch = destination.droppableId.match(/slot-([0-9:]+\s*[APMapm]{0,2})/);
+        const newTime = timeMatch ? timeMatch[1].trim() : null;
+        console.log("Extracted new time:", newTime);
         
         // Update the appointment with new stylist and time if no overlap
         updateAppointmentMutation.mutate({

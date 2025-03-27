@@ -157,7 +157,19 @@ export default function AppointmentComponent({
           
           {/* Service name with prominent display */}
           <div className="text-xs mt-1 font-semibold bg-white/30 px-2 py-1 rounded-md shadow-inner border border-white/20">
-            {appointment.serviceName || 'No service specified'}
+            {appointment.services && appointment.services.length > 0 ? (
+              <>
+                {/* Show first service by default */}
+                <div className="flex justify-between">
+                  <span>{appointment.services[0].name}</span>
+                  {appointment.services.length > 1 && (
+                    <span className="text-[10px] bg-white/20 px-1 rounded">{appointment.services.length} services</span>
+                  )}
+                </div>
+              </>
+            ) : (
+              appointment.serviceName || 'No service specified'
+            )}
           </div>
           
           {/* Always show key details */}
@@ -201,7 +213,19 @@ export default function AppointmentComponent({
           {isExpanded && (
             <div className="text-xs mt-2 pt-1 border-t border-white/20">
               <div className="font-semibold mb-1">Service Details:</div>
-              <div className="ml-1">{appointment.serviceName}</div>
+              {appointment.services && appointment.services.length > 0 ? (
+                <div className="ml-1 space-y-1">
+                  {appointment.services.map((service, index) => (
+                    <div key={index} className="flex justify-between">
+                      <span>{service.name}</span>
+                      <span>£{service.price || 0}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="ml-1">{appointment.serviceName}</div>
+              )}
+              
               {appointment.notes && (
                 <>
                   <div className="font-semibold mt-1 mb-1">Notes:</div>
