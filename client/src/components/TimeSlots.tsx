@@ -201,7 +201,7 @@ export default function TimeSlots({
                                       // Add horizontal offset for overlapping appointments (simple approach)
                                       left: '2%', 
                                       width: '96%',
-                                      zIndex: 10 + index
+                                      zIndex: 20 + index
                                     }}
                                   >
                                     <AppointmentComponent 

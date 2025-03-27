@@ -38,7 +38,7 @@
   /* Vertical time lines */
   .time-slot::before {
     content: '';
-    @apply absolute top-0 left-0 w-full h-full pointer-events-none z-20;
+    @apply absolute top-0 left-0 w-full h-full pointer-events-none z-0;
     background-image: repeating-linear-gradient(
       to bottom,
       transparent 0,
@@ -46,7 +46,7 @@
       theme('colors.border') 29px,
       theme('colors.border') 31px
     );
-    opacity: 0.6;
+    opacity: 0.7;
   }
   
   .appointment {
