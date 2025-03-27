@@ -112,11 +112,11 @@ export default function TimeSlots({
                   droppableId={`stylist-${stylist.id}-slot-${slot.time}`}
                   key={`${slot.time}-${stylist.id}`}
                   isDropDisabled={isOff}
+                  type="DEFAULT"
+                  direction="vertical"
+                  mode="standard"
                 >
                   {(provided, snapshot) => {
-                    // Process placeholder to avoid React memo warnings
-                    const placeholderElement = provided.placeholder ? provided.placeholder : null;
-                    
                     return (
                       <div 
                         ref={provided.innerRef}
@@ -230,7 +230,7 @@ export default function TimeSlots({
                             )}
                             
                             {/* Placeholder for dragging - essential for react-beautiful-dnd to work correctly */}
-                            <div>{placeholderElement}</div>
+                            {provided.placeholder}
                           </>
                         )}
                       </div>
