@@ -63,8 +63,18 @@ export default function TimeSlots({
   // Calculate column width based on number of stylists
   const getColumnWidth = () => {
     // Equal width for all columns
-    return 'calc((100% - 20px) / ' + stylists.length + ')';
+    return `calc((100% - 20px) / ${stylists.length})`;
   };
+
+  // Adding 15-minute gridlines to each time slot
+  const TimeSlotGrid = ({ children }: { children: React.ReactNode }) => (
+    <div className="absolute inset-0 grid grid-rows-4 pointer-events-none">
+      <div className="border-b border-dashed border-border/20"></div>
+      <div className="border-b border-dashed border-border/20"></div>
+      <div className="border-b border-dashed border-border/20"></div>
+      <div></div>
+    </div>
+  );
   
   // Day view - the default
   const renderDayView = () => (
@@ -92,7 +102,7 @@ export default function TimeSlots({
             </div>
           </div>
           
-          <div className="flex flex-grow overflow-x-auto">
+          <div className="flex flex-grow">
             {stylists.map((stylist) => {
               const timeSlotAppointments = getAppointmentsForTimeSlot(slot.time, stylist.id);
               const isOff = isTimeSlotOff(slot.time, stylist.id);
@@ -112,109 +122,110 @@ export default function TimeSlots({
                       style={{ width: getColumnWidth() }}
                       onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
                     >
+                      {/* 15-minute grid lines */}
+                      {!isOff && <TimeSlotGrid>{null}</TimeSlotGrid>}
+                      
                       {isOff ? (
                         <div className="h-full bg-muted text-center text-sm text-muted-foreground pt-2 font-medium">
                           off
                         </div>
                       ) : (
                         <>
-                          {/* Time indicators are now handled by CSS */}
-                          
-                          {timeSlotAppointments.length > 0 ? (
-                            <div className="relative">
-                              {timeSlotAppointments.map((appointment, index) => {
-                                // Calculate top position based on start time
-                                const startTime = appointment.startTime;
-                                let topPosition = 0;
+                          {/* Appointments */}
+                          {timeSlotAppointments.map((appointment, index) => {
+                            // Calculate top position based on start time
+                            const startTime = appointment.startTime;
+                            let topPosition = 0;
+                            
+                            try {
+                              // Parse 12-hour time (e.g., "1:00 pm")
+                              const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
+                              const startMatch = startTime.match(match12Hr);
+                              
+                              if (startMatch) {
+                                let startHour = parseInt(startMatch[1]);
+                                const startMinute = parseInt(startMatch[2]);
+                                const startPeriod = startMatch[3].toLowerCase();
                                 
-                                try {
-                                  // Parse 12-hour time (e.g., "1:00 pm")
-                                  const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
-                                  const startMatch = startTime.match(match12Hr);
+                                // Convert to 24-hour
+                                if (startPeriod === 'pm' && startHour < 12) startHour += 12;
+                                if (startPeriod === 'am' && startHour === 12) startHour = 0;
+                                
+                                // Calculate top position relative to the time slot
+                                const slotHour = parseInt(slot.time.split(':')[0]);
+                                const slotMinute = parseInt(slot.time.split(':')[1]);
+                                
+                                // If the appointment starts before this time slot
+                                if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
+                                  topPosition = 0;
+                                } else {
+                                  // Calculate minutes from the start of the time slot
+                                  const minutesFromSlotStart = 
+                                    (startHour - slotHour) * 60 + (startMinute - slotMinute);
                                   
-                                  if (startMatch) {
-                                    let startHour = parseInt(startMatch[1]);
-                                    const startMinute = parseInt(startMatch[2]);
-                                    const startPeriod = startMatch[3].toLowerCase();
-                                    
-                                    // Convert to 24-hour
-                                    if (startPeriod === 'pm' && startHour < 12) startHour += 12;
-                                    if (startPeriod === 'am' && startHour === 12) startHour = 0;
-                                    
-                                    // Calculate top position relative to the time slot
-                                    const slotHour = parseInt(slot.time.split(':')[0]);
-                                    const slotMinute = parseInt(slot.time.split(':')[1]);
-                                    
-                                    // If the appointment starts before this time slot
-                                    if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
-                                      topPosition = 0;
-                                    } else {
-                                      // Calculate minutes from the start of the time slot
-                                      const minutesFromSlotStart = 
-                                        (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                                      
-                                      // Each 15 minutes is 30px in height (120px / 4 = 30px per 15 min)
-                                      topPosition = (minutesFromSlotStart * 30) / 15;
-                                    }
-                                  } else {
-                                    // Try 24-hour format as fallback
-                                    const match24Hr = /(\d+):(\d+)/;
-                                    const startMatch = startTime.match(match24Hr);
-                                    
-                                    if (startMatch) {
-                                      const startHour = parseInt(startMatch[1]);
-                                      const startMinute = parseInt(startMatch[2]);
-                                      
-                                      // Calculate top position
-                                      const slotHour = parseInt(slot.time.split(':')[0]);
-                                      const slotMinute = parseInt(slot.time.split(':')[1]);
-                                      
-                                      if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
-                                        topPosition = 0;
-                                      } else {
-                                        const minutesFromSlotStart = 
-                                          (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                                        // Each 15 minutes is 30px in height (120px / 4 = 30px per 15 min)
-                                        topPosition = (minutesFromSlotStart * 30) / 15;
-                                      }
-                                    }
-                                  }
-                                } catch (e) {
-                                  console.error("Failed to calculate appointment position", e);
+                                  // Each 15 minutes is 30px in height (120px / 4 = 30px per 15 min)
+                                  topPosition = (minutesFromSlotStart * 30) / 15;
                                 }
+                              } else {
+                                // Try 24-hour format as fallback
+                                const match24Hr = /(\d+):(\d+)/;
+                                const startMatch = startTime.match(match24Hr);
                                 
-                                return (
-                                  <div 
-                                    key={appointment.id}
-                                    className="absolute"
-                                    style={{
-                                      // Top position is calculated based on start time relative to the time slot
-                                      top: `${topPosition}px`,
-                                      // Add horizontal offset for overlapping appointments (simple approach)
-                                      left: '2%', 
-                                      width: '96%',
-                                      zIndex: 20 + index
-                                    }}
-                                  >
-                                    <AppointmentComponent 
-                                      appointment={appointment}
-                                      onEditAppointment={onEditAppointment}
-                                    />
-                                  </div>
-                                );
-                              })}
-                              {provided.placeholder}
-                            </div>
-                          ) : (
+                                if (startMatch) {
+                                  const startHour = parseInt(startMatch[1]);
+                                  const startMinute = parseInt(startMatch[2]);
+                                  
+                                  // Calculate top position
+                                  const slotHour = parseInt(slot.time.split(':')[0]);
+                                  const slotMinute = parseInt(slot.time.split(':')[1]);
+                                  
+                                  if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
+                                    topPosition = 0;
+                                  } else {
+                                    const minutesFromSlotStart = 
+                                      (startHour - slotHour) * 60 + (startMinute - slotMinute);
+                                    // Each 15 minutes is 30px in height (120px / 4 = 30px per 15 min)
+                                    topPosition = (minutesFromSlotStart * 30) / 15;
+                                  }
+                                }
+                              }
+                            } catch (e) {
+                              console.error("Failed to calculate appointment position", e);
+                            }
+                            
+                            return (
+                              <div 
+                                key={appointment.id}
+                                className="absolute"
+                                style={{
+                                  // Top position is calculated based on start time relative to the time slot
+                                  top: `${topPosition}px`,
+                                  // Add horizontal offset for overlapping appointments (simple approach)
+                                  left: '2%', 
+                                  width: '96%',
+                                  zIndex: 20 + index
+                                }}
+                              >
+                                <AppointmentComponent 
+                                  appointment={appointment}
+                                  onEditAppointment={onEditAppointment}
+                                />
+                              </div>
+                            );
+                          })}
+                          
+                          {/* Empty state */}
+                          {timeSlotAppointments.length === 0 && (
                             <div className="h-full w-full flex items-center justify-center">
                               <div className="text-sm text-muted-foreground border-2 border-dashed border-muted-foreground/50 rounded-md w-5/6 h-5/6 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors">
                                 <span className="font-medium">+</span>
                               </div>
                             </div>
                           )}
+                          
+                          {provided.placeholder}
                         </>
                       )}
-                      {!isOff && provided.placeholder}
                     </div>
                   )}
                 </Droppable>
@@ -241,7 +252,7 @@ export default function TimeSlots({
   // Render view based on viewMode
   if (viewMode === 'week') {
     return renderWeekView();
-  } else {
-    return renderDayView();
   }
+  
+  return renderDayView();
 }

@@ -103,11 +103,15 @@ export default function AppointmentComponent({
     }
   };
 
-  // Handle size adjustment
+  // Handle size adjustment in 15-minute increments
   const adjustSize = (e: React.MouseEvent, increment: number) => {
     e.stopPropagation();
     e.preventDefault();
     setSizeAdjustment(prev => Math.max(prev + increment, -2)); // Prevent making too small
+    
+    // Update the appointment end time based on the adjustment
+    // Code would ideally call an API to update the appointment's duration
+    // For now, we're just adjusting visually
   };
   
   // Toggle expanded view
