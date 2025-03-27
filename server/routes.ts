@@ -241,7 +241,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Remove password from the response
-      const { password, ...userWithoutPassword } = user;
+      const userWithoutPassword = { ...user };
+      delete (userWithoutPassword as any).password;
       
       res.status(200).json(userWithoutPassword);
     } catch (error) {
@@ -286,7 +287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, updatedFields);
       
       // Remove password from the response
-      const { password, ...userWithoutPassword } = updatedUser;
+      const userWithoutPassword = { ...updatedUser };
+      delete (userWithoutPassword as any).password;
       
       res.status(200).json(userWithoutPassword);
     } catch (error) {
@@ -323,7 +325,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, { profileImageUrl });
       
       // Remove password from the response
-      const { password, ...userWithoutPassword } = updatedUser;
+      const userWithoutPassword = { ...updatedUser };
+      delete (userWithoutPassword as any).password;
       
       res.status(200).json(userWithoutPassword);
     } catch (error) {
