@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import edgeLogo from '@assets/edgeicon_1024.png';
 
 // Form validation schema
 const registerSchema = z.object({
@@ -51,8 +52,8 @@ export default function RegisterPage() {
         description: 'You have been registered successfully.',
       });
       
-      // Redirect to dashboard or home page
-      setLocation('/');
+      // Redirect to appointments dashboard
+      setLocation('/appointments');
     },
     onError: (error: any) => {
       toast({
@@ -75,6 +76,9 @@ export default function RegisterPage() {
     <div className="flex justify-center items-center h-screen bg-gradient-to-b from-muted to-background">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <img src={edgeLogo} alt="The Edge Salon" className="h-24 w-24" />
+          </div>
           <CardTitle className="text-2xl font-bold text-center">
             Create an Account
           </CardTitle>
