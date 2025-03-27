@@ -13,7 +13,8 @@ import {
   insertCustomerSchema, 
   insertAppointmentSchema,
   insertUserSchema,
-  loginUserSchema
+  loginUserSchema,
+  insertStylistScheduleSchema
 } from "@shared/schema";
 
 // Define custom session data

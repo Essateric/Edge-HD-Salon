@@ -65,3 +65,17 @@ export type TimeSlot = {
 };
 
 export type ViewMode = 'day' | 'week' | 'month';
+
+export type StylistSchedule = {
+  id: number;
+  stylistId: number;
+  dayOfWeek: number; // 0-6 for Sunday-Saturday
+  startTime: string; // Format: "HH:MM"
+  endTime: string; // Format: "HH:MM"
+  isWorkingDay: boolean;
+};
+
+export type DayOfWeek = {
+  value: number;
+  label: string;
+};

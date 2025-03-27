@@ -8,7 +8,8 @@ import {
   User, InsertUser,
   Role, InsertRole,
   Permission, InsertPermission,
-  RolePermission, InsertRolePermission
+  RolePermission, InsertRolePermission,
+  StylistSchedule, InsertStylistSchedule
 } from "@shared/schema";
 import { add, format, parse } from "date-fns";
 import * as bcrypt from "bcryptjs";
@@ -91,6 +92,15 @@ export interface IStorage {
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment | undefined>;
   deleteAppointment(id: number): Promise<boolean>;
+  
+  // Stylist Schedule operations
+  getAllStylistSchedules(): Promise<StylistSchedule[]>;
+  getStylistSchedule(id: number): Promise<StylistSchedule | undefined>;
+  getStylistSchedulesByStylist(stylistId: number): Promise<StylistSchedule[]>;
+  getStylistScheduleByDay(stylistId: number, dayOfWeek: number): Promise<StylistSchedule | undefined>;
+  createStylistSchedule(schedule: InsertStylistSchedule): Promise<StylistSchedule>;
+  updateStylistSchedule(id: number, schedule: Partial<InsertStylistSchedule>): Promise<StylistSchedule | undefined>;
+  deleteStylistSchedule(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -104,6 +114,7 @@ export class MemStorage implements IStorage {
   private roles: Map<number, Role>;
   private permissions: Map<number, Permission>;
   private rolePermissions: Map<number, RolePermission>;
+  private stylistSchedules: Map<number, StylistSchedule>;
   
   private currentUserId: number;
   private currentStylistId: number;
@@ -115,6 +126,7 @@ export class MemStorage implements IStorage {
   private currentRoleId: number;
   private currentPermissionId: number;
   private currentRolePermissionId: number;
+  private currentStylistScheduleId: number;
   
   constructor() {
     this.users = new Map();
@@ -127,6 +139,7 @@ export class MemStorage implements IStorage {
     this.roles = new Map();
     this.permissions = new Map();
     this.rolePermissions = new Map();
+    this.stylistSchedules = new Map();
     
     this.currentUserId = 1;
     this.currentStylistId = 1;
@@ -138,6 +151,7 @@ export class MemStorage implements IStorage {
     this.currentRoleId = 1;
     this.currentPermissionId = 1;
     this.currentRolePermissionId = 1;
+    this.currentStylistScheduleId = 1;
     
     // Seed data
     this.seedData();
@@ -449,6 +463,37 @@ export class MemStorage implements IStorage {
       stylistId: 1 // Link to first stylist
     };
     this.createUser(stylistUser);
+    
+    // Seed stylist schedules (default opening hours)
+    // Create default schedules for all stylists (9am to 5pm, Monday-Friday)
+    setTimeout(() => {
+      const allStylists = this.getAllStylists();
+      allStylists.then(stylists => {
+        stylists.forEach(stylist => {
+          // Monday to Friday (1-5)
+          for (let day = 1; day <= 5; day++) {
+            this.createStylistSchedule({
+              stylistId: stylist.id,
+              dayOfWeek: day,
+              startTime: "09:00",
+              endTime: "17:00",
+              isWorkingDay: true
+            });
+          }
+          
+          // Weekend (0 and 6) - not working
+          [0, 6].forEach(day => {
+            this.createStylistSchedule({
+              stylistId: stylist.id,
+              dayOfWeek: day,
+              startTime: "09:00", 
+              endTime: "17:00",
+              isWorkingDay: false
+            });
+          });
+        });
+      });
+    }, 200);
   }
   
   // Helper method for permissions by name
@@ -925,6 +970,56 @@ export class MemStorage implements IStorage {
   
   async deleteAppointment(id: number): Promise<boolean> {
     return this.appointments.delete(id);
+  }
+
+  // Stylist Schedule operations
+  async getAllStylistSchedules(): Promise<StylistSchedule[]> {
+    return Array.from(this.stylistSchedules.values());
+  }
+  
+  async getStylistSchedule(id: number): Promise<StylistSchedule | undefined> {
+    return this.stylistSchedules.get(id);
+  }
+  
+  async getStylistSchedulesByStylist(stylistId: number): Promise<StylistSchedule[]> {
+    return Array.from(this.stylistSchedules.values())
+      .filter(schedule => schedule.stylistId === stylistId);
+  }
+  
+  async getStylistScheduleByDay(stylistId: number, dayOfWeek: number): Promise<StylistSchedule | undefined> {
+    return Array.from(this.stylistSchedules.values())
+      .find(schedule => schedule.stylistId === stylistId && schedule.dayOfWeek === dayOfWeek);
+  }
+  
+  async createStylistSchedule(schedule: InsertStylistSchedule): Promise<StylistSchedule> {
+    const id = this.currentStylistScheduleId++;
+    // Ensure isWorkingDay is explicitly set to true or null, not undefined
+    const newSchedule: StylistSchedule = { 
+      ...schedule, 
+      id,
+      isWorkingDay: schedule.isWorkingDay === undefined ? true : schedule.isWorkingDay 
+    };
+    this.stylistSchedules.set(id, newSchedule);
+    return newSchedule;
+  }
+  
+  async updateStylistSchedule(id: number, schedule: Partial<InsertStylistSchedule>): Promise<StylistSchedule | undefined> {
+    const existingSchedule = this.stylistSchedules.get(id);
+    if (!existingSchedule) return undefined;
+    
+    // Handle the isWorkingDay field explicitly to avoid undefined
+    const updatedData = { ...schedule };
+    if (updatedData.isWorkingDay === undefined) {
+      delete updatedData.isWorkingDay; // Don't update if undefined
+    }
+    
+    const updatedSchedule: StylistSchedule = { ...existingSchedule, ...updatedData };
+    this.stylistSchedules.set(id, updatedSchedule);
+    return updatedSchedule;
+  }
+  
+  async deleteStylistSchedule(id: number): Promise<boolean> {
+    return this.stylistSchedules.delete(id);
   }
 }
 

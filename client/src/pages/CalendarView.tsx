@@ -258,46 +258,80 @@ export default function CalendarView() {
     const appointmentId = parseInt(draggableId.replace('appointment-', ''));
     const appointment = appointments.find(appt => appt.id === appointmentId);
     
-    if (!appointment) return;
+    if (!appointment) {
+      console.error("Could not find appointment with ID:", appointmentId);
+      return;
+    }
+    
+    console.log("Moving appointment:", appointment);
+    console.log("From:", source.droppableId);
+    console.log("To:", destination.droppableId);
     
     // Extract stylist ID from destination droppable ID
-    const match = destination.droppableId.match(/stylist-(\d+)-slot-(\d+)/);
+    const match = destination.droppableId.match(/stylist-(\d+)-slot-([0-9:.]+\s*[APMapm]*)/);
     
-    if (match) {
-      const stylistId = parseInt(match[1]);
-      
-      // Only update if the stylist has changed
-      if (stylistId !== appointment.stylistId) {
-        // Check for time overlaps before allowing the drop
-        if (hasTimeOverlap(appointment, stylistId)) {
-          // If there's an overlap, show a toast message and don't allow the drop
-          toast({
-            title: "Time slot conflict",
-            description: "This appointment would overlap with an existing booking. Please choose another time slot.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        // Show loading toast
-        toast({
-          title: "Moving appointment...",
-          description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
-        });
-        // Extract the time from droppableId (format: "stylist-{id}-slot-{time}")
-        // The time format could be like "10:00" or "10:00 AM"
-        const timeMatch = destination.droppableId.match(/slot-([0-9:]+\s*[APMapm]{0,2})/);
-        const newTime = timeMatch ? timeMatch[1].trim() : null;
-        console.log("Extracted new time:", newTime);
-        
-        // Update the appointment with new stylist and time if no overlap
-        updateAppointmentMutation.mutate({
-          id: appointment.id,
-          stylistId,
-          startTime: newTime || appointment.startTime // Use the new time if available, otherwise keep original
-        });
-      }
+    if (!match) {
+      console.error("Invalid destination droppable ID format:", destination.droppableId);
+      return;
     }
+    
+    const stylistId = parseInt(match[1]);
+    const newTime = match[2].trim();
+    
+    console.log("Target stylist ID:", stylistId);
+    console.log("Target time:", newTime);
+    
+    // Only proceed if we have valid time and stylist data
+    if (!stylistId || !newTime) {
+      toast({
+        title: "Error moving appointment",
+        description: "Could not determine the target time or stylist.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check for time overlaps before allowing the drop
+    if (hasTimeOverlap(appointment, stylistId)) {
+      // If there's an overlap, show a toast message and don't allow the drop
+      toast({
+        title: "Time slot conflict",
+        description: "This appointment would overlap with an existing booking. Please choose another time slot.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if the time is within salon opening hours (9am-6pm)
+    const timeHour = parseInt(newTime.split(':')[0]);
+    if (timeHour < 9 || timeHour >= 18) {
+      toast({
+        title: "Outside operating hours",
+        description: "The salon is only open from 9am to 6pm.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Show loading toast
+    toast({
+      title: "Moving appointment...",
+      description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
+    });
+    
+    // Create a copy of the appointment to update
+    const updatedAppointment = {
+      ...appointment,
+      stylistId,
+      startTime: newTime
+    };
+    
+    // Update the appointment with new stylist and time
+    updateAppointmentMutation.mutate({
+      id: appointment.id,
+      stylistId,
+      startTime: newTime
+    });
   };
   
   return (

@@ -196,6 +196,27 @@ export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type Role = typeof roles.$inferSelect;
 export type InsertPermission = z.infer<typeof insertPermissionSchema>;
 export type Permission = typeof permissions.$inferSelect;
+// Stylist Schedules table for working hours and availability
+export const stylistSchedules = pgTable("stylist_schedules", {
+  id: serial("id").primaryKey(),
+  stylistId: integer("stylist_id").notNull(),
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6 for Sunday-Saturday
+  startTime: text("start_time").notNull(), // Format: "HH:MM"
+  endTime: text("end_time").notNull(), // Format: "HH:MM"
+  isWorkingDay: boolean("is_working_day").default(true),
+});
+
+export const insertStylistScheduleSchema = createInsertSchema(stylistSchedules).pick({
+  stylistId: true,
+  dayOfWeek: true,
+  startTime: true,
+  endTime: true,
+  isWorkingDay: true,
+});
+
+export type InsertStylistSchedule = z.infer<typeof insertStylistScheduleSchema>;
+export type StylistSchedule = typeof stylistSchedules.$inferSelect;
+
 export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
 export type RolePermission = typeof rolePermissions.$inferSelect;
 export type LoginUser = z.infer<typeof loginUserSchema>;
