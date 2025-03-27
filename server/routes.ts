@@ -477,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Appointments routes
-  app.get('/api/appointments', authenticated, hasPermission('view_appointments'), async (req: Request, res: Response) => {
+  app.get('/api/appointments', authenticated, hasPermission('view_all_appointments'), async (req: Request, res: Response) => {
     const date = req.query.date as string;
     const stylistId = req.query.stylistId ? parseInt(req.query.stylistId as string) : undefined;
     const customerId = req.query.customerId ? parseInt(req.query.customerId as string) : undefined;
@@ -497,7 +497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(appointments);
   });
   
-  app.get('/api/appointments/:id', authenticated, hasPermission('view_appointments'), async (req: Request, res: Response) => {
+  app.get('/api/appointments/:id', authenticated, hasPermission('view_all_appointments'), async (req: Request, res: Response) => {
     const appointments = await storage.getAllAppointments();
     const appointment = appointments.find(a => a.id === parseInt(req.params.id));
     
@@ -508,7 +508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(appointment);
   });
   
-  app.post('/api/appointments', authenticated, hasPermission('manage_appointments'), async (req: Request, res: Response) => {
+  app.post('/api/appointments', authenticated, hasPermission('book_appointments'), async (req: Request, res: Response) => {
     try {
       // Extract basic appointment data
       const { 
@@ -559,7 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.put('/api/appointments/:id', authenticated, hasPermission('manage_appointments'), async (req: Request, res: Response) => {
+  app.put('/api/appointments/:id', authenticated, hasPermission('manage_all_appointments'), async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const appointmentData = req.body;
@@ -579,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.delete('/api/appointments/:id', authenticated, hasPermission('manage_appointments'), async (req: Request, res: Response) => {
+  app.delete('/api/appointments/:id', authenticated, hasPermission('manage_all_appointments'), async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     const success = await storage.deleteAppointment(id);
     
