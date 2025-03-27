@@ -14,7 +14,7 @@ export default function StylistHeader({ stylists }: StylistHeaderProps) {
           <div className="p-3 flex flex-col items-center">
             <Avatar className="w-12 h-12 mb-1">
               <AvatarImage src={stylist.imageUrl} alt={stylist.name} />
-              <AvatarFallback className="bg-primary text-white">{stylist.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="bg-[#B08D57] text-white">{stylist.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium">{stylist.name}</span>
           </div>

@@ -47,7 +47,7 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
       {...attributes}
       {...listeners}
       className={`appointment absolute top-0 left-0 right-0 mx-1 ${
-        appointment.isConsultation ? 'bg-amber-600' : 'bg-primary/90'
+        appointment.isConsultation ? 'bg-[#8B734A]' : 'bg-[#B08D57]/90'
       } text-white rounded shadow-md p-1 z-10 cursor-move`}
       style={{ 
         height: `${getHeight()}px`,

@@ -18,14 +18,14 @@ export default function BottomToolbar({ viewMode, onViewModeChange }: BottomTool
         <span className="text-xs mt-1">Filter</span>
       </button>
       <button 
-        className={`flex flex-col items-center px-3 py-1 ${viewMode === 'week' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+        className={`flex flex-col items-center px-3 py-1 ${viewMode === 'week' ? 'text-[#B08D57]' : 'text-muted-foreground hover:text-foreground'}`}
         onClick={() => onViewModeChange('week')}
       >
         <LayoutGrid className="h-6 w-6" />
         <span className="text-xs mt-1">Week View</span>
       </button>
-      <button className="flex flex-col items-center px-3 py-1 text-primary relative">
-        <div className="absolute -top-1 -right-1 h-5 w-5 bg-primary rounded-full text-primary-foreground text-xs flex items-center justify-center">3</div>
+      <button className="flex flex-col items-center px-3 py-1 text-[#B08D57] relative">
+        <div className="absolute -top-1 -right-1 h-5 w-5 bg-[#B08D57] rounded-full text-white text-xs flex items-center justify-center">3</div>
         <Clipboard className="h-6 w-6" />
         <span className="text-xs mt-1">Task</span>
       </button>

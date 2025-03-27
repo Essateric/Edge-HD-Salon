@@ -1,22 +1,34 @@
-import { PlusIcon, CalendarIcon, UsersIcon, BarChartIcon, ScissorsIcon } from 'lucide-react';
+import { PlusIcon, CalendarIcon, UsersIcon, BarChartIcon, ScissorsIcon, MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
+import { useState } from 'react';
 
 interface NavigationBarProps {
   activeView: string;
 }
 
 export default function NavigationBar({ activeView }: NavigationBarProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
-    <div className="bg-white border-b border-gray-200 px-4">
+    <div className="bg-background border-b border-gray-800 px-4">
       <div className="flex items-center justify-between">
-        <div className="flex">
+        {/* Mobile menu button */}
+        <button 
+          className="md:hidden p-2" 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          <MenuIcon className="h-6 w-6 text-gray-400" />
+        </button>
+
+        {/* Desktop navigation */}
+        <div className="hidden md:flex">
           <Link 
             href="/calendar" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'calendar' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-[#B08D57] text-[#B08D57]' 
+                : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
             <CalendarIcon className="h-5 w-5 mr-2" />
@@ -26,8 +38,8 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/services" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'services' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-[#B08D57] text-[#B08D57]' 
+                : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
             <ScissorsIcon className="h-5 w-5 mr-2" />
@@ -37,8 +49,8 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/clients" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'clients' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-[#B08D57] text-[#B08D57]' 
+                : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
             <UsersIcon className="h-5 w-5 mr-2" />
@@ -48,21 +60,69 @@ export default function NavigationBar({ activeView }: NavigationBarProps) {
             href="/reports" 
             className={`flex items-center px-4 py-3 border-b-2 ${
               activeView === 'reports' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-[#B08D57] text-[#B08D57]' 
+                : 'border-transparent text-gray-400 hover:text-gray-300'
             }`}
           >
             <BarChartIcon className="h-5 w-5 mr-2" />
             <span className={activeView === 'reports' ? 'font-medium' : ''}>Reports</span>
           </Link>
         </div>
+
+        {/* New Booking button */}
         <div>
-          <Button className="bg-primary text-white rounded-md px-4 py-2 flex items-center shadow-sm">
+          <Button className="bg-[#B08D57] hover:bg-[#8B734A] text-white rounded-md px-4 py-2 flex items-center shadow-sm">
             <PlusIcon className="h-5 w-5 mr-1" />
-            <span>New Booking</span>
+            <span className="hidden sm:inline">New Booking</span>
           </Button>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden py-2">
+          <Link 
+            href="/calendar" 
+            className={`flex items-center px-4 py-2 ${
+              activeView === 'calendar' ? 'text-[#B08D57]' : 'text-gray-400'
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <CalendarIcon className="h-5 w-5 mr-2" />
+            <span>Calendar</span>
+          </Link>
+          <Link 
+            href="/services" 
+            className={`flex items-center px-4 py-2 ${
+              activeView === 'services' ? 'text-[#B08D57]' : 'text-gray-400'
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <ScissorsIcon className="h-5 w-5 mr-2" />
+            <span>Services</span>
+          </Link>
+          <Link 
+            href="/clients" 
+            className={`flex items-center px-4 py-2 ${
+              activeView === 'clients' ? 'text-[#B08D57]' : 'text-gray-400'
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <UsersIcon className="h-5 w-5 mr-2" />
+            <span>Clients</span>
+          </Link>
+          <Link 
+            href="/reports" 
+            className={`flex items-center px-4 py-2 ${
+              activeView === 'reports' ? 'text-[#B08D57]' : 'text-gray-400'
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <BarChartIcon className="h-5 w-5 mr-2" />
+            <span>Reports</span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
