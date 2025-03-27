@@ -538,7 +538,8 @@ export class MemStorage implements IStorage {
       lastLogin: null,
       createdAt: now,
       customerId: user.customerId || null,
-      stylistId: user.stylistId || null
+      stylistId: user.stylistId || null,
+      profileImageUrl: user.profileImageUrl || null
     };
     
     this.users.set(id, newUser);

@@ -171,6 +171,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   customerId: integer("customer_id"), // Link to customer record if applicable
   stylistId: integer("stylist_id"), // Link to stylist record if applicable
+  profileImageUrl: text("profile_image_url"), // URL for user profile image
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -182,6 +183,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   roleId: true,
   customerId: true,
   stylistId: true,
+  profileImageUrl: true,
 });
 
 // Schema for login

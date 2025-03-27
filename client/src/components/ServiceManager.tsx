@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,144 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ServiceCategory, Service } from "@/lib/types";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, Save } from "lucide-react";
+
+// Separate component for service row to handle state properly
+interface ServiceRowProps {
+  service: Service;
+  categories?: ServiceCategory[];
+  onEdit: (service: Service) => void;
+  onDelete: (id: number) => void;
+  queryClient: any;
+}
+
+function ServiceRow({ service, categories, onEdit, onDelete, queryClient }: ServiceRowProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedDuration, setEditedDuration] = useState(service.defaultDuration);
+  const { toast } = useToast();
+  
+  const handleDurationSave = async () => {
+    try {
+      await apiRequest(
+        `${'/api/services'}/${service.id}`, 
+        'PUT',
+        {
+          ...service,
+          defaultDuration: editedDuration
+        }
+      );
+      
+      toast({
+        title: "Success",
+        description: "Service duration updated",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update service duration:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update service duration",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleDuplicateService = async () => {
+    try {
+      // Create a new service based on this one
+      await apiRequest(
+        '/api/services', 
+        'POST',
+        {
+          name: `${service.name} (Copy)`,
+          categoryId: service.categoryId,
+          defaultDuration: service.defaultDuration
+        }
+      );
+      
+      toast({
+        title: "Success",
+        description: "Service duplicated successfully",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/services'] });
+    } catch (error) {
+      console.error('Failed to duplicate service:', error);
+      toast({
+        title: "Error",
+        description: "Failed to duplicate service",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  return (
+    <TableRow key={service.id}>
+      <TableCell>{service.name}</TableCell>
+      <TableCell>
+        {categories?.find(c => c.id === service.categoryId)?.name || "Unknown"}
+      </TableCell>
+      <TableCell>
+        {isEditing ? (
+          <div className="flex items-center space-x-2">
+            <Input
+              type="number"
+              min={15}
+              step={5}
+              value={editedDuration}
+              onChange={(e) => setEditedDuration(parseInt(e.target.value) || service.defaultDuration)}
+              className="w-20"
+            />
+            <Button 
+              size="icon" 
+              variant="outline" 
+              onClick={handleDurationSave}
+            >
+              <Save className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div 
+            className="cursor-pointer hover:underline"
+            onClick={() => setIsEditing(true)}
+          >
+            {service.defaultDuration}
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <Button 
+            size="icon" 
+            variant="outline"
+            onClick={() => onEdit(service)}
+            title="Edit service"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="icon" 
+            variant="outline"
+            onClick={handleDuplicateService}
+            title="Duplicate service"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button 
+            size="icon" 
+            variant="destructive"
+            onClick={() => onDelete(service.id)}
+            title="Delete service"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 interface ServiceManagerProps {
   isOpen: boolean;
@@ -462,45 +600,30 @@ export default function ServiceManager({ isOpen, onClose }: ServiceManagerProps)
                 {servicesLoading ? (
                   <p>Loading services...</p>
                 ) : services && services.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Default Duration (mins)</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {services.map(service => (
-                        <TableRow key={service.id}>
-                          <TableCell>{service.name}</TableCell>
-                          <TableCell>
-                            {categories?.find(c => c.id === service.categoryId)?.name || "Unknown"}
-                          </TableCell>
-                          <TableCell>{service.defaultDuration}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                size="icon" 
-                                variant="outline"
-                                onClick={() => handleEditService(service)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                size="icon" 
-                                variant="destructive"
-                                onClick={() => handleDeleteService(service.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                  <ScrollArea className="h-[400px]">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Default Duration (mins)</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {services.map(service => (
+                          <ServiceRow 
+                            key={service.id}
+                            service={service}
+                            categories={categories}
+                            onEdit={handleEditService}
+                            onDelete={handleDeleteService}
+                            queryClient={queryClient}
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
                 ) : (
                   <p>No services found. Create one above.</p>
                 )}
