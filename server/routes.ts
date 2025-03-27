@@ -209,6 +209,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
   const apiRouter = app.route('/api');
   
+  // User Management Routes
+  
+  // Get all users
+  app.get('/api/users', authenticated, hasPermission('manage_users'), async (_req: Request, res: Response) => {
+    try {
+      const users = await storage.getUsers();
+      // Remove passwords from the response
+      const usersWithoutPasswords = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      res.status(200).json(usersWithoutPasswords);
+    } catch (error) {
+      console.error('Error getting users:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Get user by ID
+  app.get('/api/users/:id', authenticated, hasPermission('manage_users'), async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error getting user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Update user
+  app.put('/api/users/:id', authenticated, hasPermission('manage_users'), async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Validate update data using Zod
+      const updateSchema = insertUserSchema.partial();
+      const parsedData = updateSchema.safeParse(req.body);
+      
+      if (!parsedData.success) {
+        return res.status(400).json({ 
+          message: 'Invalid user data', 
+          errors: parsedData.error.errors 
+        });
+      }
+      
+      // Special handling for password updates
+      let updatedFields = parsedData.data;
+      if (updatedFields.password) {
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        updatedFields.password = await bcrypt.hash(updatedFields.password, salt);
+      }
+      
+      // Update the user
+      const updatedUser = await storage.updateUser(userId, updatedFields);
+      
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Update user profile picture
+  app.put('/api/users/:id/profile-image', authenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      // Only allow users to update their own profile picture unless they have admin privileges
+      if (req.session.userId !== userId) {
+        // Check if user has permission to manage users
+        const permissions = await storage.getUserPermissions(req.session.userId as number);
+        
+        if (!permissions.some(p => p.name === 'manage_users')) {
+          return res.status(403).json({ message: 'Forbidden - You can only update your own profile picture' });
+        }
+      }
+      
+      // Validate the profileImageUrl
+      const { profileImageUrl } = req.body;
+      if (!profileImageUrl || typeof profileImageUrl !== 'string') {
+        return res.status(400).json({ message: 'Profile image URL is required' });
+      }
+      
+      // Update only the profile image URL
+      const updatedUser = await storage.updateUser(userId, { profileImageUrl });
+      
+      // Remove password from the response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating profile image:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // Delete user
+  app.delete('/api/users/:id', authenticated, hasPermission('manage_users'), async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Don't allow deleting your own account
+      if (req.session.userId === userId) {
+        return res.status(400).json({ message: 'You cannot delete your own account' });
+      }
+      
+      // Delete the user
+      await storage.deleteUser(userId);
+      
+      res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Stylists routes
   app.get('/api/stylists', async (_req: Request, res: Response) => {
     const stylists = await storage.getAllStylists();

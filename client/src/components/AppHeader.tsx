@@ -1,4 +1,4 @@
-import { BellRing, Settings, User, Calendar, ClipboardList, Scissors } from 'lucide-react';
+import { BellRing, Settings, User, Calendar, ClipboardList, Scissors, Users } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import edgeLogo from '@assets/edgeicon_1024.png';
 
@@ -32,6 +32,13 @@ export default function AppHeader() {
             <span className={`flex items-center cursor-pointer ${location === '/services' ? 'text-[#B08D57] font-medium' : 'text-gray-400 hover:text-gray-200'} transition-colors`}>
               <Scissors className="h-4 w-4 mr-2" />
               <span>Services</span>
+            </span>
+          </Link>
+          
+          <Link href="/users">
+            <span className={`flex items-center cursor-pointer ${location === '/users' ? 'text-[#B08D57] font-medium' : 'text-gray-400 hover:text-gray-200'} transition-colors`}>
+              <Users className="h-4 w-4 mr-2" />
+              <span>Users</span>
             </span>
           </Link>
         </nav>
