@@ -28,6 +28,7 @@ export default function CalendarView() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [selectedStylist, setSelectedStylist] = useState<Stylist | null>(null);
   const [showServices, setShowServices] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const { toast } = useToast();
   
   // Format date based on view mode
@@ -118,6 +119,8 @@ export default function CalendarView() {
   };
   
   const handleNewBooking = (stylistId?: number, time?: string) => {
+    setEditingAppointment(null); // Clear any editing state
+    
     if (stylistId) {
       const stylist = stylists.find(s => s.id === stylistId) || null;
       setSelectedStylist(stylist);
@@ -127,6 +130,14 @@ export default function CalendarView() {
       setSelectedTimeSlot(time);
     }
     
+    setIsBookingModalOpen(true);
+  };
+  
+  // Handle appointment edit
+  const handleEditAppointment = (appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setSelectedStylist(stylists.find(s => s.id === appointment.stylistId) || null);
+    setSelectedTimeSlot(appointment.startTime);
     setIsBookingModalOpen(true);
   };
   
@@ -252,12 +263,7 @@ export default function CalendarView() {
         collisionDetection={pointerWithin}
         onDragEnd={handleDragEnd}
         modifiers={[restrictToVerticalAxis]}
-        measuring={{
-          droppable: {
-            strategy: 'rects',
-            frequency: 'optimized',
-          },
-        }}
+
       >
         <div className="flex flex-grow overflow-hidden h-[calc(100vh-130px)]">
           {/* Main calendar grid */}
@@ -271,6 +277,7 @@ export default function CalendarView() {
                     stylists={stylists}
                     appointments={appointments}
                     onTimeSlotClick={handleNewBooking}
+                    onEditAppointment={handleEditAppointment}
                     viewMode={viewMode}
                   />
                 </>
@@ -284,6 +291,7 @@ export default function CalendarView() {
                     stylists={stylists}
                     appointments={appointments}
                     onTimeSlotClick={handleNewBooking}
+                    onEditAppointment={handleEditAppointment}
                     viewMode={viewMode}
                   />
                 </>
@@ -312,6 +320,7 @@ export default function CalendarView() {
         selectedDate={currentDate}
         selectedTimeSlot={selectedTimeSlot}
         selectedStylist={selectedStylist}
+        editingAppointment={editingAppointment}
       />
     </div>
   );
