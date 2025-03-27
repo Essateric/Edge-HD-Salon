@@ -306,90 +306,100 @@ export default function CalendarView() {
     // Remove dragging class
     document.body.classList.remove('is-dragging');
     
+    // Early return if we don't have a destination
     if (!result.destination) return;
     
-    const { draggableId, destination, source } = result;
+    try {
+      const { draggableId, destination, source } = result;
+      
+      // If the source and destination are the same, no need to do anything
+      if (source.droppableId === destination.droppableId) return;
     
-    // If the source and destination are the same, no need to do anything
-    if (source.droppableId === destination.droppableId) return;
-    
-    const appointmentId = parseInt(draggableId.replace('appointment-', ''));
-    const appointment = appointments.find(appt => appt.id === appointmentId);
-    
-    if (!appointment) {
-      console.error("Could not find appointment with ID:", appointmentId);
-      return;
-    }
-    
-    console.log("Moving appointment:", appointment);
-    console.log("From:", source.droppableId);
-    console.log("To:", destination.droppableId);
-    
-    // Extract stylist ID from destination droppable ID
-    const match = destination.droppableId.match(/stylist-(\d+)-slot-([0-9:.]+\s*[APMapm]*)/);
-    
-    if (!match) {
-      console.error("Invalid destination droppable ID format:", destination.droppableId);
-      return;
-    }
-    
-    const stylistId = parseInt(match[1]);
-    const newTime = match[2].trim();
-    
-    console.log("Target stylist ID:", stylistId);
-    console.log("Target time:", newTime);
-    
-    // Only proceed if we have valid time and stylist data
-    if (!stylistId || !newTime) {
+      const appointmentId = parseInt(draggableId.replace('appointment-', ''));
+      const appointment = appointments.find(appt => appt.id === appointmentId);
+      
+      if (!appointment) {
+        console.error("Could not find appointment with ID:", appointmentId);
+        return;
+      }
+      
+      console.log("Moving appointment:", appointment);
+      console.log("From:", source.droppableId);
+      console.log("To:", destination.droppableId);
+      
+      // Extract stylist ID from destination droppable ID
+      const match = destination.droppableId.match(/stylist-(\d+)-slot-([0-9:.]+\s*[APMapm]*)/);
+      
+      if (!match) {
+        console.error("Invalid destination droppable ID format:", destination.droppableId);
+        return;
+      }
+      
+      const stylistId = parseInt(match[1]);
+      const newTime = match[2].trim();
+      
+      console.log("Target stylist ID:", stylistId);
+      console.log("Target time:", newTime);
+      
+      // Only proceed if we have valid time and stylist data
+      if (!stylistId || !newTime) {
+        toast({
+          title: "Error moving appointment",
+          description: "Could not determine the target time or stylist.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check for time overlaps before allowing the drop
+      if (hasTimeOverlap(appointment, stylistId)) {
+        // If there's an overlap, show a toast message and don't allow the drop
+        toast({
+          title: "Time slot conflict",
+          description: "This appointment would overlap with an existing booking. Please choose another time slot.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check if the time is within salon opening hours (9am-6pm)
+      const timeHour = parseInt(newTime.split(':')[0]);
+      if (timeHour < 9 || timeHour >= 18) {
+        toast({
+          title: "Outside operating hours",
+          description: "The salon is only open from 9am to 6pm.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Show loading toast
+      toast({
+        title: "Moving appointment...",
+        description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
+      });
+      
+      // Create a copy of the appointment to update
+      const updatedAppointment = {
+        ...appointment,
+        stylistId,
+        startTime: newTime
+      };
+      
+      // Update the appointment with new stylist and time
+      updateAppointmentMutation.mutate({
+        id: appointment.id,
+        stylistId,
+        startTime: newTime
+      });
+    } catch (error) {
+      console.error("Error in drag and drop operation:", error);
       toast({
         title: "Error moving appointment",
-        description: "Could not determine the target time or stylist.",
+        description: "There was a problem updating the appointment. Please try again.",
         variant: "destructive",
       });
-      return;
     }
-    
-    // Check for time overlaps before allowing the drop
-    if (hasTimeOverlap(appointment, stylistId)) {
-      // If there's an overlap, show a toast message and don't allow the drop
-      toast({
-        title: "Time slot conflict",
-        description: "This appointment would overlap with an existing booking. Please choose another time slot.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check if the time is within salon opening hours (9am-6pm)
-    const timeHour = parseInt(newTime.split(':')[0]);
-    if (timeHour < 9 || timeHour >= 18) {
-      toast({
-        title: "Outside operating hours",
-        description: "The salon is only open from 9am to 6pm.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Show loading toast
-    toast({
-      title: "Moving appointment...",
-      description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
-    });
-    
-    // Create a copy of the appointment to update
-    const updatedAppointment = {
-      ...appointment,
-      stylistId,
-      startTime: newTime
-    };
-    
-    // Update the appointment with new stylist and time
-    updateAppointmentMutation.mutate({
-      id: appointment.id,
-      stylistId,
-      startTime: newTime
-    });
   };
   
   return (
