@@ -1,36 +1,66 @@
-import { User } from 'lucide-react';
+import { BellRing, Calendar, Settings, User } from 'lucide-react';
+import { useLocation } from 'wouter';
 
-interface AppHeaderProps {
-  user: {
-    initials: string;
-    name: string;
-  };
-}
-
-export default function AppHeader({ user }: AppHeaderProps) {
+export default function AppHeader() {
+  const [location] = useLocation();
+  
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="flex justify-between items-center px-4 py-2">
-        <div className="flex items-center">
-          <button className="p-2 rounded-full hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <span className="ml-2 text-lg font-medium flex items-center">
-            <svg className="h-5 w-5 text-primary mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
-            </svg>
-            Shortcuts
-          </span>
-        </div>
-        <div className="flex items-center">
-          <button className="px-3 py-1 text-sm rounded-full border border-gray-300 hover:bg-gray-100 mr-2">
-            <span className="hidden md:inline">Shortcuts</span>
-          </button>
-          <div className="h-8 w-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-medium">
-            <span>{user.initials}</span>
+    <header className="border-b bg-white py-3 px-4 flex items-center justify-between">
+      <div className="flex items-center">
+        <div className="flex items-center mr-8">
+          <div className="font-bold text-2xl text-primary">
+            <span className="text-3xl mr-1">THE</span>
+            EDGE
+            <span className="text-sm align-top ml-1">HD</span>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground font-normal">SALON</div>
           </div>
+        </div>
+        
+        <nav className="hidden md:flex space-x-6">
+          <a
+            href="/"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              location === '/' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            Calendar
+          </a>
+          <a
+            href="/services"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              location === '/services' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            Services
+          </a>
+          <a
+            href="/clients"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              location === '/clients' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            Clients
+          </a>
+          <a
+            href="/reports"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              location === '/reports' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            Reports
+          </a>
+        </nav>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <BellRing className="h-5 w-5" />
+        </button>
+        <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <Settings className="h-5 w-5" />
+        </button>
+        <div className="h-8 w-8 rounded-full bg-primary text-white grid place-items-center">
+          <User className="h-5 w-5" />
         </div>
       </div>
     </header>

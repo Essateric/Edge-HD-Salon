@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, ArrowLeft, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ interface BookingModalProps {
 interface SelectedServiceItem {
   id: number;
   name: string;
-  price?: number;
+  price: number;
   duration: number;
 }
 
@@ -46,13 +46,17 @@ export default function BookingModal({
   
   const [customer, setCustomer] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [serviceSelectionOpen, setServiceSelectionOpen] = useState(false);
   const [selectedServices, setSelectedServices] = useState<SelectedServiceItem[]>([]);
-  const [date] = useState(format(selectedDate, 'yyyy-MM-dd'));
-  const [time] = useState(selectedTimeSlot || '10:00');
-  const [stylist] = useState(selectedStylist?.id.toString() || '');
-  const [totalDuration, setTotalDuration] = useState(0);
   const [notes, setNotes] = useState('');
+  const [activeTab, setActiveTab] = useState('customer');
+  
+  // Format date and time
+  const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+  const formattedTimeDisplay = selectedTimeSlot || '10:00 AM';
+  
+  // Calculate total price and duration
+  const totalPrice = selectedServices.reduce((total, service) => total + (service.price || 0), 0);
+  const totalDuration = selectedServices.reduce((total, service) => total + service.duration, 0);
   
   // Fetch service categories
   const { data: categories = [] } = useQuery<ServiceCategory[]>({
@@ -95,13 +99,26 @@ export default function BookingModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Don't submit if no services are selected
+    if (selectedServices.length === 0) {
+      toast({
+        title: "No services selected",
+        description: "Please select at least one service.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Use the first service for now (will need to be modified for multi-service support)
+    const firstService = selectedServices[0];
+    
     const appointment = {
-      customerName: customer,
-      serviceId: parseInt(service),
-      stylistId: parseInt(stylist),
-      date,
-      startTime: time,
-      duration: parseInt(duration),
+      customerName: customer || 'Guest',
+      serviceId: firstService.id,
+      stylistId: selectedStylist?.id || 1,
+      date: formattedDate,
+      startTime: selectedTimeSlot || '10:00',
+      duration: totalDuration, 
       notes
     };
     
@@ -110,52 +127,51 @@ export default function BookingModal({
   
   const resetForm = () => {
     setCustomer('');
-    setService('');
-    setTime('10:00');
-    setStylist('');
-    setDuration('30');
     setNotes('');
     setSelectedCategoryId(null);
-    setServiceSelectionOpen(false);
+    setSelectedServices([]);
+    setActiveTab('customer');
   };
-  
-  // Generate time slot options in 15-minute increments from 9am to 7pm
-  const timeOptions = [];
-  for (let hour = 9; hour <= 19; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      const h = hour % 12 === 0 ? 12 : hour % 12;
-      const ampm = hour >= 12 ? 'pm' : 'am';
-      const m = minute.toString().padStart(2, '0');
-      timeOptions.push(`${h}:${m} ${ampm}`);
-    }
-  }
   
   // Handle selecting a category
   const handleCategorySelect = (categoryId: number) => {
     setSelectedCategoryId(categoryId);
-    setServiceSelectionOpen(true);
   };
   
-  // Handle selecting a service
-  const handleServiceSelect = (serviceId: string) => {
-    setService(serviceId);
-    setServiceSelectionOpen(false);
-    
-    // Set duration based on the selected service
-    const selectedService = services.find(s => s.id.toString() === serviceId);
-    if (selectedService) {
-      setDuration(selectedService.defaultDuration.toString());
-    }
+  // Toggle service selection
+  const toggleServiceSelection = (service: Service) => {
+    setSelectedServices(prev => {
+      // Check if service is already selected
+      const existingIndex = prev.findIndex(s => s.id === service.id);
+      
+      if (existingIndex >= 0) {
+        // Remove service if already selected
+        return prev.filter(s => s.id !== service.id);
+      } else {
+        // Add service if not already selected
+        return [
+          ...prev, 
+          { 
+            id: service.id, 
+            name: service.name, 
+            price: service.price || 0, 
+            duration: service.defaultDuration 
+          }
+        ];
+      }
+    });
   };
   
-  // Get the selected service name
-  const selectedServiceName = service ? 
-    services.find(s => s.id.toString() === service)?.name : '';
+  // Check if a service is selected
+  const isServiceSelected = (serviceId: number) => {
+    return selectedServices.some(s => s.id === serviceId);
+  };
   
-  // Get the selected stylist name
-  const selectedStylistName = stylist ? 
-    stylists.find(s => s.id.toString() === stylist)?.name : '';
-    
+  // Remove a service from selected services
+  const removeService = (serviceId: number) => {
+    setSelectedServices(prev => prev.filter(s => s.id !== serviceId));
+  };
+  
   // Function to handle closing the modal
   const handleClose = () => {
     resetForm();
@@ -165,164 +181,206 @@ export default function BookingModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md md:max-w-2xl">
+          <DialogHeader className="border-b pb-4">
             <DialogTitle className="flex justify-between items-center">
-              <span>New Appointment</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold">EDGE</span>
+                <span>{formattedTimeDisplay} {format(selectedDate, 'dd MMMM yyyy')}</span>
+              </div>
               <Button variant="ghost" size="icon" onClick={handleClose}>
                 <X className="h-4 w-4" />
               </Button>
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <Label htmlFor="customer">Customer</Label>
-                <Input
-                  id="customer"
-                  placeholder="Search or create customer"
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="service">Service</Label>
-                <div 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                  onClick={() => setServiceSelectionOpen(true)}
-                >
-                  {selectedServiceName || "Select service"}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="customer">Customer</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="services" className="relative">
+                Services
+                {selectedServices.length > 0 && (
+                  <span className="ml-1 rounded-full bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                    {selectedServices.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="customer">
+              <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="customer">Customer Name</Label>
                   <Input
-                    id="date"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    id="customer"
+                    placeholder="Search or enter customer name"
+                    value={customer}
+                    onChange={(e) => setCustomer(e.target.value)}
                   />
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="time">Time</Label>
+                  <Label htmlFor="stylist">Stylist</Label>
                   <Input
-                    id="time"
-                    value={time}
+                    id="stylist"
+                    value={selectedStylist?.name || "Unassigned"}
                     readOnly
                     className="bg-muted"
                   />
                 </div>
+                
+                <div className="flex justify-end">
+                  <Button onClick={() => setActiveTab('details')}>
+                    Next
+                  </Button>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="stylist">Stylist</Label>
-                <Input
-                  id="stylist"
-                  value={selectedStylistName || ""}
-                  readOnly
-                  className="bg-muted"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration</Label>
-                <Select value={duration} onValueChange={setDuration}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select duration" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="45">45 minutes</SelectItem>
-                    <SelectItem value="60">60 minutes</SelectItem>
-                    <SelectItem value="75">75 minutes</SelectItem>
-                    <SelectItem value="90">90 minutes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Add any additional notes here"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                />
-              </div>
-            </div>
+            </TabsContent>
             
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createAppointmentMutation.isPending || !service}>
-                Save Appointment
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Service Selection Modal */}
-      <Dialog open={serviceSelectionOpen} onOpenChange={setServiceSelectionOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCategoryId ? 'Select Service' : 'Select Service Category'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedCategoryId ? (
-            // Display services for the selected category
-            <div className="grid gap-2">
-              <div className="flex justify-between items-center mb-2">
+            <TabsContent value="details">
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Add any additional notes here"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab('customer')}>
+                    Back
+                  </Button>
+                  <Button onClick={() => setActiveTab('services')}>
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="services">
+              <div className="grid md:grid-cols-2 gap-4 py-4">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-medium">Choose Services</h3>
+                    {selectedCategoryId && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSelectedCategoryId(null)}
+                        className="h-8 px-2"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-1" />
+                        Categories
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {!selectedCategoryId ? (
+                    // Show categories
+                    <div className="space-y-2">
+                      <Input 
+                        placeholder="Search categories..."
+                        className="mb-2"
+                      />
+                      {categories.map(category => (
+                        <div 
+                          key={category.id}
+                          className="p-3 border rounded-md cursor-pointer hover:bg-accent"
+                          onClick={() => handleCategorySelect(category.id)}
+                        >
+                          <div className="font-medium">{category.name}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    // Show services in selected category
+                    <div className="space-y-2">
+                      <Input 
+                        placeholder="Search services..."
+                        className="mb-2"
+                      />
+                      {servicesByCategory[selectedCategoryId]?.map(service => (
+                        <div 
+                          key={service.id}
+                          className={`p-3 border rounded-md flex items-center justify-between cursor-pointer ${isServiceSelected(service.id) ? 'bg-primary/10 border-primary' : 'hover:bg-accent'}`}
+                          onClick={() => toggleServiceSelection(service)}
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium">{service.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {service.defaultDuration} min · £{service.price?.toFixed(2) || '0.00'}
+                            </div>
+                          </div>
+                          <Checkbox checked={isServiceSelected(service.id)} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Selected Services</h3>
+                  
+                  {selectedServices.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No services selected
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedServices.map(service => (
+                        <div key={service.id} className="flex justify-between items-center p-3 border rounded-md">
+                          <div>
+                            <div className="font-medium">{service.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {service.duration} min
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium">£{service.price.toFixed(2)}</div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => removeService(service.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <Separator />
+                      
+                      <div className="flex justify-between items-center font-medium">
+                        <span>Total</span>
+                        <span>£{totalPrice.toFixed(2)}</span>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        Total duration: {totalDuration} minutes
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex justify-between mt-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setActiveTab('details')}>
+                  Back
+                </Button>
                 <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setSelectedCategoryId(null)}
+                  onClick={handleSubmit}
+                  disabled={selectedServices.length === 0 || createAppointmentMutation.isPending}
                 >
-                  Back to Categories
+                  Book Appointment
                 </Button>
               </div>
-              
-              <div className="grid gap-2">
-                {servicesByCategory[selectedCategoryId]?.map(service => (
-                  <Card 
-                    key={service.id} 
-                    className="cursor-pointer hover:bg-accent"
-                    onClick={() => handleServiceSelect(service.id.toString())}
-                  >
-                    <CardContent className="p-4">
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-muted-foreground">{service.defaultDuration} minutes</div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ) : (
-            // Display service categories
-            <div className="grid gap-2">
-              {categories.map(category => (
-                <Card 
-                  key={category.id} 
-                  className="cursor-pointer hover:bg-accent"
-                  onClick={() => handleCategorySelect(category.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="font-medium">{category.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {servicesByCategory[category.id]?.length || 0} services
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </>
