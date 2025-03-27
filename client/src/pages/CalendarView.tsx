@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { format, addDays, subDays } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
 import CalendarToolbar from '@/components/CalendarToolbar';
 import ServicesPanel from '@/components/ServicesPanel';
 import StylistHeader from '@/components/StylistHeader';
@@ -8,7 +9,7 @@ import TimeSlots from '@/components/TimeSlots';
 import BottomToolbar from '@/components/BottomToolbar';
 import BookingModal from '@/components/BookingModal';
 import { Stylist, Appointment, Service, TimeSlot, ViewMode } from '@/lib/types';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 export default function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -77,6 +78,45 @@ export default function CalendarView() {
   const handleCloseBookingModal = () => {
     setIsBookingModalOpen(false);
   };
+
+  // Update appointment mutation
+  const updateAppointmentMutation = useMutation({
+    mutationFn: async (updatedAppointment: Partial<Appointment>) => {
+      const res = await apiRequest(`/api/appointments/${updatedAppointment.id}`, 'PUT', updatedAppointment);
+      return res.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments', format(currentDate, 'yyyy-MM-dd')] });
+    }
+  });
+
+  // Handle drag end event
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    // Extract data from the active element (dragged appointment)
+    const appointment = (active.data.current as Appointment);
+    
+    // Extract data from the over element (drop target)
+    const targetId = over.id.toString();
+    const match = targetId.match(/slot-(\d+)-(\d+)/);
+    
+    if (match) {
+      const stylistId = parseInt(match[1]);
+      
+      // Only update if the stylist has changed
+      if (stylistId !== appointment.stylistId) {
+        // Update the appointment with new stylist
+        updateAppointmentMutation.mutate({
+          id: appointment.id,
+          stylistId
+        });
+      }
+    }
+  };
   
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
@@ -89,21 +129,26 @@ export default function CalendarView() {
         onNewBooking={() => handleNewBooking()}
       />
       
-      <div className="flex h-[calc(100vh-170px)] overflow-hidden">
-        {/* Main calendar grid */}
-        <div className="flex-1 overflow-x-auto">
-          <div className="min-w-max">
-            <StylistHeader stylists={stylists} />
-            
-            <TimeSlots 
-              timeSlots={timeSlots}
-              stylists={stylists}
-              appointments={appointments}
-              onTimeSlotClick={handleNewBooking}
-            />
+      <DndContext 
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex h-[calc(100vh-170px)] overflow-hidden">
+          {/* Main calendar grid */}
+          <div className="flex-1 overflow-x-auto">
+            <div className="min-w-max">
+              <StylistHeader stylists={stylists} />
+              
+              <TimeSlots 
+                timeSlots={timeSlots}
+                stylists={stylists}
+                appointments={appointments}
+                onTimeSlotClick={handleNewBooking}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </DndContext>
       
       <BottomToolbar viewMode={viewMode} onViewModeChange={setViewMode} />
       

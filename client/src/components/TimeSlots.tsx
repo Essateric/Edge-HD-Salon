@@ -1,4 +1,5 @@
 import { format, parse } from 'date-fns';
+import { useDroppable } from '@dnd-kit/core';
 import { TimeSlot, Stylist, Appointment } from '@/lib/types';
 import AppointmentComponent from '@/components/Appointment';
 
@@ -43,7 +44,7 @@ export default function TimeSlots({
     <div className="relative">
       {timeSlots.map((slot) => (
         <div key={slot.time} className="flex time-slot">
-          <div className="w-16 flex-shrink-0 border-r border-gray-200 text-right pr-2 text-xs text-gray-500 py-1">
+          <div className="w-16 flex-shrink-0 border-r border-border text-right pr-2 text-xs text-muted-foreground py-1">
             <div className="h-full flex flex-col justify-between">
               <span>{slot.formatted}</span>
               <span>15</span>
@@ -56,14 +57,26 @@ export default function TimeSlots({
             const timeSlotAppointments = getAppointmentsForTimeSlot(slot.time, stylist.id);
             const isOff = isTimeSlotOff(slot.time, stylist.id);
             
+            // Create a droppable area for each stylist column
+            const { isOver, setNodeRef } = useDroppable({
+              id: `slot-${stylist.id}-${slot.time}`,
+              data: {
+                stylistId: stylist.id,
+                time: slot.time
+              }
+            });
+            
             return (
               <div 
+                ref={setNodeRef}
                 key={`${slot.time}-${stylist.id}`} 
-                className={`stylist-column flex-shrink-0 border-r border-gray-200 relative w-32 h-12 ${!isOff ? 'cursor-pointer hover:bg-green-50' : ''}`}
+                className={`stylist-column flex-shrink-0 border-r border-border relative w-32 h-12 ${
+                  !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
+                } ${isOver ? 'bg-primary/20' : ''}`}
                 onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
               >
                 {isOff ? (
-                  <div className="h-full bg-gray-50 text-center text-xs text-gray-400 pt-2">off</div>
+                  <div className="h-full bg-muted text-center text-xs text-muted-foreground pt-2">off</div>
                 ) : (
                   timeSlotAppointments.length > 0 ? (
                     timeSlotAppointments.map((appointment) => (
@@ -74,7 +87,7 @@ export default function TimeSlots({
                     ))
                   ) : (
                     <div className="h-full w-full flex items-center justify-center">
-                      <div className="text-xs text-gray-300 border border-dashed border-gray-200 rounded-sm w-3/4 h-3/4 flex items-center justify-center">
+                      <div className="text-xs text-muted-foreground border border-dashed border-muted-foreground rounded-sm w-3/4 h-3/4 flex items-center justify-center">
                         <span>+</span>
                       </div>
                     </div>

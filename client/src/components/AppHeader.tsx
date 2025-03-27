@@ -1,13 +1,15 @@
 import { BellRing, Calendar, Settings, User } from 'lucide-react';
 import { useLocation } from 'wouter';
+import edgeLogo from '@assets/edgeicon_1024.png';
 
 export default function AppHeader() {
   const [location] = useLocation();
   
   return (
-    <header className="border-b bg-white py-3 px-4 flex items-center justify-between">
+    <header className="border-b bg-background py-3 px-4 flex items-center justify-between">
       <div className="flex items-center">
         <div className="flex items-center mr-8">
+          <img src={edgeLogo} alt="The Edge Salon Logo" className="h-12 w-12 mr-3" />
           <div className="font-bold text-2xl text-primary">
             <span className="text-3xl mr-1">THE</span>
             EDGE

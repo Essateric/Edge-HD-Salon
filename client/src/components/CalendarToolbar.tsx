@@ -20,41 +20,41 @@ export default function CalendarToolbar({
   onNewBooking
 }: CalendarToolbarProps) {
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div className="bg-background border-b border-border px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center justify-between sm:justify-start">
         <button 
-          className="p-2 rounded-md hover:bg-gray-100"
+          className="p-2 rounded-md hover:bg-muted"
           onClick={onPrevious}
         >
-          <ChevronLeft className="h-5 w-5 text-gray-500" />
+          <ChevronLeft className="h-5 w-5 text-muted-foreground" />
         </button>
         <h2 className="text-lg font-medium px-2">
           {currentDate}
         </h2>
         <button 
-          className="p-2 rounded-md hover:bg-gray-100"
+          className="p-2 rounded-md hover:bg-muted"
           onClick={onNext}
         >
-          <ChevronRight className="h-5 w-5 text-gray-500" />
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </button>
       </div>
       <div className="mt-3 sm:mt-0 flex items-center space-x-2">
-        <button className="px-3 py-1 text-sm rounded-md border border-gray-300 hover:bg-gray-100">Today</button>
-        <div className="bg-gray-200 rounded-md p-1 flex">
+        <button className="px-3 py-1 text-sm rounded-md border border-border hover:bg-muted">Today</button>
+        <div className="bg-muted rounded-md p-1 flex">
           <button 
-            className={`px-3 py-1 text-sm ${viewMode === 'day' ? 'bg-white rounded shadow' : 'hover:bg-gray-100'}`}
+            className={`px-3 py-1 text-sm ${viewMode === 'day' ? 'bg-background rounded shadow-sm' : 'hover:bg-background/50'}`}
             onClick={() => onViewModeChange('day')}
           >
             Day
           </button>
           <button 
-            className={`px-3 py-1 text-sm ${viewMode === 'week' ? 'bg-white rounded shadow' : 'hover:bg-gray-100'}`}
+            className={`px-3 py-1 text-sm ${viewMode === 'week' ? 'bg-background rounded shadow-sm' : 'hover:bg-background/50'}`}
             onClick={() => onViewModeChange('week')}
           >
             Week
           </button>
           <button 
-            className={`px-3 py-1 text-sm ${viewMode === 'month' ? 'bg-white rounded shadow' : 'hover:bg-gray-100'}`}
+            className={`px-3 py-1 text-sm ${viewMode === 'month' ? 'bg-background rounded shadow-sm' : 'hover:bg-background/50'}`}
             onClick={() => onViewModeChange('month')}
           >
             Month

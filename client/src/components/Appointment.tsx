@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { Appointment } from '@/lib/types';
 
 interface AppointmentProps {
@@ -8,6 +10,16 @@ interface AppointmentProps {
 
 export default function AppointmentComponent({ appointment }: AppointmentProps) {
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Configure draggable
+  const {attributes, listeners, setNodeRef, transform} = useDraggable({
+    id: `appointment-${appointment.id}`,
+    data: appointment,
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+  };
   
   // Calculate the height based on duration
   // Assuming each hour is 48px in height (12px per 15 min)
@@ -28,11 +40,15 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
   
   return (
     <motion.div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       className={`appointment absolute top-0 left-0 right-0 mx-1 ${
-        appointment.isConsultation ? 'bg-amber-500' : 'bg-green-500'
-      } text-white rounded shadow-sm p-1 z-10`}
+        appointment.isConsultation ? 'bg-amber-600' : 'bg-primary/90'
+      } text-white rounded shadow-md p-1 z-10 cursor-move`}
       style={{ 
-        height: `${getHeight()}px` 
+        height: `${getHeight()}px`,
+        ...style
       }}
       initial={{ opacity: 0.8 }}
       animate={{ 
@@ -43,8 +59,11 @@ export default function AppointmentComponent({ appointment }: AppointmentProps) 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="text-xs font-medium mb-1">REQ</div>
-      <div className="text-xs font-medium">
+      <div className="text-xs font-medium mb-1 flex justify-between">
+        <span>REQ</span>
+        <span className="text-xs opacity-80">{appointment.startTime} - {appointment.endTime}</span>
+      </div>
+      <div className="text-xs font-medium line-clamp-2">
         {appointment.customerName || 'Unspecified'} - {appointment.serviceName}
       </div>
     </motion.div>
