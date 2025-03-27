@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,6 +10,40 @@ import CalendarView from "@/pages/CalendarView";
 import AppointmentsDashboard from "@/pages/AppointmentsDashboard";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
+import { useEffect, useState } from "react";
+
+// Protected route component
+function ProtectedRoute({ component: Component, ...rest }: any) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          setLocation('/login');
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+        setLocation('/login');
+      }
+    };
+
+    checkAuth();
+  }, [setLocation]);
+
+  // Show nothing while checking authentication
+  if (isAuthenticated === null) {
+    return <div className="flex items-center justify-center h-full">Loading...</div>;
+  }
+
+  return isAuthenticated ? <Component {...rest} /> : <Redirect to="/login" />;
+}
 
 function Router() {
   const [location] = useLocation();
@@ -17,10 +51,10 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/calendar" component={CalendarView} />
-      <Route path="/services" component={ServicesPage} />
-      <Route path="/appointments" component={AppointmentsDashboard} />
+      <Route path="/" component={() => <ProtectedRoute component={Home} />} />
+      <Route path="/calendar" component={() => <ProtectedRoute component={CalendarView} />} />
+      <Route path="/services" component={() => <ProtectedRoute component={ServicesPage} />} />
+      <Route path="/appointments" component={() => <ProtectedRoute component={AppointmentsDashboard} />} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route component={NotFound} />
@@ -31,6 +65,13 @@ function Router() {
 function App() {
   const [location] = useLocation();
   const isAuthRoute = location === '/login' || location === '/register';
+
+  // Redirect to login page by default
+  useEffect(() => {
+    if (location === '/') {
+      // This will check auth and redirect appropriately
+    }
+  }, [location]);
 
   return (
     <QueryClientProvider client={queryClient}>
