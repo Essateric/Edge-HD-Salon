@@ -26,7 +26,7 @@ interface BookingModalProps {
 
 export default function BookingModal({
   isOpen,
-  onClose,
+  onClose: closeModal,
   stylists,
   services,
   selectedDate,
@@ -72,8 +72,8 @@ export default function BookingModal({
         title: "Appointment created",
         description: "The appointment has been successfully scheduled.",
       });
-      onClose();
       resetForm();
+      closeModal();
     },
     onError: (error) => {
       toast({
@@ -107,6 +107,8 @@ export default function BookingModal({
     setStylist('');
     setDuration('30');
     setNotes('');
+    setSelectedCategoryId(null);
+    setServiceSelectionOpen(false);
   };
   
   // Generate time slot options in 15-minute increments from 9am to 7pm
@@ -120,126 +122,201 @@ export default function BookingModal({
     }
   }
   
+  // Handle selecting a category
+  const handleCategorySelect = (categoryId: number) => {
+    setSelectedCategoryId(categoryId);
+    setServiceSelectionOpen(true);
+  };
+  
+  // Handle selecting a service
+  const handleServiceSelect = (serviceId: string) => {
+    setService(serviceId);
+    setServiceSelectionOpen(false);
+    
+    // Set duration based on the selected service
+    const selectedService = services.find(s => s.id.toString() === serviceId);
+    if (selectedService) {
+      setDuration(selectedService.defaultDuration.toString());
+    }
+  };
+  
+  // Get the selected service name
+  const selectedServiceName = service ? 
+    services.find(s => s.id.toString() === service)?.name : '';
+  
+  // Get the selected stylist name
+  const selectedStylistName = stylist ? 
+    stylists.find(s => s.id.toString() === stylist)?.name : '';
+    
+  // Function to handle closing the modal
+  const handleClose = () => {
+    resetForm();
+    closeModal();
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <span>New Appointment</span>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="customer">Customer</Label>
-              <Input
-                id="customer"
-                placeholder="Search or create customer"
-                value={customer}
-                onChange={(e) => setCustomer(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="service">Service</Label>
-              <Select value={service} onValueChange={setService}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((s) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex justify-between items-center">
+              <span>New Appointment</span>
+              <Button variant="ghost" size="icon" onClick={handleClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="customer">Customer</Label>
                 <Input
-                  id="date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  id="customer"
+                  placeholder="Search or create customer"
+                  value={customer}
+                  onChange={(e) => setCustomer(e.target.value)}
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label htmlFor="time">Time</Label>
-                <Select value={time} onValueChange={setTime}>
+                <Label htmlFor="service">Service</Label>
+                <div 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                  onClick={() => setServiceSelectionOpen(true)}
+                >
+                  {selectedServiceName || "Select service"}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="time">Time</Label>
+                  <Input
+                    id="time"
+                    value={time}
+                    readOnly
+                    className="bg-muted"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="stylist">Stylist</Label>
+                <Input
+                  id="stylist"
+                  value={selectedStylistName || ""}
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration</Label>
+                <Select value={duration} onValueChange={setDuration}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select time" />
+                    <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
-                    {timeOptions.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                    <SelectItem value="60">60 minutes</SelectItem>
+                    <SelectItem value="75">75 minutes</SelectItem>
+                    <SelectItem value="90">90 minutes</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Add any additional notes here"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                />
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="stylist">Stylist</Label>
-              <Select value={stylist} onValueChange={setStylist}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select stylist" />
-                </SelectTrigger>
-                <SelectContent>
-                  {stylists.map((s) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
-              <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="45">45 minutes</SelectItem>
-                  <SelectItem value="60">60 minutes</SelectItem>
-                  <SelectItem value="75">75 minutes</SelectItem>
-                  <SelectItem value="90">90 minutes</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                placeholder="Add any additional notes here"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={2}
-              />
-            </div>
-          </div>
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createAppointmentMutation.isPending || !service}>
+                Save Appointment
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Service Selection Modal */}
+      <Dialog open={serviceSelectionOpen} onOpenChange={setServiceSelectionOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedCategoryId ? 'Select Service' : 'Select Service Category'}
+            </DialogTitle>
+          </DialogHeader>
           
-          <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createAppointmentMutation.isPending}>
-              Save Appointment
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          {selectedCategoryId ? (
+            // Display services for the selected category
+            <div className="grid gap-2">
+              <div className="flex justify-between items-center mb-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSelectedCategoryId(null)}
+                >
+                  Back to Categories
+                </Button>
+              </div>
+              
+              <div className="grid gap-2">
+                {servicesByCategory[selectedCategoryId]?.map(service => (
+                  <Card 
+                    key={service.id} 
+                    className="cursor-pointer hover:bg-accent"
+                    onClick={() => handleServiceSelect(service.id.toString())}
+                  >
+                    <CardContent className="p-4">
+                      <div className="font-medium">{service.name}</div>
+                      <div className="text-sm text-muted-foreground">{service.defaultDuration} minutes</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : (
+            // Display service categories
+            <div className="grid gap-2">
+              {categories.map(category => (
+                <Card 
+                  key={category.id} 
+                  className="cursor-pointer hover:bg-accent"
+                  onClick={() => handleCategorySelect(category.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="font-medium">{category.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {servicesByCategory[category.id]?.length || 0} services
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
