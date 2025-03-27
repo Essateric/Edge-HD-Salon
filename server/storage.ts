@@ -488,13 +488,14 @@ export class MemStorage implements IStorage {
       }
     }
     
-    // Calculate end time based on start time and duration (if not provided)
+    // Use the provided endTime or calculate it based on start time and duration
     let endTime = appointmentData.endTime;
-    if (!endTime && appointmentData.startTime) {
-      // Get service duration
-      let duration = 30; // Default to 30 minutes
-      if (appointmentData.serviceId && appointmentData.stylistId) {
-        // First check if there's a stylist-specific duration
+    if ((!endTime || endTime === '') && appointmentData.startTime) {
+      // Get service duration from the appointment data or the service
+      let duration = appointmentData.duration || 30; // Use provided duration or default to 30 minutes
+      
+      if (!appointmentData.duration && appointmentData.serviceId && appointmentData.stylistId) {
+        // If no duration was provided, check for stylist-specific duration
         const stylistDuration = await this.getStylistServiceDurationByServiceAndStylist(
           appointmentData.serviceId, 
           appointmentData.stylistId
@@ -511,16 +512,36 @@ export class MemStorage implements IStorage {
         }
       }
       
-      const startDateTime = parse(appointmentData.startTime, 'h:mm a', new Date());
+      // Parse the startTime (handling both HH:MM and h:mm a formats)
+      let startDateTime: Date;
+      if (appointmentData.startTime.includes(':') && !appointmentData.startTime.includes(' ')) {
+        // Format is HH:MM (24-hour)
+        const [hours, minutes] = appointmentData.startTime.split(':').map(Number);
+        startDateTime = new Date();
+        startDateTime.setHours(hours, minutes, 0, 0);
+      } else {
+        // Format is h:mm a (12-hour with AM/PM)
+        startDateTime = parse(appointmentData.startTime, 'h:mm a', new Date());
+      }
+      
       const endDateTime = add(startDateTime, { minutes: duration });
-      endTime = format(endDateTime, 'h:mm a');
+      endTime = format(endDateTime, 'HH:mm'); // Use 24-hour format for consistency
     }
     
+    // Ensure all required fields have values, even if null
     const appointment: Appointment = { 
-      ...appointmentData, 
       id,
+      date: appointmentData.date,
+      stylistId: appointmentData.stylistId,
+      serviceId: appointmentData.serviceId,
       serviceName: serviceName || "Unnamed Service",
-      endTime: endTime || appointmentData.startTime
+      startTime: appointmentData.startTime,
+      endTime: endTime || appointmentData.startTime,
+      notes: appointmentData.notes || null,
+      customerId: appointmentData.customerId || null,
+      customerName: appointmentData.customerName || null,
+      isConsultation: appointmentData.isConsultation || null,
+      createdAt: new Date()
     };
     
     this.appointments.set(id, appointment);

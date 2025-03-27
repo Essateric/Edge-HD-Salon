@@ -326,21 +326,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerName, 
         stylistId, 
         serviceId, 
+        serviceName, 
         date, 
         startTime, 
+        endTime,
         duration, 
         notes, 
         isConsultation 
       } = req.body;
       
-      // Get service details
-      const service = await storage.getService(serviceId);
-      if (!service) {
-        return res.status(400).json({ message: 'Service not found' });
+      // Get service details if not provided
+      let serviceDetails;
+      if (!serviceName) {
+        serviceDetails = await storage.getService(serviceId);
+        if (!serviceDetails) {
+          return res.status(400).json({ message: 'Service not found' });
+        }
       }
-      
-      // Calculate end time based on duration
-      const appointmentDuration = duration || service.defaultDuration;
       
       // Create appointment object
       const appointmentData = {
@@ -348,12 +350,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerName: customerName || null,
         stylistId,
         serviceId,
-        serviceName: service.name,
+        serviceName: serviceName || serviceDetails?.name,
         date,
         startTime,
-        endTime: '', // Will be calculated in storage.createAppointment
-        notes: notes || '',
-        isConsultation: isConsultation || false
+        endTime: endTime || '', // Now provided by client
+        notes: notes || null,
+        isConsultation: isConsultation || null
       };
       
       const appointment = await storage.createAppointment(appointmentData);

@@ -75,24 +75,28 @@ export default function BookingModal({
   
   const createAppointmentMutation = useMutation({
     mutationFn: async (appointment: any) => {
-      const res = await apiRequest('/api/appointments', 'POST', appointment);
+      // Calculate end time based on start time and duration
+      const startTime = appointment.startTime;
+      const duration = appointment.duration;
+      
+      // Parse start time (HH:MM format)
+      const [hours, minutes] = startTime.split(':').map(Number);
+      
+      // Create date objects for start and end times
+      const startDate = new Date();
+      startDate.setHours(hours, minutes, 0, 0);
+      
+      const endDate = new Date(startDate.getTime() + duration * 60000);
+      const endTimeStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+      
+      // Add end time to the appointment data
+      const appointmentWithEndTime = {
+        ...appointment,
+        endTime: endTimeStr
+      };
+      
+      const res = await apiRequest('/api/appointments', 'POST', appointmentWithEndTime);
       return await res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      toast({
-        title: "Appointment created",
-        description: "The appointment has been successfully scheduled.",
-      });
-      resetForm();
-      closeModal();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create appointment. Please try again.",
-        variant: "destructive",
-      });
     }
   });
   
@@ -109,20 +113,51 @@ export default function BookingModal({
       return;
     }
     
-    // Use the first service for now (will need to be modified for multi-service support)
-    const firstService = selectedServices[0];
+    // Create multiple appointments - one for each service
+    let currentStartTime = selectedTimeSlot || '10:00';
+    let currentDateTime = new Date(`${formattedDate}T${currentStartTime}`);
     
-    const appointment = {
-      customerName: customer || 'Guest',
-      serviceId: firstService.id,
-      stylistId: selectedStylist?.id || 1,
-      date: formattedDate,
-      startTime: selectedTimeSlot || '10:00',
-      duration: totalDuration, 
-      notes
-    };
+    // Create a promise array to track all appointment creations
+    const appointmentPromises = selectedServices.map(async (service, index) => {
+      // For each service after the first one, the start time is the end time of the previous service
+      if (index > 0) {
+        currentDateTime = new Date(currentDateTime.getTime() + (selectedServices[index - 1].duration * 60000));
+        currentStartTime = currentDateTime.toTimeString().substring(0, 5);
+      }
+      
+      const appointment = {
+        customerName: customer || 'Guest',
+        serviceId: service.id,
+        serviceName: service.name, // Include service name for display
+        stylistId: selectedStylist?.id || 1,
+        date: formattedDate,
+        startTime: currentStartTime,
+        duration: service.duration,
+        notes: notes
+      };
+      
+      return createAppointmentMutation.mutateAsync(appointment);
+    });
     
-    createAppointmentMutation.mutate(appointment);
+    // Process all appointment creations
+    Promise.all(appointmentPromises)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+        toast({
+          title: "Appointments created",
+          description: `${selectedServices.length} service${selectedServices.length > 1 ? 's' : ''} scheduled successfully.`,
+        });
+        resetForm();
+        closeModal();
+      })
+      .catch((error) => {
+        toast({
+          title: "Error",
+          description: "Failed to create appointments. Please try again.",
+          variant: "destructive",
+        });
+        console.error(error);
+      });
   };
   
   const resetForm = () => {
