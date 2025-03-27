@@ -1,16 +1,7 @@
 import { useState } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { 
-  DndContext, 
-  DragEndEvent, 
-  closestCenter,
-  pointerWithin,
-  DragStartEvent,
-  DragOverlay,
-  DragMoveEvent
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import CalendarToolbar from '@/components/CalendarToolbar';
 import ServicesPanel from '@/components/ServicesPanel';
 import StylistHeader from '@/components/StylistHeader';
@@ -210,17 +201,17 @@ export default function CalendarView() {
   };
 
   // Handle drag end event
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
     
-    if (!over) return;
+    const { draggableId, destination } = result;
+    const appointmentId = parseInt(draggableId.replace('appointment-', ''));
+    const appointment = appointments.find(appt => appt.id === appointmentId);
     
-    // Extract data from the active element (dragged appointment)
-    const appointment = (active.data.current as Appointment);
+    if (!appointment) return;
     
-    // Extract data from the over element (drop target)
-    const targetId = over.id.toString();
-    const match = targetId.match(/slot-(\d+)-(\d+)/);
+    // Extract stylist ID from destination droppable ID
+    const match = destination.droppableId.match(/stylist-(\d+)-slot-(\d+)/);
     
     if (match) {
       const stylistId = parseInt(match[1]);
@@ -259,12 +250,7 @@ export default function CalendarView() {
         onNewBooking={() => handleNewBooking()}
       />
       
-      <DndContext 
-        collisionDetection={pointerWithin}
-        onDragEnd={handleDragEnd}
-        modifiers={[restrictToVerticalAxis]}
-
-      >
+      <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex flex-grow overflow-hidden h-[calc(100vh-130px)]">
           {/* Main calendar grid */}
           <div className="flex-1 overflow-x-auto overflow-y-auto">
@@ -308,7 +294,7 @@ export default function CalendarView() {
             </div>
           </div>
         </div>
-      </DndContext>
+      </DragDropContext>
       
       <BottomToolbar viewMode={viewMode} onViewModeChange={setViewMode} />
       
