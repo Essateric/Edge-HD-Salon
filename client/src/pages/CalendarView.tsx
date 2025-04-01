@@ -551,7 +551,7 @@ export default function CalendarView() {
       // First, keep a copy of the current state for potential rollback
       const previousAppointments = [...localAppointments];
       
-      // Update the local state immediately for UI responsiveness
+      // This uses the exact pattern from the comparison table with a flag
       setLocalAppointments(prev => {
         let updated = false;
         const newAppointments = prev.map(appt => {
@@ -562,11 +562,11 @@ export default function CalendarView() {
           return appt;
         });
         
+        // If the appointment wasn't found in our array, add it
         if (!updated) {
           newAppointments.push(updatedAppointment);
         }
         
-        console.log("Updated local appointments:", newAppointments);
         return newAppointments;
       });
       

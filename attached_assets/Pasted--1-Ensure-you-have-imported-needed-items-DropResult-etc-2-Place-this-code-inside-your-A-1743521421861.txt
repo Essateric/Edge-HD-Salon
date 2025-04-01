@@ -1,0 +1,156 @@
+// 1) Ensure you have imported needed items (DropResult, etc.) 
+// 2) Place this code inside your AppointmentsDashboard (or relevant file)
+
+const handleDragEnd = (result: DropResult) => {
+  // Remove dragging class
+  document.body.classList.remove('is-dragging');
+  
+  // Early return if we don't have a destination
+  if (!result.destination) {
+    console.log("No destination provided, canceling drag operation");
+    return;
+  }
+  
+  try {
+    const { draggableId, destination, source } = result;
+
+    // If source & destination are the same, do nothing
+    if (source.droppableId === destination.droppableId) {
+      console.log("Source and destination are the same, no changes needed");
+      return;
+    }
+
+    // Extract the appointment ID from the draggable ID
+    const appointmentId = parseInt(draggableId.replace('appointment-', ''));
+
+    // Find the appointment in our local state or global appointments
+    const appointment =
+      localAppointments.find(appt => appt.id === appointmentId) ||
+      appointments.find(appt => appt.id === appointmentId);
+
+    if (!appointment) {
+      console.error("Could not find appointment with ID:", appointmentId);
+      return;
+    }
+
+    console.log("Moving appointment:", appointment);
+    console.log("From:", source.droppableId);
+    console.log("To:", destination.droppableId);
+
+    // Regex to extract stylist ID & time from droppableId
+    const match = destination.droppableId.match(/stylist-(\\d+)-slot-([0-9:.]+\\s*[APMapm]*)/);
+    if (!match) {
+      console.error("Invalid destination droppable ID format:", destination.droppableId);
+      console.log("Expected format: stylist-{id}-slot-{time}");
+      return;
+    }
+
+    const newStylistId = parseInt(match[1]);
+    const newStartTime = match[2];
+
+    if (isNaN(newStylistId)) {
+      console.error("Invalid stylist ID:", match[1]);
+      return;
+    }
+
+    // Get stylist object
+    const newStylist = stylists.find(s => s.id === newStylistId);
+    if (!newStylist) {
+      console.error("Could not find stylist with ID:", newStylistId);
+      return;
+    }
+
+    // Convert time to 24-hour format
+    const [timeStr, period] = newStartTime.trim().split(/\\s+/);
+    let [hours, minutes] = timeStr.split(':').map(Number);
+    if (period && period.toLowerCase() === 'pm' && hours < 12) hours += 12;
+    if (period && period.toLowerCase() === 'am' && hours === 12) hours = 0;
+    const formattedStartTime = `${hours}:${minutes || '00'}`;
+
+    // Calculate end time
+    const startTimeInMinutes = hours * 60 + (minutes || 0);
+    const endTimeInMinutes = startTimeInMinutes + (appointment.duration || 30);
+    const endHours = Math.floor(endTimeInMinutes / 60);
+    const endMinutes = endTimeInMinutes % 60;
+    const formattedEndTime = `${endHours}:${endMinutes === 0 ? '00' : endMinutes}`;
+
+    // Check for overlapping times
+    if (
+      hasTimeOverlap(
+        {
+          ...appointment,
+          stylistId: newStylistId,
+          startTime: formattedStartTime,
+          endTime: formattedEndTime,
+        },
+        newStylistId
+      )
+    ) {
+      console.warn("Overlap detected with appointment:", appointment);
+      toast({
+        title: "Cannot move appointment",
+        description: "This time slot already has an appointment. Please choose another time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prepare updated appointment object
+    const updatedAppointment = {
+      ...appointment,
+      stylistId: newStylistId,
+      stylistName: newStylist.name,
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
+    };
+
+    // Update local state first for instant feedback
+    setLocalAppointments(prev => {
+      let updated = false;
+      const newAppointments = prev.map(appt => {
+        if (appt.id === appointmentId) {
+          updated = true;
+          return updatedAppointment;
+        }
+        return appt;
+      });
+      if (!updated) {
+        newAppointments.push(updatedAppointment);
+      }
+      return newAppointments;
+    });
+
+    // Prompt login if user is not authenticated
+    if (!currentUser) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to move appointments.",
+        variant: "destructive",
+      });
+      setIsLoggingIn(true);
+      return;
+    }
+
+    // Send update to server
+    updateAppointmentMutation.mutate(updatedAppointment, {
+      onSuccess: () => {
+        console.log("Appointment successfully updated on server");
+      },
+      onError: (error) => {
+        console.error("Error updating appointment:", error);
+        toast({
+          title: "Error updating appointment",
+          description: "The appointment was not saved. Try again.",
+          variant: "destructive",
+        });
+      },
+    });
+  } catch (error) {
+    console.error("Error in handleDragEnd:", error);
+    toast({
+      title: "Error moving appointment",
+      description: "An unexpected error occurred. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
