@@ -12,6 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { Stylist, Appointment, Service, TimeSlot, ViewMode } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 
 export default function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -21,7 +26,29 @@ export default function CalendarView() {
   const [selectedStylist, setSelectedStylist] = useState<Stylist | null>(null);
   const [showServices, setShowServices] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Fetch current user
+  const { data: currentUser, isLoading: isLoadingUser, refetch: refetchUser } = useQuery({
+    queryKey: ['/api/auth/me'],
+    queryFn: async () => {
+      try {
+        const res = await apiRequest('/api/auth/me', 'GET');
+        if (res.status === 401) {
+          return null;
+        }
+        return await res.json();
+      } catch (error) {
+        console.error('Failed to fetch current user:', error);
+        return null;
+      }
+    },
+    retry: false
+  });
   
   // Format date based on view mode
   const getFormattedDate = () => {
@@ -232,6 +259,45 @@ export default function CalendarView() {
   };
 
   // Update appointment mutation
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const res = await apiRequest('/api/auth/login', 'POST', credentials);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Login successful',
+        description: 'You are now logged in.',
+        variant: 'default',
+      });
+      refetchUser();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Login failed',
+        description: error.message || 'An error occurred during login.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  // Handle login submission
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    
+    try {
+      await loginMutation.mutateAsync({ email, password });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+  
   const updateAppointmentMutation = useMutation({
     mutationFn: async (updatedAppointment: Partial<Appointment>) => {
       const res = await apiRequest(`/api/appointments/${updatedAppointment.id}`, 'PUT', updatedAppointment);
@@ -583,6 +649,76 @@ export default function CalendarView() {
     }
   };
   
+  // Show login form if user is not authenticated
+  if (!currentUser && !isLoadingUser) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+        <Card className="w-[350px] shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A]">
+              The Edge Salon
+            </CardTitle>
+            <CardDescription>
+              Please log in to access the appointment scheduler
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="stylist@theedgesalon.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-[#D4B78E] to-[#8B734A] hover:from-[#8B734A] hover:to-[#D4B78E]"
+                disabled={isLoggingIn}
+              >
+                {isLoggingIn ? 'Logging in...' : 'Log in'}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="text-center text-sm text-gray-500">
+            <div className="w-full">
+              <p>Demo Accounts:</p>
+              <p className="mt-1">Admin: essateric@gmail.com / admin123</p>
+              <p>Stylist: martin@theedgesalon.com / stylist123</p>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoadingUser) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-medium mb-2">Loading salon scheduler...</h2>
+          <p className="text-gray-500">Please wait while we retrieve your account information</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main calendar view (user is authenticated)
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
       <CalendarToolbar 
