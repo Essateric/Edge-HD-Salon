@@ -357,12 +357,12 @@ export default function CalendarView() {
   };
   
   const updateAppointmentMutation = useMutation({
-    mutationFn: async (updatedAppointment: Partial<Appointment>) => {
+    mutationFn: async (updatedAppointment: Appointment) => {
       const res = await apiRequest(`/api/appointments/${updatedAppointment.id}`, 'PUT', updatedAppointment);
       return res.json();
     },
     onSuccess: (data) => {
-      // Show success toast first
+      // Default success handler - used when the mutation is called without explicit handlers
       toast({
         title: "Appointment moved",
         description: "The appointment has been successfully reassigned.",
@@ -391,9 +391,6 @@ export default function CalendarView() {
         return newAppointments;
       });
       
-      // Update local state first, then invalidate the query in the background
-      // We'll maintain our local state as the source of truth until the query completes
-      
       // After we've handled the local update, invalidate the cache for background refresh
       // We use a longer delay to ensure the UI remains stable during drag operations
       setTimeout(() => {
@@ -402,8 +399,8 @@ export default function CalendarView() {
       }, 1000);
     },
     onError: (error) => {
+      // Default error handler - used when the mutation is called without explicit error handler
       console.error("Error updating appointment:", error);
-      // Show error toast
       toast({
         title: "Failed to move appointment",
         description: "There was an error while updating the appointment. Please try again.",
@@ -469,20 +466,16 @@ export default function CalendarView() {
     try {
       const { draggableId, destination, source } = result;
       
-      // If the source and destination are the same, no need to do anything
       if (source.droppableId === destination.droppableId) {
         console.log("Source and destination are the same, no changes needed");
         return;
       }
     
-      // Extract the appointment ID from the draggable ID
       const appointmentId = parseInt(draggableId.replace('appointment-', ''));
       
-      // Find the appointment in our state
       const appointment = localAppointments.find(appt => appt.id === appointmentId) || 
                         appointments.find(appt => appt.id === appointmentId);
       
-      // Safety check - ensure we found the appointment
       if (!appointment) {
         console.error("Could not find appointment with ID:", appointmentId);
         return;
@@ -492,71 +485,52 @@ export default function CalendarView() {
       console.log("From:", source.droppableId);
       console.log("To:", destination.droppableId);
       
-      // Extract stylist ID and time slot from destination droppable ID
-      // Format: stylist-{id}-slot-{time}
       const match = destination.droppableId.match(/stylist-(\d+)-slot-([0-9:.]+\s*[APMapm]*)/);
       
       if (!match) {
         console.error("Invalid destination droppable ID format:", destination.droppableId);
+        console.log("Expected format: stylist-{id}-slot-{time}");
         return;
       }
       
-      // Parse the stylist ID and time
       const newStylistId = parseInt(match[1]);
       const newStartTime = match[2];
       
-      // Ensure we have valid numbers
       if (isNaN(newStylistId)) {
         console.error("Invalid stylist ID:", match[1]);
         return;
       }
       
-      // Get the stylist object
       const newStylist = stylists.find(s => s.id === newStylistId);
       if (!newStylist) {
         console.error("Could not find stylist with ID:", newStylistId);
         return;
       }
       
-      // Calculate start and end times
-      // Split the time into hour and minute components
       const [timeStr, period] = newStartTime.trim().split(/\s+/);
       let [hours, minutes] = timeStr.split(':').map(Number);
       
-      // Adjust for PM if needed
       if (period && period.toLowerCase() === 'pm' && hours < 12) {
         hours += 12;
       }
-      // Adjust for AM if needed
       if (period && period.toLowerCase() === 'am' && hours === 12) {
         hours = 0;
       }
       
-      // Format the new start time in 24-hour format
       const formattedStartTime = `${hours}:${minutes || '00'}`;
-      
-      // Calculate end time based on the appointment duration
-      // Convert start time to minutes
       const startTimeInMinutes = hours * 60 + (minutes || 0);
-      
-      // Add the appointment duration
       const endTimeInMinutes = startTimeInMinutes + (appointment.duration || 30);
-      
-      // Convert back to hours and minutes
       const endHours = Math.floor(endTimeInMinutes / 60);
       const endMinutes = endTimeInMinutes % 60;
-      
-      // Format the end time in 24-hour format
       const formattedEndTime = `${endHours}:${endMinutes === 0 ? '00' : endMinutes}`;
       
-      // Check for time slot overlaps
       if (hasTimeOverlap({
         ...appointment,
         stylistId: newStylistId,
         startTime: formattedStartTime,
         endTime: formattedEndTime
       }, newStylistId)) {
-        console.log("Time overlap detected, showing warning");
+        console.warn("Overlap detected with appointment:", appointment);
         toast({
           title: "Cannot move appointment",
           description: "This time slot already has an appointment. Please choose another time.",
@@ -565,7 +539,6 @@ export default function CalendarView() {
         return;
       }
       
-      // Clone appointment for local update
       const updatedAppointment = {
         ...appointment,
         stylistId: newStylistId,
@@ -574,24 +547,23 @@ export default function CalendarView() {
         endTime: formattedEndTime
       };
       
-      // First update the local state for immediate UI feedback
       setLocalAppointments(prev => {
+        let updated = false;
         const newAppointments = prev.map(appt => {
           if (appt.id === appointmentId) {
+            updated = true;
             return updatedAppointment;
           }
           return appt;
         });
         
-        // If the appointment wasn't in the local state yet, add it
-        if (!newAppointments.some(appt => appt.id === appointmentId)) {
+        if (!updated) {
           newAppointments.push(updatedAppointment);
         }
         
         return newAppointments;
       });
       
-      // Check if user is logged in before making API requests
       if (!currentUser) {
         toast({
           title: "Authentication required",
@@ -602,19 +574,18 @@ export default function CalendarView() {
         return;
       }
       
-      // Then send the update to the server
-      updateAppointmentMutation.mutate({
-        id: appointment.id,
-        stylistId: newStylistId,
-        startTime: formattedStartTime,
-        endTime: formattedEndTime,
-        // Include all necessary appointment data to ensure it doesn't disappear
-        customerName: appointment.customerName,
-        serviceName: appointment.serviceName,
-        date: appointment.date,
-        duration: appointment.duration,
-        status: appointment.status,
-        services: appointment.services
+      updateAppointmentMutation.mutate(updatedAppointment, {
+        onSuccess: () => {
+          console.log("Appointment successfully updated on server");
+        },
+        onError: (error) => {
+          console.error("Error updating appointment:", error);
+          toast({
+            title: "Error updating appointment",
+            description: "The appointment was not saved. Try again.",
+            variant: "destructive",
+          });
+        }
       });
       
     } catch (error) {
