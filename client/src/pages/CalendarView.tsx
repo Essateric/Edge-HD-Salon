@@ -336,7 +336,83 @@ export default function CalendarView() {
       }
       
       const stylistId = parseInt(match[1]);
-      const newTime = match[2].trim();
+      const slotTime = match[2].trim();
+      
+      // Calculate time with 15-minute intervals
+      // Parse the time to get hours and minutes
+      let newTime = slotTime;
+      
+      try {
+        // If it's in 12-hour format (e.g., "1:00 pm")
+        const match12Hr = slotTime.match(/(\d+):(\d+)\s*(am|pm)/i);
+        
+        if (match12Hr) {
+          const hour = parseInt(match12Hr[1]);
+          const minute = parseInt(match12Hr[2]);
+          const period = match12Hr[3].toLowerCase();
+          
+          // Convert to 24-hour time for calculations
+          let hour24 = hour;
+          if (period === 'pm' && hour < 12) hour24 += 12;
+          if (period === 'am' && hour === 12) hour24 = 0;
+          
+          // Round to nearest 15-minute interval
+          let roundedMinute = Math.round(minute / 15) * 15;
+          let adjustedHour = hour24;
+          
+          // Handle case where minutes are 60 after rounding
+          if (roundedMinute === 60) {
+            adjustedHour += 1;
+            roundedMinute = 0;
+          }
+          
+          // Format back to 12-hour time
+          let hour12 = adjustedHour % 12;
+          if (hour12 === 0) hour12 = 12;
+          const newPeriod = adjustedHour >= 12 ? 'pm' : 'am';
+          
+          // Format with leading zeros for minutes
+          let minuteStr = roundedMinute.toString();
+          if (roundedMinute === 0) {
+            minuteStr = '00';
+          } else if (roundedMinute < 10) {
+            minuteStr = `0${roundedMinute}`;
+          }
+          
+          newTime = `${hour12}:${minuteStr} ${newPeriod}`;
+        } else {
+          // If it's in 24-hour format (e.g., "13:00")
+          const match24Hr = slotTime.match(/(\d+):(\d+)/);
+          
+          if (match24Hr) {
+            const hour = parseInt(match24Hr[1]);
+            const minute = parseInt(match24Hr[2]);
+            
+            // Round to nearest 15-minute interval
+            let roundedMinute = Math.round(minute / 15) * 15;
+            let adjustedHour = hour;
+            
+            // Handle case where minutes are 60 after rounding
+            if (roundedMinute === 60) {
+              adjustedHour += 1;
+              roundedMinute = 0;
+            }
+            
+            // Format with leading zeros for minutes
+            let minuteStr = roundedMinute.toString();
+            if (roundedMinute === 0) {
+              minuteStr = '00';
+            } else if (roundedMinute < 10) {
+              minuteStr = `0${roundedMinute}`;
+            }
+            
+            newTime = `${adjustedHour}:${minuteStr}`;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to parse time for 15-minute adjustment:", error);
+        // Use the original time if parsing fails
+      }
       
       console.log("Target stylist ID:", stylistId);
       console.log("Target time:", newTime);
@@ -379,18 +455,96 @@ export default function CalendarView() {
         description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
       });
       
+      // Calculate new end time to maintain the same duration
+      let endTime = "";
+      try {
+        // Get duration in minutes
+        const getTimeInMinutes = (timeStr: string) => {
+          // Handle 12-hour format
+          const match12Hr = timeStr.match(/(\d+):(\d+)\s*(am|pm)/i);
+          if (match12Hr) {
+            const hour = parseInt(match12Hr[1]);
+            const minute = parseInt(match12Hr[2]);
+            const period = match12Hr[3].toLowerCase();
+            
+            let hour24 = hour;
+            if (period === 'pm' && hour < 12) hour24 += 12;
+            if (period === 'am' && hour === 12) hour24 = 0;
+            
+            return hour24 * 60 + minute;
+          }
+          
+          // Handle 24-hour format
+          const match24Hr = timeStr.match(/(\d+):(\d+)/);
+          if (match24Hr) {
+            const hour = parseInt(match24Hr[1]);
+            const minute = parseInt(match24Hr[2]);
+            return hour * 60 + minute;
+          }
+          
+          return 0;
+        };
+        
+        // Calculate duration in minutes
+        const startMinutes = getTimeInMinutes(appointment.startTime);
+        const endMinutes = getTimeInMinutes(appointment.endTime);
+        const durationMinutes = endMinutes - startMinutes;
+        
+        // Get new start time in minutes
+        const newStartMinutes = getTimeInMinutes(newTime);
+        
+        // Calculate new end time in minutes
+        const newEndMinutes = newStartMinutes + durationMinutes;
+        
+        // Convert back to hours and minutes
+        const newEndHour = Math.floor(newEndMinutes / 60);
+        const newEndMinute = newEndMinutes % 60;
+        
+        // Handle minutes that need to be rounded
+        let minuteStr = newEndMinute.toString();
+        if (newEndMinute === 0) {
+          minuteStr = '00';
+        } else if (newEndMinute < 10) {
+          minuteStr = `0${newEndMinute}`;
+        }
+        
+        // Format based on the time format (12-hour or 24-hour)
+        if (newTime.match(/am|pm/i)) {
+          // 12-hour format
+          let hour12 = newEndHour % 12;
+          if (hour12 === 0) hour12 = 12;
+          const period = newEndHour >= 12 ? 'pm' : 'am';
+          endTime = `${hour12}:${minuteStr} ${period}`;
+        } else {
+          // 24-hour format
+          endTime = `${newEndHour}:${minuteStr}`;
+        }
+      } catch (error) {
+        console.error("Failed to calculate new end time:", error);
+        // If there's an error, don't update the end time
+        endTime = appointment.endTime;
+      }
+      
+      console.log("New end time calculated:", endTime);
+      
       // Create a copy of the appointment to update
       const updatedAppointment = {
         ...appointment,
         stylistId,
-        startTime: newTime
+        startTime: newTime,
+        endTime: endTime,
+        date: format(currentDate, 'yyyy-MM-dd') // Ensure the date is updated too
       };
+      
+      console.log("Updating appointment with:", updatedAppointment);
       
       // Update the appointment with new stylist and time
       updateAppointmentMutation.mutate({
         id: appointment.id,
         stylistId,
-        startTime: newTime
+        startTime: newTime,
+        endTime: endTime,
+        date: format(currentDate, 'yyyy-MM-dd')
       });
     } catch (error) {
       console.error("Error in drag and drop operation:", error);
