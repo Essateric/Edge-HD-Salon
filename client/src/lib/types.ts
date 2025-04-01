@@ -79,3 +79,10 @@ export type DayOfWeek = {
   value: number;
   label: string;
 };
+
+// Extend window interface for global appointment tracking
+declare global {
+  interface Window {
+    lastMovedAppointment?: Appointment;
+  }
+}

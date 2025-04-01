@@ -22,7 +22,16 @@ export default function TimeSlots({
 }: TimeSlotsProps) {
   // Function to get appointments for a specific time slot and stylist
   const getAppointmentsForTimeSlot = (time: string, stylistId: number) => {
-    return appointments.filter(appointment => {
+    // Check for the last moved appointment in global state
+    let allAppointments = [...appointments];
+    
+    // Add the last moved appointment if it exists and isn't already in the list
+    if (window.lastMovedAppointment && 
+        !appointments.some(a => a.id === window.lastMovedAppointment?.id)) {
+      allAppointments.push(window.lastMovedAppointment);
+    }
+    
+    return allAppointments.filter(appointment => {
       if (appointment.stylistId !== stylistId) return false;
       
       const startTime = appointment.startTime;

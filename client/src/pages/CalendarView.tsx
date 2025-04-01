@@ -539,6 +539,7 @@ export default function CalendarView() {
         return;
       }
       
+      // Create a complete appointment object with all necessary fields
       const updatedAppointment = {
         ...appointment,
         stylistId: newStylistId,
@@ -547,6 +548,10 @@ export default function CalendarView() {
         endTime: formattedEndTime
       };
       
+      // First, keep a copy of the current state for potential rollback
+      const previousAppointments = [...localAppointments];
+      
+      // Update the local state immediately for UI responsiveness
       setLocalAppointments(prev => {
         let updated = false;
         const newAppointments = prev.map(appt => {
@@ -561,8 +566,12 @@ export default function CalendarView() {
           newAppointments.push(updatedAppointment);
         }
         
+        console.log("Updated local appointments:", newAppointments);
         return newAppointments;
       });
+      
+      // Also, explicitly add this appointment to a global variable to ensure it doesn't disappear
+      window.lastMovedAppointment = updatedAppointment;
       
       if (!currentUser) {
         toast({
@@ -574,15 +583,40 @@ export default function CalendarView() {
         return;
       }
       
-      updateAppointmentMutation.mutate(updatedAppointment, {
-        onSuccess: () => {
-          console.log("Appointment successfully updated on server");
+      // Make sure we're preserving all important fields in the request
+      const completeAppointmentData = {
+        ...appointment,
+        stylistId: newStylistId,
+        stylistName: newStylist.name,
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
+        date: appointment.date, // Make sure date is included
+        customerName: appointment.customerName,
+        serviceName: appointment.serviceName,
+        duration: appointment.duration,
+        cost: appointment.cost,
+        status: appointment.status,
+        services: appointment.services
+      };
+      
+      // Save this appointment to global state as a backup
+      window.lastMovedAppointment = completeAppointmentData;
+      
+      // Send the update to the server with complete data
+      updateAppointmentMutation.mutate(completeAppointmentData, {
+        onSuccess: (data) => {
+          console.log("Appointment successfully updated on server:", data);
+          toast({
+            title: "Appointment moved",
+            description: "The appointment has been successfully reassigned.",
+            variant: "default",
+          });
         },
         onError: (error) => {
           console.error("Error updating appointment:", error);
           toast({
             title: "Error updating appointment",
-            description: "The appointment was not saved. Try again.",
+            description: "The appointment was not saved on the server, but is visible in your calendar. Try again.",
             variant: "destructive",
           });
         }
