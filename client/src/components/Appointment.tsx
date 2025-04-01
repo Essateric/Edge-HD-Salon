@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 import { Appointment } from '@/lib/types';
 import { ChevronUp, ChevronDown, Plus, Minus } from 'lucide-react';
@@ -122,6 +122,18 @@ export default function AppointmentComponent({
     setIsExpanded(!isExpanded);
   };
   
+  // Log appointment data for debugging
+  useEffect(() => {
+    console.log(`Appointment ${appointment.id}`, {
+      id: appointment.id,
+      stylistId: appointment.stylistId,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      customerName: appointment.customerName,
+      serviceName: appointment.serviceName
+    });
+  }, [appointment.id, appointment.stylistId, appointment.startTime, appointment.endTime]);
+
   return (
     <Draggable 
       draggableId={`appointment-${appointment.id}`} 

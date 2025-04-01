@@ -97,13 +97,33 @@ export default function CalendarView() {
   const { lastMessage, connected } = useWebSocket();
   
   // Fetch appointments for the current date
-  const { data: appointments = [], refetch: refetchAppointments } = useQuery<Appointment[]>({
+  const { data: appointments = [], refetch: refetchAppointments, isLoading: isLoadingAppointments } = useQuery<Appointment[]>({
     queryKey: ['/api/appointments', format(currentDate, 'yyyy-MM-dd')],
     queryFn: async () => {
-      const res = await apiRequest(`/api/appointments?date=${format(currentDate, 'yyyy-MM-dd')}`, 'GET');
-      return await res.json();
-    }
+      try {
+        const res = await apiRequest(`/api/appointments?date=${format(currentDate, 'yyyy-MM-dd')}`, 'GET');
+        console.log("Fetched appointments from API:", await res.clone().json());
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+        return [];
+      }
+    },
+    // Don't refetch too aggressively during drag operations
+    refetchOnWindowFocus: false,
+    staleTime: 10000
   });
+  
+  // Keep a local state copy of appointments to avoid losing them during drags
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>([]);
+  
+  // Sync remote appointments to local state whenever they change
+  useEffect(() => {
+    if (appointments && appointments.length > 0) {
+      console.log("Updating local appointments:", appointments);
+      setLocalAppointments(appointments.map(appt => ({...appt})));
+    }
+  }, [appointments]);
   
   // Handle WebSocket messages for real-time updates
   useEffect(() => {
@@ -313,20 +333,31 @@ export default function CalendarView() {
       
       console.log("Appointment successfully updated:", data);
       
-      // Wait a moment for UI updates before refreshing data
+      // Immediately update our local state to avoid visual flickering/disappearing
+      const updatedAppointment = data as Appointment;
+      
+      // Find and update the appointment in local state
+      setLocalAppointments(prevAppointments => {
+        const newAppointments = [...prevAppointments];
+        const index = newAppointments.findIndex(appt => appt.id === updatedAppointment.id);
+        
+        if (index >= 0) {
+          newAppointments[index] = { ...newAppointments[index], ...updatedAppointment };
+          console.log("Updated appointment in local state:", newAppointments[index]);
+        } else {
+          // If not found, add it
+          newAppointments.push(updatedAppointment);
+          console.log("Added new appointment to local state:", updatedAppointment);
+        }
+        
+        return newAppointments;
+      });
+      
+      // Still invalidate the cache but with a delay
       setTimeout(() => {
         // Invalidate all appointments queries to refresh data from server
         queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-        
-        // Force a manual refetch with a small delay to ensure we have the latest data
-        refetchAppointments().then(() => {
-          console.log("Appointments data refreshed after drag operation");
-        });
-        
-        // Add appointment directly to state as a backup
-        const updatedAppointment = data as Appointment;
-        // Update local state if needed
-      }, 300);
+      }, 500);
     },
     onError: (error) => {
       console.error("Error updating appointment:", error);
@@ -406,7 +437,8 @@ export default function CalendarView() {
       const appointmentId = parseInt(draggableId.replace('appointment-', ''));
       
       // Find the appointment in our state
-      const appointment = appointments.find(appt => appt.id === appointmentId);
+      const appointment = localAppointments.find(appt => appt.id === appointmentId) || 
+                        appointments.find(appt => appt.id === appointmentId);
       
       // Safety check - ensure we found the appointment
       if (!appointment) {
@@ -427,368 +459,240 @@ export default function CalendarView() {
         return;
       }
       
-      // Parse the stylist ID and time slot
-      const stylistId = parseInt(match[1]);
-      const slotTime = match[2].trim();
+      // Parse the stylist ID and time
+      const newStylistId = parseInt(match[1]);
+      const newStartTime = match[2];
       
-      // Calculate time with 15-minute intervals
-      // Parse the time to get hours and minutes
-      let newTime = slotTime;
-      
-      try {
-        // If it's in 12-hour format (e.g., "1:00 pm")
-        const match12Hr = slotTime.match(/(\d+):(\d+)\s*(am|pm)/i);
-        
-        if (match12Hr) {
-          const hour = parseInt(match12Hr[1]);
-          const minute = parseInt(match12Hr[2]);
-          const period = match12Hr[3].toLowerCase();
-          
-          // Convert to 24-hour time for calculations
-          let hour24 = hour;
-          if (period === 'pm' && hour < 12) hour24 += 12;
-          if (period === 'am' && hour === 12) hour24 = 0;
-          
-          // Round to nearest 15-minute interval
-          let roundedMinute = Math.round(minute / 15) * 15;
-          let adjustedHour = hour24;
-          
-          // Handle case where minutes are 60 after rounding
-          if (roundedMinute === 60) {
-            adjustedHour += 1;
-            roundedMinute = 0;
-          }
-          
-          // Format back to 12-hour time
-          let hour12 = adjustedHour % 12;
-          if (hour12 === 0) hour12 = 12;
-          const newPeriod = adjustedHour >= 12 ? 'pm' : 'am';
-          
-          // Format with leading zeros for minutes
-          let minuteStr = roundedMinute.toString();
-          if (roundedMinute === 0) {
-            minuteStr = '00';
-          } else if (roundedMinute < 10) {
-            minuteStr = `0${roundedMinute}`;
-          }
-          
-          newTime = `${hour12}:${minuteStr} ${newPeriod}`;
-        } else {
-          // If it's in 24-hour format (e.g., "13:00")
-          const match24Hr = slotTime.match(/(\d+):(\d+)/);
-          
-          if (match24Hr) {
-            const hour = parseInt(match24Hr[1]);
-            const minute = parseInt(match24Hr[2]);
-            
-            // Round to nearest 15-minute interval
-            let roundedMinute = Math.round(minute / 15) * 15;
-            let adjustedHour = hour;
-            
-            // Handle case where minutes are 60 after rounding
-            if (roundedMinute === 60) {
-              adjustedHour += 1;
-              roundedMinute = 0;
-            }
-            
-            // Format with leading zeros for minutes
-            let minuteStr = roundedMinute.toString();
-            if (roundedMinute === 0) {
-              minuteStr = '00';
-            } else if (roundedMinute < 10) {
-              minuteStr = `0${roundedMinute}`;
-            }
-            
-            newTime = `${adjustedHour}:${minuteStr}`;
-          }
-        }
-      } catch (error) {
-        console.error("Failed to parse time for 15-minute adjustment:", error);
-        // Use the original time if parsing fails
+      // Ensure we have valid numbers
+      if (isNaN(newStylistId)) {
+        console.error("Invalid stylist ID:", match[1]);
+        return;
       }
       
-      console.log("Target stylist ID:", stylistId);
-      console.log("Target time:", newTime);
+      // Get the stylist object
+      const newStylist = stylists.find(s => s.id === newStylistId);
+      if (!newStylist) {
+        console.error("Could not find stylist with ID:", newStylistId);
+        return;
+      }
       
-      // Only proceed if we have valid time and stylist data
-      if (!stylistId || !newTime) {
+      // Calculate start and end times
+      // Split the time into hour and minute components
+      const [timeStr, period] = newStartTime.trim().split(/\s+/);
+      let [hours, minutes] = timeStr.split(':').map(Number);
+      
+      // Adjust for PM if needed
+      if (period && period.toLowerCase() === 'pm' && hours < 12) {
+        hours += 12;
+      }
+      // Adjust for AM if needed
+      if (period && period.toLowerCase() === 'am' && hours === 12) {
+        hours = 0;
+      }
+      
+      // Format the new start time in 24-hour format
+      const formattedStartTime = `${hours}:${minutes || '00'}`;
+      
+      // Calculate end time based on the appointment duration
+      // Convert start time to minutes
+      const startTimeInMinutes = hours * 60 + (minutes || 0);
+      
+      // Add the appointment duration
+      const endTimeInMinutes = startTimeInMinutes + (appointment.duration || 30);
+      
+      // Convert back to hours and minutes
+      const endHours = Math.floor(endTimeInMinutes / 60);
+      const endMinutes = endTimeInMinutes % 60;
+      
+      // Format the end time in 24-hour format
+      const formattedEndTime = `${endHours}:${endMinutes === 0 ? '00' : endMinutes}`;
+      
+      // Check for time slot overlaps
+      if (hasTimeOverlap({
+        ...appointment,
+        stylistId: newStylistId,
+        startTime: formattedStartTime,
+        endTime: formattedEndTime
+      }, newStylistId)) {
+        console.log("Time overlap detected, showing warning");
         toast({
-          title: "Error moving appointment",
-          description: "Could not determine the target time or stylist.",
+          title: "Cannot move appointment",
+          description: "This time slot already has an appointment. Please choose another time.",
           variant: "destructive",
         });
         return;
       }
       
-      // Check for time overlaps before allowing the drop
-      if (hasTimeOverlap(appointment, stylistId)) {
-        // If there's an overlap, show a toast message and don't allow the drop
-        toast({
-          title: "Time slot conflict",
-          description: "This appointment would overlap with an existing booking. Please choose another time slot.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Check if the time is within salon opening hours (9am-6pm)
-      const timeHour = parseInt(newTime.split(':')[0]);
-      if (timeHour < 9 || timeHour >= 18) {
-        toast({
-          title: "Outside operating hours",
-          description: "The salon is only open from 9am to 6pm.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Show loading toast
-      toast({
-        title: "Moving appointment...",
-        description: `Reassigning to ${stylists.find(s => s.id === stylistId)?.name || 'another stylist'}`,
-      });
-      
-      // Calculate new end time to maintain the same duration
-      let endTime = "";
-      try {
-        // Get duration in minutes
-        const getTimeInMinutes = (timeStr: string) => {
-          // Handle 12-hour format
-          const match12Hr = timeStr.match(/(\d+):(\d+)\s*(am|pm)/i);
-          if (match12Hr) {
-            const hour = parseInt(match12Hr[1]);
-            const minute = parseInt(match12Hr[2]);
-            const period = match12Hr[3].toLowerCase();
-            
-            let hour24 = hour;
-            if (period === 'pm' && hour < 12) hour24 += 12;
-            if (period === 'am' && hour === 12) hour24 = 0;
-            
-            return hour24 * 60 + minute;
-          }
-          
-          // Handle 24-hour format
-          const match24Hr = timeStr.match(/(\d+):(\d+)/);
-          if (match24Hr) {
-            const hour = parseInt(match24Hr[1]);
-            const minute = parseInt(match24Hr[2]);
-            return hour * 60 + minute;
-          }
-          
-          return 0;
-        };
-        
-        // Calculate duration in minutes
-        const startMinutes = getTimeInMinutes(appointment.startTime);
-        const endMinutes = getTimeInMinutes(appointment.endTime);
-        const durationMinutes = endMinutes - startMinutes;
-        
-        // Get new start time in minutes
-        const newStartMinutes = getTimeInMinutes(newTime);
-        
-        // Calculate new end time in minutes
-        const newEndMinutes = newStartMinutes + durationMinutes;
-        
-        // Convert back to hours and minutes
-        const newEndHour = Math.floor(newEndMinutes / 60);
-        const newEndMinute = newEndMinutes % 60;
-        
-        // Handle minutes that need to be rounded
-        let minuteStr = newEndMinute.toString();
-        if (newEndMinute === 0) {
-          minuteStr = '00';
-        } else if (newEndMinute < 10) {
-          minuteStr = `0${newEndMinute}`;
-        }
-        
-        // Format based on the time format (12-hour or 24-hour)
-        if (newTime.match(/am|pm/i)) {
-          // 12-hour format
-          let hour12 = newEndHour % 12;
-          if (hour12 === 0) hour12 = 12;
-          const period = newEndHour >= 12 ? 'pm' : 'am';
-          endTime = `${hour12}:${minuteStr} ${period}`;
-        } else {
-          // 24-hour format
-          endTime = `${newEndHour}:${minuteStr}`;
-        }
-      } catch (error) {
-        console.error("Failed to calculate new end time:", error);
-        // If there's an error, don't update the end time
-        endTime = appointment.endTime;
-      }
-      
-      console.log("New end time calculated:", endTime);
-      
-      // Create a copy of the appointment to update
+      // Clone appointment for local update
       const updatedAppointment = {
         ...appointment,
-        stylistId,
-        startTime: newTime,
-        endTime: endTime,
-        date: format(currentDate, 'yyyy-MM-dd') // Ensure the date is updated too
+        stylistId: newStylistId,
+        stylistName: newStylist.name,
+        startTime: formattedStartTime,
+        endTime: formattedEndTime
       };
       
-      console.log("Updating appointment with:", updatedAppointment);
+      // First update the local state for immediate UI feedback
+      setLocalAppointments(prev => {
+        const newAppointments = prev.map(appt => {
+          if (appt.id === appointmentId) {
+            return updatedAppointment;
+          }
+          return appt;
+        });
+        
+        // If the appointment wasn't in the local state yet, add it
+        if (!newAppointments.some(appt => appt.id === appointmentId)) {
+          newAppointments.push(updatedAppointment);
+        }
+        
+        return newAppointments;
+      });
       
-      // Update the appointment with new stylist and time
+      // Check if user is logged in before making API requests
+      if (!currentUser) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to move appointments.",
+          variant: "destructive",
+        });
+        setIsLoggingIn(true);
+        return;
+      }
+      
+      // Then send the update to the server
       updateAppointmentMutation.mutate({
         id: appointment.id,
-        stylistId,
-        startTime: newTime,
-        endTime: endTime,
-        date: format(currentDate, 'yyyy-MM-dd')
+        stylistId: newStylistId,
+        startTime: formattedStartTime,
+        endTime: formattedEndTime
       });
+      
     } catch (error) {
-      console.error("Error in drag and drop operation:", error);
+      console.error("Error in handleDragEnd:", error);
       toast({
         title: "Error moving appointment",
-        description: "There was a problem updating the appointment. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
   };
   
-  // Show login form if user is not authenticated
-  if (!currentUser && !isLoadingUser) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-        <Card className="w-[350px] shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A]">
-              The Edge Salon
-            </CardTitle>
-            <CardDescription>
-              Please log in to access the appointment scheduler
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="stylist@theedgesalon.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-[#D4B78E] to-[#8B734A] hover:from-[#8B734A] hover:to-[#D4B78E]"
-                disabled={isLoggingIn}
-              >
-                {isLoggingIn ? 'Logging in...' : 'Log in'}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="text-center text-sm text-gray-500">
-            <div className="w-full">
-              <p>Demo Accounts:</p>
-              <p className="mt-1">Admin: essateric@gmail.com / admin123</p>
-              <p>Stylist: martin@theedgesalon.com / stylist123</p>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (isLoadingUser) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-medium mb-2">Loading salon scheduler...</h2>
-          <p className="text-gray-500">Please wait while we retrieve your account information</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Main calendar view (user is authenticated)
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-50">
+      {/* Calendar Toolbar */}
       <CalendarToolbar 
-        currentDate={formattedDate}
+        formattedDate={formattedDate}
         viewMode={viewMode}
+        onViewModeChange={setViewMode}
         onPrevious={handlePrevious}
         onNext={handleNext}
         onToday={handleToday}
-        onViewModeChange={setViewMode}
-        onNewBooking={() => handleNewBooking()}
       />
       
-      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex flex-grow overflow-hidden h-[calc(100vh-130px)]">
-          {/* Main calendar grid */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="min-w-max h-full">
-              {viewMode === 'day' && (
-                <>
-                  <StylistHeader stylists={stylists} />
-                  <TimeSlots 
-                    timeSlots={timeSlots}
-                    stylists={stylists}
-                    appointments={appointments}
-                    onTimeSlotClick={handleNewBooking}
-                    onEditAppointment={handleEditAppointment}
-                    viewMode={viewMode}
-                  />
-                </>
-              )}
-              
-              {viewMode === 'week' && (
-                <>
-                  <StylistHeader stylists={stylists} />
-                  <TimeSlots 
-                    timeSlots={timeSlots}
-                    stylists={stylists}
-                    appointments={appointments}
-                    onTimeSlotClick={handleNewBooking}
-                    onEditAppointment={handleEditAppointment}
-                    viewMode={viewMode}
-                  />
-                </>
-              )}
-              
-              {viewMode === 'month' && (
-                <div className="p-4 w-full h-full">
-                  <div className="bg-gray-100 p-4 rounded-lg text-center">
-                    <h3 className="text-lg text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A] font-semibold mb-2">Month View Coming Soon</h3>
-                    <p className="text-gray-600">Month view is under development. Please use Day or Week view for now.</p>
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Login Form - Show if not logged in and when needed */}
+        {isLoggingIn && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-[350px] max-w-[90vw]">
+              <CardHeader>
+                <CardTitle>Login Required</CardTitle>
+                <CardDescription>
+                  Please log in to manage appointments
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      required
+                    />
                   </div>
-                </div>
-              )}
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                </form>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setIsLoggingIn(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" onClick={handleLogin} disabled={loginMutation.isPending}>
+                  {loginMutation.isPending ? "Logging in..." : "Login"}
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
-        </div>
-      </DragDropContext>
+        )}
+
+        {/* Main Calendar Grid */}
+        <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
+          <div className="p-4">
+            {isLoadingAppointments ? (
+              <div className="flex justify-center items-center h-[500px]">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            ) : (
+              viewMode === 'day' ? (
+                <>
+                  <StylistHeader stylists={stylists} />
+                  <TimeSlots 
+                    timeSlots={timeSlots}
+                    stylists={stylists}
+                    appointments={localAppointments.length > 0 ? localAppointments : appointments}
+                    onTimeSlotClick={handleNewBooking}
+                    onEditAppointment={handleEditAppointment}
+                    viewMode={viewMode}
+                  />
+                </>
+              ) : (
+                <>
+                  <StylistHeader stylists={stylists} />
+                  <TimeSlots 
+                    timeSlots={timeSlots}
+                    stylists={stylists}
+                    appointments={localAppointments.length > 0 ? localAppointments : appointments}
+                    onTimeSlotClick={handleNewBooking}
+                    onEditAppointment={handleEditAppointment}
+                    viewMode={viewMode}
+                  />
+                </>
+              )
+            )}
+          </div>
+        </DragDropContext>
+      </div>
       
-      <BottomToolbar viewMode={viewMode} onViewModeChange={setViewMode} />
+      {/* Bottom Toolbar */}
+      <BottomToolbar currentUser={currentUser} />
       
-      <BookingModal 
-        isOpen={isBookingModalOpen}
-        onClose={handleCloseBookingModal}
-        stylists={stylists}
-        services={services}
-        selectedDate={currentDate}
-        selectedTimeSlot={selectedTimeSlot}
-        selectedStylist={selectedStylist}
-        editingAppointment={editingAppointment}
-      />
+      {/* Booking Modal */}
+      {isBookingModalOpen && (
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={handleCloseBookingModal}
+          timeSlot={selectedTimeSlot}
+          stylist={selectedStylist}
+          services={services}
+          date={currentDate}
+          editingAppointment={editingAppointment}
+        />
+      )}
     </div>
   );
 }
