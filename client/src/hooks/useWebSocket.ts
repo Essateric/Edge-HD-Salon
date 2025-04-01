@@ -28,11 +28,12 @@ export const useWebSocket = (): WebSocketHook => {
     // Create a function to establish connection
     const connectWebSocket = () => {
       try {
-        // Determine the WebSocket URL - use relative URL to avoid domain issues
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        // Use a relative path to avoid any domain/token issues
-        const wsUrl = `${protocol}//${host}/ws`;
+        // Determine the WebSocket URL using the current window location
+        // This ensures we connect to the same host that served our app
+        const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}${window.location.host.includes(':') ? '//' + window.location.host : '//' + window.location.host}/ws`;
+        
+        // Log the exact URL we're trying to connect to
+        console.log('Creating WebSocket connection with URL:', wsUrl);
         
         console.log('Attempting WebSocket connection to:', wsUrl);
         

@@ -1,7 +1,7 @@
 import { format, parse, startOfWeek, addDays } from 'date-fns';
-import { Droppable } from 'react-beautiful-dnd';
 import { TimeSlot, Stylist, Appointment, ViewMode } from '@/lib/types';
 import AppointmentComponent from '@/components/Appointment';
+import DroppableArea from '@/components/DroppableArea';
 
 interface TimeSlotsProps {
   timeSlots: TimeSlot[];
@@ -108,7 +108,7 @@ export default function TimeSlots({
               const isOff = isTimeSlotOff(slot.time, stylist.id);
               
               return (
-                <Droppable 
+                <DroppableArea 
                   droppableId={`stylist-${stylist.id}-slot-${slot.time}`}
                   key={`${slot.time}-${stylist.id}`}
                   isDropDisabled={isOff}
@@ -234,7 +234,7 @@ export default function TimeSlots({
                       </div>
                     );
                   }}
-                </Droppable>
+                </DroppableArea>
               );
             })}
           </div>
