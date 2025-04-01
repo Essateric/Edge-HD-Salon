@@ -238,22 +238,32 @@ export default function CalendarView() {
       return res.json();
     },
     onSuccess: (data) => {
-      // Invalidate and force an immediate refetch
-      queryClient.invalidateQueries({ queryKey: ['/api/appointments', format(currentDate, 'yyyy-MM-dd')] });
-      
-      // Force refetch to ensure we have the latest data
-      refetchAppointments();
-      
-      console.log("Appointment successfully updated:", data);
-      
-      // Show success toast
+      // Show success toast first
       toast({
         title: "Appointment moved",
         description: "The appointment has been successfully reassigned.",
         variant: "default",
       });
+      
+      console.log("Appointment successfully updated:", data);
+      
+      // Wait a moment for UI updates before refreshing data
+      setTimeout(() => {
+        // Invalidate all appointments queries to refresh data from server
+        queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+        
+        // Force a manual refetch with a small delay to ensure we have the latest data
+        refetchAppointments().then(() => {
+          console.log("Appointments data refreshed after drag operation");
+        });
+        
+        // Add appointment directly to state as a backup
+        const updatedAppointment = data as Appointment;
+        // Update local state if needed
+      }, 300);
     },
     onError: (error) => {
+      console.error("Error updating appointment:", error);
       // Show error toast
       toast({
         title: "Failed to move appointment",
