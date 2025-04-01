@@ -21,36 +21,41 @@ export const useWebSocket = (): WebSocketHook => {
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
   const maxReconnectAttempts = 5;
+  const WebSocketClass = WebSocket; // Store WebSocket class reference for consistent usage
 
   // Create WebSocket connection
   useEffect(() => {
     // Create a function to establish connection
     const connectWebSocket = () => {
       try {
-        // Determine the WebSocket URL
+        // Determine the WebSocket URL - use relative URL to avoid domain issues
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = window.location.host;
-        // Use a fully qualified path to ensure we connect correctly
+        // Use a relative path to avoid any domain/token issues
         const wsUrl = `${protocol}//${host}/ws`;
         
         console.log('Attempting WebSocket connection to:', wsUrl);
         
         // Close any existing connection
-        if (socketRef.current) {
+        if (socketRef.current && socketRef.current.readyState !== WebSocketClass.CLOSED) {
           socketRef.current.close();
         }
         
         // Create new WebSocket connection
-        const socket = new WebSocket(wsUrl);
+        const socket = new WebSocketClass(wsUrl);
         socketRef.current = socket;
 
         socket.onopen = () => {
           console.log('WebSocket connection established');
-          setReadyState(WebSocket.OPEN);
+          setReadyState(WebSocketClass.OPEN);
           reconnectAttemptsRef.current = 0; // Reset reconnect attempts on successful connection
           
           // Send initial ping to test connection
-          socket.send(JSON.stringify({ type: 'ping' }));
+          try {
+            socket.send(JSON.stringify({ type: 'ping' }));
+          } catch (e) {
+            console.error('Error sending initial ping message:', e);
+          }
         };
 
         socket.onmessage = (event) => {
@@ -65,7 +70,7 @@ export const useWebSocket = (): WebSocketHook => {
 
         socket.onclose = (event) => {
           console.log('WebSocket connection closed', event.code, event.reason);
-          setReadyState(WebSocket.CLOSED);
+          setReadyState(WebSocketClass.CLOSED);
           
           // Attempt to reconnect after a delay, unless it was a clean close or max attempts reached
           if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
@@ -91,10 +96,14 @@ export const useWebSocket = (): WebSocketHook => {
 
         socket.onerror = (error) => {
           console.error('WebSocket error:', error);
-          // Errors will be followed by onclose, so we'll handle reconnection there
+          // We'll set the readyState as an additional safety measure
+          setReadyState(socket.readyState);
+          // Most errors will be followed by onclose, so we'll handle reconnection there
         };
       } catch (error) {
         console.error('Error establishing WebSocket connection:', error);
+        setReadyState(WebSocketClass.CLOSED);
+        
         // Schedule a retry if connection setup fails
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
           reconnectAttemptsRef.current++;
@@ -126,7 +135,13 @@ export const useWebSocket = (): WebSocketHook => {
       
       // Close the socket if it exists
       if (socketRef.current) {
-        socketRef.current.close();
+        try {
+          if (socketRef.current.readyState === WebSocketClass.OPEN) {
+            socketRef.current.close();
+          }
+        } catch (e) {
+          console.error('Error closing WebSocket connection:', e);
+        }
         socketRef.current = null;
       }
     };
@@ -134,10 +149,14 @@ export const useWebSocket = (): WebSocketHook => {
 
   // Send message function
   const sendMessage = useCallback((message: WebSocketMessage) => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(message));
-    } else {
-      console.warn('WebSocket not connected, message not sent:', message);
+    try {
+      if (socketRef.current && socketRef.current.readyState === WebSocketClass.OPEN) {
+        socketRef.current.send(JSON.stringify(message));
+      } else {
+        console.warn('WebSocket not connected, message not sent:', message);
+      }
+    } catch (error) {
+      console.error('Error sending WebSocket message:', error);
     }
   }, []);
 
@@ -145,6 +164,6 @@ export const useWebSocket = (): WebSocketHook => {
     sendMessage,
     lastMessage,
     readyState,
-    connected: readyState === WebSocket.OPEN
+    connected: readyState === WebSocketClass.OPEN
   };
 };

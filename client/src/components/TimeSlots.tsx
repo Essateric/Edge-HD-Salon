@@ -112,9 +112,7 @@ export default function TimeSlots({
                   droppableId={`stylist-${stylist.id}-slot-${slot.time}`}
                   key={`${slot.time}-${stylist.id}`}
                   isDropDisabled={isOff}
-                  type="DEFAULT"
                   direction="vertical"
-                  mode="standard"
                 >
                   {(provided, snapshot) => {
                     return (

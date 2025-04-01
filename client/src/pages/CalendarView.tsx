@@ -238,8 +238,13 @@ export default function CalendarView() {
       return res.json();
     },
     onSuccess: (data) => {
-      // Invalidate and refetch
+      // Invalidate and force an immediate refetch
       queryClient.invalidateQueries({ queryKey: ['/api/appointments', format(currentDate, 'yyyy-MM-dd')] });
+      
+      // Force refetch to ensure we have the latest data
+      refetchAppointments();
+      
+      console.log("Appointment successfully updated:", data);
       
       // Show success toast
       toast({
