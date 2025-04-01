@@ -39,15 +39,19 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
       {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
         // Wrap the original render function to ensure placeholder is always included
         if (typeof children === 'function') {
+          // When there's a drag operation, we need to make sure the DOM is fully prepared
+          if (snapshot.isDraggingOver) {
+            console.log(`Dragging over ${droppableId}`, snapshot);
+          }
+          
           const childrenResult = children(provided, snapshot);
           
           return (
-            <>
+            <React.Fragment>
               {childrenResult}
-              {/* Ensure placeholder is always in DOM even when not rendered by children */}
+              {/* Ensure placeholder is always available in the DOM as a backup */}
               <div style={{ display: 'none' }}>{provided.placeholder}</div>
-              {/* We don't need the backup placeholder as it's causing highlighting issues */}
-            </>
+            </React.Fragment>
           );
         }
         

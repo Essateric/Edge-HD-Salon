@@ -109,9 +109,15 @@ export default function CalendarView() {
         return [];
       }
     },
-    // Don't refetch too aggressively during drag operations
+    // Extended stale time to prevent refetches during drag operations
     refetchOnWindowFocus: false,
-    staleTime: 10000
+    staleTime: 30000, // 30 seconds 
+    // Additional stability measures
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchInterval: 60000, // Gentle background refresh every minute
+    retry: 3,
+    retryDelay: 2000
   });
   
   // Keep a local state copy of appointments to avoid losing them during drags
@@ -135,16 +141,28 @@ export default function CalendarView() {
         case 'appointment_created':
           // If we received appointment data with the message
           if (lastMessage.appointment) {
+            // Also save to the global backup in case of issues
+            window.lastMovedAppointment = lastMessage.appointment;
+            console.log("WebSocket: Saved new appointment to global backup:", lastMessage.appointment);
+            
             // Update local state first for immediate UI feedback
             setLocalAppointments(prev => {
-              const appointmentExists = prev.some(a => a.id === lastMessage.appointment.id);
-              if (appointmentExists) {
-                // Update existing appointment
-                return prev.map(a => a.id === lastMessage.appointment.id ? lastMessage.appointment : a);
-              } else {
-                // Add new appointment
-                return [...prev, lastMessage.appointment];
+              // Use the flag pattern for better tracking
+              let updated = false;
+              const newAppointments = prev.map(a => {
+                if (a.id === lastMessage.appointment.id) {
+                  updated = true;
+                  return lastMessage.appointment;
+                }
+                return a;
+              });
+              
+              // If the appointment wasn't in the array, add it
+              if (!updated && lastMessage.appointment) {
+                newAppointments.push(lastMessage.appointment);
               }
+              
+              return newAppointments;
             });
           }
           
@@ -161,10 +179,29 @@ export default function CalendarView() {
         case 'appointment_updated':
           // If we received appointment data with the message
           if (lastMessage.appointment) {
+            // Also save to the global backup in case of issues
+            window.lastMovedAppointment = lastMessage.appointment;
+            console.log("WebSocket: Saved updated appointment to global backup:", lastMessage.appointment);
+            
             // Update local state first for immediate UI feedback
-            setLocalAppointments(prev => 
-              prev.map(a => a.id === lastMessage.appointment.id ? lastMessage.appointment : a)
-            );
+            setLocalAppointments(prev => {
+              // Use the flag pattern for better tracking
+              let updated = false;
+              const newAppointments = prev.map(a => {
+                if (a.id === lastMessage.appointment.id) {
+                  updated = true;
+                  return lastMessage.appointment;
+                }
+                return a;
+              });
+              
+              // If the appointment wasn't in the array, add it
+              if (!updated && lastMessage.appointment) {
+                newAppointments.push(lastMessage.appointment);
+              }
+              
+              return newAppointments;
+            });
           }
           
           // Then refresh from server in the background
@@ -391,12 +428,16 @@ export default function CalendarView() {
         return newAppointments;
       });
       
-      // After we've handled the local update, invalidate the cache for background refresh
-      // We use a longer delay to ensure the UI remains stable during drag operations
+      // After we've handled the local update, we'll invalidate the cache, but with a much longer delay
+      // This ensures the UI remains stable during drag operations and prevents appointments from disappearing
       setTimeout(() => {
-        // Invalidate all appointments queries to refresh data from server
+        // First, ensure our local state is still correctly reflecting this update
+        window.lastMovedAppointment = updatedAppointment;
+        
+        // Then we can safely invalidate to refresh data from server
+        console.log("Safe to invalidate cache now, appointment is stable in local state");
         queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      }, 1000);
+      }, 5000); // Increased to 5 seconds for better stability
     },
     onError: (error) => {
       // Default error handler - used when the mutation is called without explicit error handler
@@ -551,12 +592,19 @@ export default function CalendarView() {
       // First, keep a copy of the current state for potential rollback
       const previousAppointments = [...localAppointments];
       
-      // This uses the exact pattern from the comparison table with a flag
+      console.log(`handleDragEnd: Moving appointment ${appointmentId} to stylist ${newStylistId} at ${formattedStartTime}`);
+      
+      // Save this appointment immediately to the global variable to ensure it doesn't disappear
+      window.lastMovedAppointment = updatedAppointment;
+      console.log("Setting window.lastMovedAppointment:", window.lastMovedAppointment);
+      
+      // CRITICAL FLAG SYSTEM: This flag pattern is essential to ensure appointments are correctly updated
       setLocalAppointments(prev => {
         let updated = false;
         const newAppointments = prev.map(appt => {
           if (appt.id === appointmentId) {
             updated = true;
+            console.log("Updated existing appointment in local state:", appt.id);
             return updatedAppointment;
           }
           return appt;
@@ -564,14 +612,14 @@ export default function CalendarView() {
         
         // If the appointment wasn't found in our array, add it
         if (!updated) {
+          console.log("Adding new appointment to local state:", appointmentId);
           newAppointments.push(updatedAppointment);
         }
         
         return newAppointments;
       });
       
-      // Also, explicitly add this appointment to a global variable to ensure it doesn't disappear
-      window.lastMovedAppointment = updatedAppointment;
+      // We already set this above, no need to set it again
       
       if (!currentUser) {
         toast({
@@ -708,7 +756,16 @@ export default function CalendarView() {
                   <TimeSlots 
                     timeSlots={timeSlots}
                     stylists={stylists}
-                    appointments={localAppointments.length > 0 ? localAppointments : appointments}
+                    appointments={
+                      // First try local state if available
+                      localAppointments.length > 0 
+                        ? localAppointments 
+                        // Then try server state
+                        : (appointments.length > 0 
+                          ? appointments 
+                          // Finally fall back to a single appointment from global backup if available
+                          : (window.lastMovedAppointment ? [window.lastMovedAppointment] : []))
+                    }
                     onTimeSlotClick={handleNewBooking}
                     onEditAppointment={handleEditAppointment}
                     viewMode={viewMode}
@@ -720,7 +777,16 @@ export default function CalendarView() {
                   <TimeSlots 
                     timeSlots={timeSlots}
                     stylists={stylists}
-                    appointments={localAppointments.length > 0 ? localAppointments : appointments}
+                    appointments={
+                      // First try local state if available
+                      localAppointments.length > 0 
+                        ? localAppointments 
+                        // Then try server state
+                        : (appointments.length > 0 
+                          ? appointments 
+                          // Finally fall back to a single appointment from global backup if available
+                          : (window.lastMovedAppointment ? [window.lastMovedAppointment] : []))
+                    }
                     onTimeSlotClick={handleNewBooking}
                     onEditAppointment={handleEditAppointment}
                     viewMode={viewMode}

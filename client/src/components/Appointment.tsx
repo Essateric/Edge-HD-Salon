@@ -158,8 +158,12 @@ export default function AppointmentComponent({
             height: `${getHeight()}px`,
             ...provided.draggableProps.style,
             boxShadow: snapshot.isDragging ? '0 8px 16px rgba(0,0,0,0.2)' : '',
-            // zIndex is now handled in the className to avoid conflicts
-            transform: provided.draggableProps.style?.transform
+            // Handle transform better to prevent positioning issues
+            transform: provided.draggableProps.style?.transform,
+            // Force visibility to ensure appointment doesn't disappear during drag operations
+            visibility: "visible",
+            // Add a high z-index when dragging to ensure it stays on top
+            zIndex: snapshot.isDragging ? 9999 : undefined
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
