@@ -1,40 +1,68 @@
-import React, { forwardRef } from 'react';
-import { Droppable, DroppableProps } from 'react-beautiful-dnd';
+import React from 'react';
+import { Droppable, DroppableProps, DroppableProvided, DroppableStateSnapshot } from 'react-beautiful-dnd';
 
-// Create a wrapper component for Droppable to avoid defaultProps warning
+// Enhanced DroppableArea component
 const DroppableArea: React.FC<DroppableProps> = (props) => {
-  // Forward all props to the Droppable component
-  // But ensure we're not passing any undefined props that could trigger defaultProps
+  // Extract all necessary props with defaults to avoid defaultProps warnings
   const {
     droppableId,
-    type = 'DEFAULT', // Provide default value here instead of relying on defaultProps
-    mode = 'standard', // Provide default value here
-    direction,
-    isDropDisabled,
-    isCombineEnabled,
-    ignoreContainerClipping,
+    type = 'DEFAULT',
+    mode = 'standard',
+    direction = 'vertical',
+    isDropDisabled = false,
+    isCombineEnabled = false,
+    ignoreContainerClipping = false,
+    children,
     renderClone,
     getContainerForClone,
-    children,
   } = props;
 
-  // Clean props object to remove any undefined values
+  // Create a clean props object
   const cleanProps: DroppableProps = {
     droppableId,
+    type,
+    mode,
+    direction,
+    isDropDisabled,
     children,
   };
 
-  // Only add non-default props if they're explicitly provided
-  if (type !== 'DEFAULT') cleanProps.type = type;
-  if (mode !== 'standard') cleanProps.mode = mode;
-  if (direction) cleanProps.direction = direction;
-  if (isDropDisabled !== undefined) cleanProps.isDropDisabled = isDropDisabled;
-  if (isCombineEnabled !== undefined) cleanProps.isCombineEnabled = isCombineEnabled;
-  if (ignoreContainerClipping !== undefined) cleanProps.ignoreContainerClipping = ignoreContainerClipping;
+  // Only add optional props when explicitly provided
+  if (isCombineEnabled) cleanProps.isCombineEnabled = isCombineEnabled;
+  if (ignoreContainerClipping) cleanProps.ignoreContainerClipping = ignoreContainerClipping;
   if (renderClone) cleanProps.renderClone = renderClone;
   if (getContainerForClone) cleanProps.getContainerForClone = getContainerForClone;
 
-  return <Droppable {...cleanProps} />;
+  // Enhanced wrapper to ensure proper rendering of children with snapshot
+  return (
+    <Droppable {...cleanProps}>
+      {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
+        // Wrap the original render function to ensure placeholder is always included
+        if (typeof children === 'function') {
+          const childrenResult = children(provided, snapshot);
+          
+          return (
+            <React.Fragment>
+              {childrenResult}
+              {/* Ensure placeholder is always in DOM even when not rendered by children */}
+              <div style={{ display: 'none' }}>{provided.placeholder}</div>
+            </React.Fragment>
+          );
+        }
+        
+        // Fallback for direct children (though this component typically uses function children)
+        return (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {children}
+            {provided.placeholder}
+          </div>
+        );
+      }}
+    </Droppable>
+  );
 };
 
 export default DroppableArea;

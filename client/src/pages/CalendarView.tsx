@@ -312,17 +312,27 @@ export default function CalendarView() {
     document.body.classList.remove('is-dragging');
     
     // Early return if we don't have a destination
-    if (!result.destination) return;
+    if (!result.destination) {
+      console.log("No destination provided, canceling drag operation");
+      return;
+    }
     
     try {
       const { draggableId, destination, source } = result;
       
       // If the source and destination are the same, no need to do anything
-      if (source.droppableId === destination.droppableId) return;
+      if (source.droppableId === destination.droppableId) {
+        console.log("Source and destination are the same, no changes needed");
+        return;
+      }
     
+      // Extract the appointment ID from the draggable ID
       const appointmentId = parseInt(draggableId.replace('appointment-', ''));
+      
+      // Find the appointment in our state
       const appointment = appointments.find(appt => appt.id === appointmentId);
       
+      // Safety check - ensure we found the appointment
       if (!appointment) {
         console.error("Could not find appointment with ID:", appointmentId);
         return;
@@ -332,7 +342,8 @@ export default function CalendarView() {
       console.log("From:", source.droppableId);
       console.log("To:", destination.droppableId);
       
-      // Extract stylist ID from destination droppable ID
+      // Extract stylist ID and time slot from destination droppable ID
+      // Format: stylist-{id}-slot-{time}
       const match = destination.droppableId.match(/stylist-(\d+)-slot-([0-9:.]+\s*[APMapm]*)/);
       
       if (!match) {
@@ -340,6 +351,7 @@ export default function CalendarView() {
         return;
       }
       
+      // Parse the stylist ID and time slot
       const stylistId = parseInt(match[1]);
       const slotTime = match[2].trim();
       

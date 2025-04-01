@@ -227,7 +227,7 @@ export default function TimeSlots({
                               </div>
                             )}
                             
-                            {/* Placeholder for dragging - essential for react-beautiful-dnd to work correctly */}
+                            {/* This placeholder is important for dragging, and we'll add an additional backup in the DroppableArea component */}
                             {provided.placeholder}
                           </>
                         )}
