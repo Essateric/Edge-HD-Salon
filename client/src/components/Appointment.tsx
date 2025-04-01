@@ -151,14 +151,14 @@ export default function AppointmentComponent({
                 : 'bg-gradient-to-br from-[#D4B78E] via-[#B08D57] to-[#8B734A]'
             } 
             text-white rounded shadow-md p-2 cursor-move transition-all
-            ${snapshot.isDragging ? 'opacity-90 shadow-xl scale-105 z-50 border-2 border-dashed border-white/50' : 'opacity-85 hover:opacity-100 hover:shadow-lg'}
+            ${snapshot.isDragging ? 'opacity-95 shadow-xl scale-105 z-[9999] border-2 border-solid border-amber-400' : 'opacity-85 hover:opacity-100 hover:shadow-lg'}
             ${isHovered && !snapshot.isDragging ? 'transform -translate-y-0.5' : ''}
           `}
           style={{ 
             height: `${getHeight()}px`,
             ...provided.draggableProps.style,
             boxShadow: snapshot.isDragging ? '0 8px 16px rgba(0,0,0,0.2)' : '',
-            zIndex: snapshot.isDragging ? 9999 : 'auto',
+            // zIndex is now handled in the className to avoid conflicts
             transform: provided.draggableProps.style?.transform
           }}
           onMouseEnter={() => setIsHovered(true)}

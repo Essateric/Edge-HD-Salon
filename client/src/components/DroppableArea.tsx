@@ -46,10 +46,7 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
               {childrenResult}
               {/* Ensure placeholder is always in DOM even when not rendered by children */}
               <div style={{ display: 'none' }}>{provided.placeholder}</div>
-              {/* Backup placeholder to ensure spacing is maintained during drag */}
-              {snapshot.isDraggingOver && (
-                <div style={{ height: '100px', opacity: 0 }} aria-hidden="true"></div>
-              )}
+              {/* We don't need the backup placeholder as it's causing highlighting issues */}
             </>
           );
         }

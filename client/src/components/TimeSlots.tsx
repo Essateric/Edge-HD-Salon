@@ -121,12 +121,21 @@ export default function TimeSlots({
                         {...provided.droppableProps}
                         className={`stylist-column relative h-[120px] border-r border-b border-border ${
                           !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
-                        } ${snapshot.isDraggingOver ? 'bg-primary/20' : ''}`}
+                        } ${snapshot.isDraggingOver ? 'bg-primary/20 outline outline-2 outline-amber-600/70' : ''}`}
                         style={{ width: getColumnWidth() }}
                         onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
                       >
                         {/* 15-minute grid lines */}
                         {!isOff && <TimeSlotGrid>{null}</TimeSlotGrid>}
+                        
+                        {/* Visual indicator for when dragging over a time slot */}
+                        {snapshot.isDraggingOver && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="text-amber-600 font-bold text-xl opacity-30">
+                              {slot.formatted}
+                            </div>
+                          </div>
+                        )}
                         
                         {isOff ? (
                           <div className="h-full bg-muted text-center text-sm text-muted-foreground pt-2 font-medium">
