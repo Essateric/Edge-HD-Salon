@@ -679,17 +679,18 @@ export default function CalendarView() {
       </div>
       
       {/* Bottom Toolbar */}
-      <BottomToolbar currentUser={currentUser} />
+      <BottomToolbar currentUser={currentUser} viewMode={viewMode} onViewModeChange={setViewMode} />
       
       {/* Booking Modal */}
       {isBookingModalOpen && (
         <BookingModal
           isOpen={isBookingModalOpen}
           onClose={handleCloseBookingModal}
-          timeSlot={selectedTimeSlot}
-          stylist={selectedStylist}
+          selectedTimeSlot={selectedTimeSlot}
+          selectedStylist={selectedStylist}
+          stylists={stylists}
           services={services}
-          date={currentDate}
+          selectedDate={currentDate}
           editingAppointment={editingAppointment}
         />
       )}

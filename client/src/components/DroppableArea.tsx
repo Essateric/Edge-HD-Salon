@@ -42,7 +42,7 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
           const childrenResult = children(provided, snapshot);
           
           return (
-            <React.Fragment>
+            <>
               {childrenResult}
               {/* Ensure placeholder is always in DOM even when not rendered by children */}
               <div style={{ display: 'none' }}>{provided.placeholder}</div>
@@ -50,7 +50,7 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
               {snapshot.isDraggingOver && (
                 <div style={{ height: '100px', opacity: 0 }} aria-hidden="true"></div>
               )}
-            </React.Fragment>
+            </>
           );
         }
         

@@ -4,9 +4,10 @@ import { ViewMode } from '@/lib/types';
 interface BottomToolbarProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  currentUser?: any;
 }
 
-export default function BottomToolbar({ viewMode, onViewModeChange }: BottomToolbarProps) {
+export default function BottomToolbar({ viewMode, onViewModeChange, currentUser }: BottomToolbarProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border flex justify-around py-2 px-4">
       <button className="flex flex-col items-center px-3 py-1 text-muted-foreground hover:text-foreground">

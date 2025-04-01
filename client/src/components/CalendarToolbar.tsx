@@ -3,17 +3,17 @@ import { Button } from '@/components/ui/button';
 import { ViewMode } from '@/lib/types';
 
 interface CalendarToolbarProps {
-  currentDate: string;
+  formattedDate: string;
   viewMode: ViewMode;
   onPrevious: () => void;
   onNext: () => void;
   onToday?: () => void;
   onViewModeChange: (mode: ViewMode) => void;
-  onNewBooking: () => void;
+  onNewBooking?: () => void;
 }
 
 export default function CalendarToolbar({ 
-  currentDate, 
+  formattedDate, 
   viewMode, 
   onPrevious, 
   onNext, 
@@ -31,7 +31,7 @@ export default function CalendarToolbar({
           <ChevronLeft className="h-5 w-5 text-muted-foreground" />
         </button>
         <h2 className="text-lg font-medium px-2">
-          {currentDate}
+          {formattedDate}
         </h2>
         <button 
           className="p-2 rounded-md hover:bg-muted"
