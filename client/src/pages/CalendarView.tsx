@@ -133,35 +133,73 @@ export default function CalendarView() {
       // Handle different message types
       switch (lastMessage.type) {
         case 'appointment_created':
-        case 'appointment_updated':
-        case 'appointment_deleted':
-          // Refresh appointments data
-          refetchAppointments();
-          
-          // Show appropriate toast message
-          if (lastMessage.type === 'appointment_created') {
-            toast({
-              title: "New appointment created",
-              description: "Calendar has been updated with a new booking.",
-              variant: "default",
-            });
-          } else if (lastMessage.type === 'appointment_updated') {
-            toast({
-              title: "Appointment updated",
-              description: "An appointment has been modified.",
-              variant: "default",
-            });
-          } else if (lastMessage.type === 'appointment_deleted') {
-            toast({
-              title: "Appointment removed",
-              description: "An appointment has been cancelled.",
-              variant: "default",
+          // If we received appointment data with the message
+          if (lastMessage.appointment) {
+            // Update local state first for immediate UI feedback
+            setLocalAppointments(prev => {
+              const appointmentExists = prev.some(a => a.id === lastMessage.appointment.id);
+              if (appointmentExists) {
+                // Update existing appointment
+                return prev.map(a => a.id === lastMessage.appointment.id ? lastMessage.appointment : a);
+              } else {
+                // Add new appointment
+                return [...prev, lastMessage.appointment];
+              }
             });
           }
+          
+          // Then refresh from server in the background
+          refetchAppointments();
+          
+          toast({
+            title: "New appointment created",
+            description: "Calendar has been updated with a new booking.",
+            variant: "default",
+          });
+          break;
+          
+        case 'appointment_updated':
+          // If we received appointment data with the message
+          if (lastMessage.appointment) {
+            // Update local state first for immediate UI feedback
+            setLocalAppointments(prev => 
+              prev.map(a => a.id === lastMessage.appointment.id ? lastMessage.appointment : a)
+            );
+          }
+          
+          // Then refresh from server in the background
+          refetchAppointments();
+          
+          toast({
+            title: "Appointment updated",
+            description: "An appointment has been modified.",
+            variant: "default",
+          });
+          break;
+          
+        case 'appointment_deleted':
+          // If we received appointment ID with the message
+          if (lastMessage.appointmentId) {
+            // Update local state first for immediate UI feedback
+            setLocalAppointments(prev => 
+              prev.filter(a => a.id !== lastMessage.appointmentId)
+            );
+          }
+          
+          // Then refresh from server in the background
+          refetchAppointments();
+          
+          toast({
+            title: "Appointment removed",
+            description: "An appointment has been cancelled.",
+            variant: "default",
+          });
           break;
           
         case 'connection':
           console.log('Connected to WebSocket server');
+          // On reconnect, refresh appointments to get latest data
+          refetchAppointments();
           break;
           
         default:
@@ -353,11 +391,15 @@ export default function CalendarView() {
         return newAppointments;
       });
       
-      // Still invalidate the cache but with a delay
+      // Update local state first, then invalidate the query in the background
+      // We'll maintain our local state as the source of truth until the query completes
+      
+      // After we've handled the local update, invalidate the cache for background refresh
+      // We use a longer delay to ensure the UI remains stable during drag operations
       setTimeout(() => {
         // Invalidate all appointments queries to refresh data from server
         queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      }, 500);
+      }, 1000);
     },
     onError: (error) => {
       console.error("Error updating appointment:", error);
@@ -565,7 +607,14 @@ export default function CalendarView() {
         id: appointment.id,
         stylistId: newStylistId,
         startTime: formattedStartTime,
-        endTime: formattedEndTime
+        endTime: formattedEndTime,
+        // Include all necessary appointment data to ensure it doesn't disappear
+        customerName: appointment.customerName,
+        serviceName: appointment.serviceName,
+        date: appointment.date,
+        duration: appointment.duration,
+        status: appointment.status,
+        services: appointment.services
       });
       
     } catch (error) {
