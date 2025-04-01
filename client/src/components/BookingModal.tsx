@@ -339,7 +339,6 @@ export default function BookingModal({
             </DialogDescription>
             <DialogTitle className="flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <span className="font-bold">EDGE</span>
                 <span>
                   {formattedTimeDisplay} {format(selectedDate, 'dd MMMM yyyy')}
                 </span>
