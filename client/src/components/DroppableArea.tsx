@@ -1,7 +1,7 @@
 import React from 'react';
 import { Droppable, DroppableProps, DroppableProvided, DroppableStateSnapshot } from 'react-beautiful-dnd';
 
-// Enhanced DroppableArea component
+// Fixed DroppableArea component to avoid React Fragment issues
 const DroppableArea: React.FC<DroppableProps> = (props) => {
   // Extract all necessary props with defaults to avoid defaultProps warnings
   const {
@@ -17,14 +17,14 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
     getContainerForClone,
   } = props;
 
-  // Create a clean props object
-  const cleanProps: DroppableProps = {
+  // Critical fix: Remove children from cleanProps to avoid React Fragment issues
+  // Create a clean props object without children
+  const cleanProps: Omit<DroppableProps, 'children'> = {
     droppableId,
     type,
     mode,
     direction,
     isDropDisabled,
-    children,
   };
 
   // Only add optional props when explicitly provided
@@ -37,50 +37,65 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
   return (
     <Droppable {...cleanProps}>
       {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => {
-        // Wrap the original render function to ensure placeholder is always included
-        if (typeof children === 'function') {
-          // When there's a drag operation, we need to make sure the DOM is fully prepared
-          if (snapshot.isDraggingOver) {
-            console.log(`Dragging over ${droppableId}`, snapshot);
-            
-            // Add visual feedback to the droppable area being dragged over
-            setTimeout(() => {
-              // Find all time-slot elements inside this droppable
-              const droppableEl = document.querySelector(`[data-rbd-droppable-id="${droppableId}"]`);
-              if (droppableEl) {
-                const timeSlot = droppableEl.closest('.time-slot');
-                if (timeSlot) {
-                  // Add a class to highlight this specific time slot
-                  timeSlot.classList.add('edgesalon-over');
-                  
-                  // Clean up the highlight after a short delay if the drag moves elsewhere
-                  setTimeout(() => {
-                    if (!snapshot.isDraggingOver) {
-                      timeSlot.classList.remove('edgesalon-over');
+        try {
+          // Wrap the original render function to ensure placeholder is always included
+          if (typeof children === 'function') {
+            // When there's a drag operation, we need to make sure the DOM is fully prepared
+            if (snapshot.isDraggingOver) {
+              // Add visual feedback to the droppable area being dragged over
+              setTimeout(() => {
+                try {
+                  // Find all time-slot elements inside this droppable
+                  const droppableEl = document.querySelector(`[data-rbd-droppable-id="${droppableId}"]`);
+                  if (droppableEl) {
+                    const timeSlot = droppableEl.closest('.time-slot');
+                    if (timeSlot) {
+                      // Add a class to highlight this specific time slot
+                      timeSlot.classList.add('edgesalon-over');
+                      
+                      // Clean up the highlight after a short delay if the drag moves elsewhere
+                      setTimeout(() => {
+                        if (!snapshot.isDraggingOver) {
+                          timeSlot.classList.remove('edgesalon-over');
+                        }
+                      }, 300);
                     }
-                  }, 300);
+                  }
+                } catch (err) {
+                  console.warn('Error adding highlight class:', err);
                 }
-              }
-            }, 0); // Using setTimeout with 0 delay to run after the current execution
+              }, 0); // Using setTimeout with 0 delay to run after the current execution
+            }
+            
+            // Call the children function with provided and snapshot
+            return children(provided, snapshot);
           }
           
-          const childrenResult = children(provided, snapshot);
-          
-          // Don't use a fragment here to avoid data-replit-metadata error
-          // Instead, return the children directly and let the parent component handle the placeholder
-          return childrenResult;
+          // Fallback for direct children (though this component typically uses function children)
+          return (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="droppable-container"
+            >
+              {children}
+              {provided.placeholder}
+            </div>
+          );
+        } catch (error) {
+          console.error('Error in DroppableArea:', error);
+          // Provide a fallback UI in case of errors
+          return (
+            <div 
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="droppable-error-container"
+            >
+              <div className="error-message">Error rendering droppable content</div>
+              {provided.placeholder}
+            </div>
+          );
         }
-        
-        // Fallback for direct children (though this component typically uses function children)
-        return (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-          >
-            {children}
-            {provided.placeholder}
-          </div>
-        );
       }}
     </Droppable>
   );

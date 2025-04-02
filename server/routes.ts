@@ -846,60 +846,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Set up WebSocket server
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  // Configure WebSocket with more verbose logging
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    // Additional options for better reliability
+    clientTracking: true, // Track clients for broadcasting
+    perMessageDeflate: true // Enable compression for better performance
+  });
+  
+  console.log('[WebSocket] Server initialized on path: /ws');
+  
+  // Connection tracking for debugging
+  let connectionCount = 0;
   
   // WebSocket event handling
-  wss.on('connection', (ws) => {
-    console.log('WebSocket client connected');
+  wss.on('connection', (ws, req) => {
+    const clientIp = req.socket.remoteAddress || 'unknown';
+    connectionCount++;
+    
+    console.log(`[WebSocket] Client connected: ${clientIp} (Total: ${connectionCount})`);
+    
+    // Ensure connection is alive with ping-pong
+    let pingInterval: NodeJS.Timeout;
+    let missedPings = 0;
+    
+    // Set up ping interval (every 30 seconds)
+    pingInterval = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        // Only try to ping if we're still connected
+        if (missedPings >= 2) {
+          // If missed 2+ pings, terminate connection
+          console.log(`[WebSocket] Client ${clientIp} missed ${missedPings} pings, terminating connection`);
+          clearInterval(pingInterval);
+          try {
+            ws.terminate();
+          } catch (err) {
+            console.error('[WebSocket] Error terminating stale connection:', err);
+          }
+          return;
+        }
+        
+        try {
+          // Send ping to client
+          ws.ping();
+          missedPings++;
+        } catch (err) {
+          console.error('[WebSocket] Error sending ping:', err);
+        }
+      } else {
+        // Connection already closed, clean up interval
+        clearInterval(pingInterval);
+      }
+    }, 30000);
+    
+    // Reset ping counter when we get a pong response
+    ws.on('pong', () => {
+      missedPings = 0;
+    });
     
     // Send a welcome message
-    ws.send(JSON.stringify({
-      type: 'connection',
-      message: 'Connected to Edge Salon WebSocket server'
-    }));
+    try {
+      ws.send(JSON.stringify({
+        type: 'connection',
+        message: 'Connected to Edge Salon WebSocket server',
+        timestamp: new Date().toISOString()
+      }));
+    } catch (err) {
+      console.error('[WebSocket] Error sending welcome message:', err);
+    }
     
     // Handle messages from clients
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message.toString());
-        console.log('Received message:', data);
+        console.log(`[WebSocket] Received from ${clientIp}:`, data);
         
         // Handle different message types
         switch (data.type) {
           case 'ping':
-            ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+            ws.send(JSON.stringify({ 
+              type: 'pong', 
+              timestamp: new Date().toISOString(),
+              serverTime: new Date().toISOString()
+            }));
             break;
             
           case 'subscribe':
-            // Could implement subscription to specific events
+            // Implement subscription to specific events
+            console.log(`[WebSocket] Client ${clientIp} subscribed to: ${data.channel}`);
             ws.send(JSON.stringify({ 
               type: 'subscribed', 
               channel: data.channel,
-              message: `Subscribed to ${data.channel}`
+              message: `Subscribed to ${data.channel}`,
+              timestamp: new Date().toISOString()
             }));
             break;
             
           default:
-            console.log('Unknown message type:', data.type);
+            console.log(`[WebSocket] Unknown message type from ${clientIp}:`, data.type);
         }
       } catch (error) {
-        console.error('Error processing message:', error);
+        console.error('[WebSocket] Error processing message:', error);
+        
+        // Try to send error response
+        try {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Failed to process message',
+            timestamp: new Date().toISOString()
+          }));
+        } catch (err) {
+          console.error('[WebSocket] Error sending error response:', err);
+        }
       }
     });
     
     // Handle client disconnect
-    ws.on('close', () => {
-      console.log('WebSocket client disconnected');
+    ws.on('close', (code, reason) => {
+      connectionCount = Math.max(0, connectionCount - 1);
+      console.log(`[WebSocket] Client ${clientIp} disconnected: Code=${code}, Reason=${reason || 'none'} (Remaining: ${connectionCount})`);
+      
+      // Clean up resources
+      clearInterval(pingInterval);
+    });
+    
+    // Handle connection errors
+    ws.on('error', (error) => {
+      console.error(`[WebSocket] Error with client ${clientIp}:`, error);
     });
   });
   
-  // Broadcast message to all connected clients
+  // Server-level error handling
+  wss.on('error', (error) => {
+    console.error('[WebSocket] Server error:', error);
+  });
+  
+  // Broadcast message to all connected clients with error handling
   const broadcastToClients = (data: any) => {
+    let sentCount = 0;
+    let errorCount = 0;
+    
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify(data));
+        try {
+          // Add timestamp to all broadcasts for debugging
+          const messageWithTimestamp = {
+            ...data,
+            broadcastTime: new Date().toISOString()
+          };
+          
+          client.send(JSON.stringify(messageWithTimestamp));
+          sentCount++;
+        } catch (error) {
+          console.error('[WebSocket] Error broadcasting to client:', error);
+          errorCount++;
+        }
       }
     });
+    
+    if (sentCount > 0) {
+      console.log(`[WebSocket] Broadcast sent to ${sentCount} clients (Errors: ${errorCount}): ${data.type}`);
+    }
   };
   
   // Hook into appointment creation/updates to notify connected clients

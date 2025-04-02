@@ -15,8 +15,16 @@ const InitialRouter = () => {
   return <App />;
 };
 
-createRoot(document.getElementById("root")!).render(
-  <Router>
-    <InitialRouter />
-  </Router>
-);
+// Get the root element
+const rootElement = document.getElementById("root");
+
+// Make sure it exists before rendering
+if (rootElement) {
+  createRoot(rootElement).render(
+    <Router>
+      <InitialRouter />
+    </Router>
+  );
+} else {
+  console.error("Root element not found!");
+}
