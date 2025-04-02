@@ -20,7 +20,7 @@ export default function TimeSlots({
   onTimeSlotClick,
   onEditAppointment,
   viewMode = 'day'
-}: TimeSlotsProps) {
+}: TimeSlotsProps): JSX.Element {
   // Function to get appointments for a specific time slot and stylist
   const getAppointmentsForTimeSlot = (time: string, stylistId: number) => {
     // Create a deep copy of appointments to avoid reference issues

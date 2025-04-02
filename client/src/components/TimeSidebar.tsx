@@ -3,13 +3,11 @@ import React from 'react';
 interface TimeSidebarProps {
   startHour?: number;
   endHour?: number;
-  cellHeight?: number;
 }
 
 export default function TimeSidebar({
   startHour = 9,
   endHour = 20, // 8pm
-  cellHeight = 21.1875
 }: TimeSidebarProps) {
   // Generate time slots from startHour to endHour
   const renderTimeSlots = () => {
@@ -20,36 +18,40 @@ export default function TimeSidebar({
       const displayHour = hour > 12 ? hour - 12 : hour;
       const amPm = hour >= 12 ? 'pm' : 'am';
       
-      // Hour marker
+      // Each hour block with 15-minute segments
       slots.push(
         <div 
-          key={`hour-${hour}`}
-          className="flex items-center justify-center text-sm text-gray-600"
-          style={{ height: `${cellHeight}px` }}
+          key={`hour-${hour}`} 
+          className="time-slot relative" 
+          style={{ minHeight: '84.75px' }}
         >
-          {displayHour}:00 {amPm}
+          <div className="h-full flex flex-col justify-between">
+            <div className="font-medium flex justify-end items-center gap-1">
+              {displayHour}:00 {amPm}
+              <div className="w-3 h-0.5 bg-muted-foreground/50"></div>
+            </div>
+            <div className="flex justify-end items-center gap-1">
+              <span className="text-xs">15</span>
+              <div className="w-2 h-0.5 bg-muted-foreground/30"></div>
+            </div>
+            <div className="flex justify-end items-center gap-1">
+              <span className="text-xs">30</span>
+              <div className="w-2 h-0.5 bg-muted-foreground/30"></div>
+            </div>
+            <div className="flex justify-end items-center gap-1">
+              <span className="text-xs">45</span>
+              <div className="w-2 h-0.5 bg-muted-foreground/30"></div>
+            </div>
+          </div>
         </div>
       );
-      
-      // 15, 30, 45 minute markers
-      [15, 30, 45].forEach(minute => {
-        slots.push(
-          <div 
-            key={`hour-${hour}-${minute}`}
-            className="flex items-center justify-center text-sm text-gray-400"
-            style={{ height: `${cellHeight}px` }}
-          >
-            {minute}
-          </div>
-        );
-      });
     }
     
     return slots;
   };
   
   return (
-    <div id="times-container" className="flex flex-col w-[110px] border-r border-gray-300 bg-white">
+    <div id="times-container" className="w-20 md:w-28 flex-shrink-0 border-r border-border bg-background sticky left-0">
       {renderTimeSlots()}
     </div>
   );
