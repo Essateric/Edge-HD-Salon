@@ -586,7 +586,7 @@ export default function CalendarView() {
       
       // Find the closest time slot visually
       const timeSlots = document.querySelectorAll(`[data-slot-id^="stylist-${newStylistId}-slot-"]`);
-      const calendarContainer = document.querySelector('.flex.flex-1.overflow-x-auto.relative');
+      const calendarContainer = document.querySelector('.non-scrollable-container');
       if (!calendarContainer) {
         console.error("Could not find calendar container");
         return;
@@ -594,11 +594,11 @@ export default function CalendarView() {
       
       // Get the drop position relative to the calendar container
       const dropY = destination.index * 20; // Rough approximation
-      let closestSlot = null;
+      let closestSlot: Element | null = null;
       let closestDistance = Infinity;
       
       // Find the time slot closest to the drop position
-      timeSlots.forEach((slot) => {
+      timeSlots.forEach((slot: Element) => {
         const rect = slot.getBoundingClientRect();
         const slotY = rect.top - calendarContainer.getBoundingClientRect().top;
         const distance = Math.abs(slotY - dropY);
@@ -630,7 +630,7 @@ export default function CalendarView() {
       const newStartTime = timeMatch[1];
       
       if (isNaN(newStylistId)) {
-        console.error("Invalid stylist ID:", match[1]);
+        console.error("Invalid stylist ID:", newStylistId);
         return;
       }
       

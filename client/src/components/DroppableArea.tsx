@@ -66,13 +66,9 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
           
           const childrenResult = children(provided, snapshot);
           
-          return (
-            <React.Fragment>
-              {childrenResult}
-              {/* Ensure placeholder is always available in the DOM as a backup */}
-              <div style={{ display: 'none' }}>{provided.placeholder}</div>
-            </React.Fragment>
-          );
+          // Don't use a fragment here to avoid data-replit-metadata error
+          // Instead, return the children directly and let the parent component handle the placeholder
+          return childrenResult;
         }
         
         // Fallback for direct children (though this component typically uses function children)

@@ -273,7 +273,7 @@ export default function TimeSlots({
         <TimeSidebar startHour={9} endHour={20} />
         
         {/* Main Calendar Content - new layout with vertical columns */}
-        <div className="flex flex-1 overflow-x-auto relative" style={{ height: '700px' }}>
+        <div className="flex flex-1 relative non-scrollable-container" style={{ height: '700px', overflow: 'hidden' }}>
           {/* Current time line indicator */}
           <div
             id="now-line"

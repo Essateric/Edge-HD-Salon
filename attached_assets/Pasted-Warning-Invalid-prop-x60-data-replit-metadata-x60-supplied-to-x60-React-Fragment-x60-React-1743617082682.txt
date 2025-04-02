@@ -1,0 +1,120 @@
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at Droppable (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:9460:49)
+    at ConnectFunction (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1918:48)
+    at DroppableArea (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/DroppableArea.tsx:21:5)
+    at div
+    at div
+    at div
+    at div
+    at TimeSlots (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/TimeSlots.tsx:24:3)
+    at div
+    at Provider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1738:20)
+    at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8281:25)
+    at ErrorBoundary2 (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:2778:35)
+    at DragDropContext (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8401:19)
+    at div
+    at div
+    at CalendarView (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/pages/CalendarView.tsx:37:41)
+    at ProtectedRoute (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:32:38)
+    at component
+    at Route (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:323:16)
+    at Switch (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:379:17)
+    at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:76:22)
+    at main
+    at div
+    at QueryClientProvider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=3d64c8d7:2805:3)
+    at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:151:35)
+    at InitialRouter (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/main.tsx?v=-7ST_tIU8AR2gEBB6kXe5:24:35)
+    at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:291:17)
+Updating local appointments: 
+(13) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at Droppable (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:9460:49)
+    at ConnectFunction (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1918:48)
+    at DroppableArea (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/DroppableArea.tsx:21:5)
+    at div
+    at div
+    at div
+    at div
+    at TimeSlots (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/TimeSlots.tsx:24:3)
+    at div
+    at Provider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1738:20)
+    at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8281:25)
+    at ErrorBoundary2 (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:2778:35)
+    at DragDropContext (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8401:19)
+    at div
+    at div
+    at CalendarView (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/pages/CalendarView.tsx:37:41)
+    at ProtectedRoute (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:32:38)
+    at component
+    at Route (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:323:16)
+    at Switch (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:379:17)
+    at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:76:22)
+    at main
+    at div
+    at QueryClientProvider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=3d64c8d7:2805:3)
+    at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:151:35)
+    at InitialRouter (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/main.tsx?v=-7ST_tIU8AR2gEBB6kXe5:24:35)
+    at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:291:17)
+Safe to invalidate cache now, appointment is stable in local state
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at Droppable (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:9460:49)
+    at ConnectFunction (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1918:48)
+    at DroppableArea (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/DroppableArea.tsx:21:5)
+    at div
+    at div
+    at div
+    at div
+    at TimeSlots (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/TimeSlots.tsx:24:3)
+    at div
+    at Provider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1738:20)
+    at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8281:25)
+    at ErrorBoundary2 (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:2778:35)
+    at DragDropContext (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8401:19)
+    at div
+    at div
+    at CalendarView (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/pages/CalendarView.tsx:37:41)
+    at ProtectedRoute (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:32:38)
+    at component
+    at Route (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:323:16)
+    at Switch (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:379:17)
+    at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:76:22)
+    at main
+    at div
+    at QueryClientProvider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=3d64c8d7:2805:3)
+    at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:151:35)
+    at InitialRouter (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/main.tsx?v=-7ST_tIU8AR2gEBB6kXe5:24:35)
+    at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:291:17)
+at Droppable (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:9460:49)
+at ConnectFunction (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1918:48)
+at DroppableArea (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/DroppableArea.tsx:21:5)
+at div
+at div
+at div
+at div
+at TimeSlots (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/components/TimeSlots.tsx:24:3)
+at div
+at Provider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:1738:20)
+at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8281:25)
+at ErrorBoundary2 (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:2778:35)
+at DragDropContext (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-beautiful-dnd.js?v=3d64c8d7:8401:19)
+at div
+at div
+at CalendarView (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/pages/CalendarView.tsx:37:41)
+at ProtectedRoute (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:32:38)
+at component
+at Route (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:323:16)
+at Switch (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:379:17)
+at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:76:22)
+at main
+at div
+at QueryClientProvider (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=3d64c8d7:2805:3)
+at App (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/App.tsx?v=-7ST_tIU8AR2gEBB6kXe5:151:35)
+at InitialRouter (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/src/main.tsx?v=-7ST_tIU8AR2gEBB6kXe5:24:35)
+at Router (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=3d64c8d7:291:17)
+at t.value (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://37b39c28-d1a3-4af0-8f07-235250cbf700-00-zdhbge6zzk9r.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+Fetched appointments from API: 
+(13) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
