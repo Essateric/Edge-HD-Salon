@@ -186,10 +186,8 @@ export default function TimeSlots({
             {...provided.droppableProps}
             className="flex-1 border-r relative"
           >
-            {/* Stylist header - fixed at top */}
-            <div className="text-center font-medium bg-gray-100 p-2 sticky top-0 z-10 border-b border-border">
-              {stylist.name}
-            </div>
+            {/* Keeping an empty div for spacing - removing the text */}
+            <div className="sticky top-0 z-10"></div>
             
             {/* Appointments */}
             {stylistAppointments.map((appointment, index) => (
@@ -217,7 +215,7 @@ export default function TimeSlots({
             {timeSlots.map(slot => (
               <div 
                 key={`grid-${slot.time}`}
-                className="border-b border-gray-200 cursor-pointer hover:bg-primary/5"
+                className="border-b border-gray-200 cursor-pointer hover:bg-primary/5 relative"
                 style={{
                   height: `${APPOINTMENT_HEIGHT}px`, 
                   position: 'absolute',
@@ -225,7 +223,14 @@ export default function TimeSlots({
                   top: `${timeToOffset(slot.time)}px`
                 }}
                 onClick={() => onTimeSlotClick(stylist.id, slot.formatted)}
-              />
+              >
+                {/* Small time label at the left edge of each time slot */}
+                {slot.time.endsWith(':00') && (
+                  <div className="text-xs text-gray-500 absolute left-2 top-0 pt-0.5">
+                    {slot.formatted}
+                  </div>
+                )}
+              </div>
             ))}
             
             {provided.placeholder}

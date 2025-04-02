@@ -39,7 +39,8 @@ export default function TimeSidebar({
             position: 'absolute',
             width: '100%',
             top: `${(hour - startHour) * 4 * APPOINTMENT_HEIGHT}px`,
-            paddingTop: '2px'
+            paddingTop: '2px',
+            color: '#4B5563'
           }}
         >
           {displayHour12}:00 {amPm}
@@ -56,7 +57,8 @@ export default function TimeSidebar({
             position: 'absolute',
             width: '100%',
             top: `${(hour - startHour) * 4 * APPOINTMENT_HEIGHT + APPOINTMENT_HEIGHT}px`,
-            paddingTop: '2px'
+            paddingTop: '2px',
+            color: '#6B7280'
           }}
         >
           :15
