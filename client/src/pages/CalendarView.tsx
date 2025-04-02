@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
-import ShortcutsTopBar from '@/components/ShortcutsTopBar';
+import EdgeSalonTopBar from '@/components/EdgeSalonTopBar';
 import ServicesPanel from '@/components/ServicesPanel';
 import StylistHeader from '@/components/StylistHeader';
 import TimeSlots from '@/components/TimeSlots';
@@ -487,16 +487,60 @@ export default function CalendarView() {
     });
   };
 
-  // Handle drag start event to apply initial styles
-  const handleDragStart = () => {
+  // Enhanced drag start event handler with visual feedback
+  const handleDragStart = (start: any) => {
     // Add a class to the body to style during dragging
     document.body.classList.add('is-dragging');
+    
+    // Add a class to all time slots to indicate draggable state
+    const timeSlotElements = document.querySelectorAll('.time-slot');
+    timeSlotElements.forEach(el => {
+      el.classList.add('edgesalon-droppable');
+    });
+    
+    // If we have the draggable ID, highlight it specially
+    if (start && start.draggableId) {
+      const appointmentId = start.draggableId.replace('appointment-', '');
+      const appointmentEl = document.querySelector(`[data-appointment-id="${appointmentId}"]`);
+      if (appointmentEl) {
+        appointmentEl.classList.add('edgesalon-dragging');
+      }
+    }
+    
+    // Save the start state for potential use in drag end
+    window.dragStartState = start;
+    
+    console.log("Drag started:", start);
   };
   
-  // Handle drag end event
+  // Enhanced drag end event with improved error handling
   const handleDragEnd = (result: DropResult) => {
-    // Remove dragging class
+    // Clean up all drag-related classes
     document.body.classList.remove('is-dragging');
+    
+    const timeSlotElements = document.querySelectorAll('.time-slot');
+    timeSlotElements.forEach(el => {
+      el.classList.remove('edgesalon-droppable');
+      el.classList.remove('edgesalon-over');
+    });
+    
+    // Remove any dragging indicators
+    const draggingEls = document.querySelectorAll('.edgesalon-dragging');
+    draggingEls.forEach(el => {
+      el.classList.remove('edgesalon-dragging');
+    });
+    
+    // Also add appropriate visual classes to elements with moveGrip/resizeGrip classes
+    const moveGrips = document.querySelectorAll('.moveGrip');
+    const resizeGrips = document.querySelectorAll('.resizeGrip');
+    
+    moveGrips.forEach(el => {
+      el.classList.remove('attached-to-drag');
+    });
+    
+    resizeGrips.forEach(el => {
+      el.classList.remove('attached-to-drag');
+    });
     
     // Early return if we don't have a destination
     if (!result.destination) {
@@ -682,8 +726,8 @@ export default function CalendarView() {
   
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* New Shortcuts Top Bar */}
-      <ShortcutsTopBar 
+      {/* Edge Salon Top Bar */}
+      <EdgeSalonTopBar 
         currentDate={currentDate}
         onPrevious={handlePrevious}
         onNext={handleNext}

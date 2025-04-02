@@ -42,6 +42,26 @@ const DroppableArea: React.FC<DroppableProps> = (props) => {
           // When there's a drag operation, we need to make sure the DOM is fully prepared
           if (snapshot.isDraggingOver) {
             console.log(`Dragging over ${droppableId}`, snapshot);
+            
+            // Add visual feedback to the droppable area being dragged over
+            setTimeout(() => {
+              // Find all time-slot elements inside this droppable
+              const droppableEl = document.querySelector(`[data-rbd-droppable-id="${droppableId}"]`);
+              if (droppableEl) {
+                const timeSlot = droppableEl.closest('.time-slot');
+                if (timeSlot) {
+                  // Add a class to highlight this specific time slot
+                  timeSlot.classList.add('edgesalon-over');
+                  
+                  // Clean up the highlight after a short delay if the drag moves elsewhere
+                  setTimeout(() => {
+                    if (!snapshot.isDraggingOver) {
+                      timeSlot.classList.remove('edgesalon-over');
+                    }
+                  }, 300);
+                }
+              }
+            }, 0); // Using setTimeout with 0 delay to run after the current execution
           }
           
           const childrenResult = children(provided, snapshot);

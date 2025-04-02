@@ -35,6 +35,19 @@
     @apply border-b border-border h-12 relative;
   }
   
+  /* Enhanced visual cues for draggable/droppable areas */
+  .time-slot.edgesalon-droppable {
+    @apply transition-colors duration-150;
+  }
+  
+  .time-slot.edgesalon-droppable:hover {
+    @apply bg-primary/5;
+  }
+  
+  .time-slot.edgesalon-over {
+    @apply bg-primary/10 border-primary/30;
+  }
+  
   /* Vertical time lines */
   .time-slot::before {
     content: '';
@@ -55,6 +68,27 @@
   
   .appointment:hover {
     @apply transform -translate-y-0.5 shadow-md;
+  }
+  
+  .appointment.edgesalon-dragging {
+    @apply ring-2 ring-primary ring-offset-2 shadow-lg scale-[1.02] z-50;
+  }
+  
+  /* Drag handles and resize handles */
+  .moveGrip {
+    @apply cursor-move opacity-50 hover:opacity-100 transition-opacity;
+  }
+  
+  .moveGrip.attached-to-drag {
+    @apply opacity-100;
+  }
+  
+  .resizeGrip {
+    @apply cursor-ns-resize opacity-50 hover:opacity-100 transition-opacity;
+  }
+  
+  .resizeGrip.attached-to-drag {
+    @apply opacity-100;
   }
   
   .stylist-column {

@@ -3,19 +3,19 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, Printer, ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 import { format } from "date-fns";
 
-interface ShortcutsTopBarProps {
+interface EdgeSalonTopBarProps {
   currentDate?: Date;
   onPrevious?: () => void;
   onNext?: () => void;
   onToday?: () => void;
 }
 
-export default function ShortcutsTopBar({
+export default function EdgeSalonTopBar({
   currentDate = new Date(),
   onPrevious,
   onNext,
   onToday
-}: ShortcutsTopBarProps) {
+}: EdgeSalonTopBarProps) {
   // Format the current date in the format "Today, 2 Apr"
   const formattedDate = format(currentDate, "'Today,' d MMM");
   

@@ -144,6 +144,7 @@ export default function AppointmentComponent({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          data-appointment-id={`${appointment.id}`}
           className={`appointment absolute top-0 left-0 right-0 mx-1 
             ${
               appointment.isConsultation 
