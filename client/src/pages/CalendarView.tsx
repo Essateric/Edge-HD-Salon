@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { format, addDays, subDays } from 'date-fns';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
-import CalendarToolbar from '@/components/CalendarToolbar';
+import ShortcutsTopBar from '@/components/ShortcutsTopBar';
 import ServicesPanel from '@/components/ServicesPanel';
 import StylistHeader from '@/components/StylistHeader';
 import TimeSlots from '@/components/TimeSlots';
@@ -682,11 +682,9 @@ export default function CalendarView() {
   
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* Calendar Toolbar */}
-      <CalendarToolbar 
-        formattedDate={formattedDate}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
+      {/* New Shortcuts Top Bar */}
+      <ShortcutsTopBar 
+        currentDate={currentDate}
         onPrevious={handlePrevious}
         onNext={handleNext}
         onToday={handleToday}
