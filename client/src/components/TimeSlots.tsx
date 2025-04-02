@@ -3,6 +3,7 @@ import { TimeSlot, Stylist, Appointment, ViewMode } from '@/lib/types';
 import AppointmentComponent from '@/components/Appointment';
 import DroppableArea from '@/components/DroppableArea';
 import TimeSidebar from '@/components/TimeSidebar';
+import { useEffect, useState } from 'react';
 
 interface TimeSlotsProps {
   timeSlots: TimeSlot[];
@@ -234,6 +235,30 @@ export default function TimeSlots({
     );
   };
   
+  // Current time indicator
+  const [nowPosition, setNowPosition] = useState(0);
+  
+  // Update the current time indicator position
+  useEffect(() => {
+    const pixelsPerMinute = 1.4125;
+    const startHour = 9; // Calendar starts at 9:00 AM
+
+    function updateNowLine() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const minutesSinceStart = (currentHour - startHour) * 60 + currentMinute;
+
+      const topPosition = minutesSinceStart * pixelsPerMinute;
+      setNowPosition(topPosition);
+    }
+
+    updateNowLine();
+    const interval = setInterval(updateNowLine, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Day view - the default
   const renderDayView = () => (
     <div className="relative h-full">
@@ -242,7 +267,14 @@ export default function TimeSlots({
         <TimeSidebar startHour={9} endHour={20} />
         
         {/* Main Calendar Content - new layout with vertical columns */}
-        <div className="flex flex-1 overflow-x-auto" style={{ height: '700px' }}>
+        <div className="flex flex-1 overflow-x-auto relative" style={{ height: '700px' }}>
+          {/* Current time line indicator */}
+          <div
+            id="now-line"
+            className="absolute left-0 w-full border-t-2 border-red-500 z-50"
+            style={{ top: `${nowPosition}px` }}
+          ></div>
+          
           {stylists.map(stylist => renderStylistColumn(stylist))}
         </div>
       </div>
