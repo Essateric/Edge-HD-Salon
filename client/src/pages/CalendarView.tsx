@@ -254,9 +254,9 @@ export default function CalendarView() {
     }
   }, [connected]);
   
-  // Generate time slots from 9am to 7pm
+  // Generate time slots from 9am to 8pm
   const timeSlots: TimeSlot[] = [];
-  for (let hour = 9; hour <= 19; hour++) {
+  for (let hour = 9; hour <= 20; hour++) {
     const isHour12 = hour % 12 === 0 ? 12 : hour % 12;
     const amPm = hour >= 12 ? 'pm' : 'am';
     

@@ -1,0 +1,43 @@
+<div id="calendar-wrapper" class="flex">
+  <!-- Time Sidebar -->
+  <div id="times-container" class="flex flex-col w-[110px] border-r border-gray-300 bg-white">
+    <!-- Time slots from 9:00 to 5:00 -->
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">9:00 am</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">10:00 am</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">11:00 am</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">12:00 pm</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">1:00 pm</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">2:00 pm</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">3:00 pm</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-600">4:00 pm</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">15</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">30</div>
+    <div class="h-[21.1875px] flex items-center justify-center text-sm text-gray-400">45</div>
+  </div>
+
+  <!-- More UI sections (e.g. employee columns) will go here next -->
+  <div id="columns-placeholder" class="flex-1 bg-gray-50">
+    <!-- Coming next: stylist columns & appointments -->
+  </div>
+</div>

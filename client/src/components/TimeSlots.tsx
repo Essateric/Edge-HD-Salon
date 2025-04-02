@@ -2,6 +2,7 @@ import { format, parse, startOfWeek, addDays } from 'date-fns';
 import { TimeSlot, Stylist, Appointment, ViewMode } from '@/lib/types';
 import AppointmentComponent from '@/components/Appointment';
 import DroppableArea from '@/components/DroppableArea';
+import TimeSidebar from '@/components/TimeSidebar';
 
 interface TimeSlotsProps {
   timeSlots: TimeSlot[];
@@ -32,10 +33,6 @@ export default function TimeSlots({
       console.log("Using backup appointment from global state:", window.lastMovedAppointment);
       allAppointments.push(window.lastMovedAppointment);
     }
-    
-    // Debug - log appointments for this stylist and time slot
-    // console.log(`Appointments for stylist ${stylistId} at ${time}:`, 
-    //    allAppointments.filter(a => a.stylistId === stylistId));
     
     return allAppointments.filter(appointment => {
       if (appointment.stylistId !== stylistId) return false;
@@ -91,179 +88,162 @@ export default function TimeSlots({
     </div>
   );
   
+  // Render a single droppable time slot for a stylist
+  const renderStylistSlot = (slot: TimeSlot, stylist: Stylist) => {
+    const timeSlotAppointments = getAppointmentsForTimeSlot(slot.time, stylist.id);
+    const isOff = isTimeSlotOff(slot.time, stylist.id);
+    
+    return (
+      <DroppableArea 
+        droppableId={`stylist-${stylist.id}-slot-${slot.time}`}
+        key={`${slot.time}-${stylist.id}`}
+        isDropDisabled={isOff}
+        direction="vertical"
+      >
+        {(provided, snapshot) => (
+          <div 
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className={`stylist-column relative h-[84.75px] border-r border-b border-border ${
+              !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
+            } ${snapshot.isDraggingOver ? 'bg-primary/20 outline outline-2 outline-amber-600/70' : ''}`}
+            style={{ width: getColumnWidth() }}
+            onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
+          >
+            {/* 15-minute grid lines */}
+            {!isOff && <TimeSlotGrid>{null}</TimeSlotGrid>}
+            
+            {/* Visual indicator for when dragging over */}
+            {snapshot.isDraggingOver && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-amber-600 font-bold text-lg opacity-30">
+                  {slot.formatted}
+                </div>
+              </div>
+            )}
+            
+            {isOff ? (
+              <div className="h-full bg-muted text-center text-sm text-muted-foreground pt-2 font-medium">
+                off
+              </div>
+            ) : (
+              <>
+                {/* Appointments */}
+                {timeSlotAppointments.map((appointment, index) => {
+                  // Calculate top position based on start time
+                  const startTime = appointment.startTime;
+                  let topPosition = 0;
+                  
+                  try {
+                    // Parse 12-hour time (e.g., "1:00 pm")
+                    const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
+                    const startMatch = startTime.match(match12Hr);
+                    
+                    if (startMatch) {
+                      let startHour = parseInt(startMatch[1]);
+                      const startMinute = parseInt(startMatch[2]);
+                      const startPeriod = startMatch[3].toLowerCase();
+                      
+                      // Convert to 24-hour
+                      if (startPeriod === 'pm' && startHour < 12) startHour += 12;
+                      if (startPeriod === 'am' && startHour === 12) startHour = 0;
+                      
+                      // Calculate top position relative to the time slot
+                      const slotHour = parseInt(slot.time.split(':')[0]);
+                      const slotMinute = parseInt(slot.time.split(':')[1]);
+                      
+                      // If the appointment starts before this time slot
+                      if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
+                        topPosition = 0;
+                      } else {
+                        // Calculate minutes from the start of the time slot
+                        const minutesFromSlotStart = 
+                          (startHour - slotHour) * 60 + (startMinute - slotMinute);
+                        
+                        // Each 15 minutes is 21.19px in height (84.75px / 4 = 21.19px per 15 min)
+                        topPosition = (minutesFromSlotStart * 21.19) / 15;
+                      }
+                    } else {
+                      // Try 24-hour format as fallback
+                      const match24Hr = /(\d+):(\d+)/;
+                      const startMatch = startTime.match(match24Hr);
+                      
+                      if (startMatch) {
+                        const startHour = parseInt(startMatch[1]);
+                        const startMinute = parseInt(startMatch[2]);
+                        
+                        // Calculate top position
+                        const slotHour = parseInt(slot.time.split(':')[0]);
+                        const slotMinute = parseInt(slot.time.split(':')[1]);
+                        
+                        if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
+                          topPosition = 0;
+                        } else {
+                          const minutesFromSlotStart = 
+                            (startHour - slotHour) * 60 + (startMinute - slotMinute);
+                          // Each 15 minutes is 21.19px in height
+                          topPosition = (minutesFromSlotStart * 21.19) / 15;
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.error("Failed to calculate appointment position", e);
+                  }
+                  
+                  return (
+                    <div 
+                      key={appointment.id}
+                      className="absolute"
+                      style={{
+                        top: `${topPosition}px`,
+                        left: '2%', 
+                        width: '96%',
+                        zIndex: 20 + index
+                      }}
+                    >
+                      <AppointmentComponent 
+                        appointment={appointment}
+                        onEditAppointment={onEditAppointment}
+                        index={index}
+                      />
+                    </div>
+                  );
+                })}
+                
+                {/* Empty state */}
+                {timeSlotAppointments.length === 0 && (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <div className="text-sm text-muted-foreground border-2 border-dashed border-muted-foreground/50 rounded-md w-5/6 h-5/6 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                      <span className="font-medium">+</span>
+                    </div>
+                  </div>
+                )}
+                
+                {provided.placeholder}
+              </>
+            )}
+          </div>
+        )}
+      </DroppableArea>
+    );
+  };
+  
   // Day view - the default
   const renderDayView = () => (
-    <div className="relative flex flex-col h-full">
-      {timeSlots.map((slot) => (
-        <div key={slot.time} className="flex time-slot" style={{ minHeight: '120px' }}>
-          <div className="w-20 md:w-28 flex-shrink-0 border-r border-border text-right pr-2 text-sm text-muted-foreground py-2 bg-background sticky left-0">
-            <div className="h-full flex flex-col justify-between">
-              <div className="font-medium flex justify-end items-center gap-1">
-                {slot.formatted}
-                <div className="w-3 h-0.5 bg-muted-foreground/50"></div>
-              </div>
-              <div className="flex justify-end items-center gap-1">
-                <span className="text-xs">15</span>
-                <div className="w-2 h-0.5 bg-muted-foreground/30"></div>
-              </div>
-              <div className="flex justify-end items-center gap-1">
-                <span className="text-xs">30</span>
-                <div className="w-2 h-0.5 bg-muted-foreground/30"></div>
-              </div>
-              <div className="flex justify-end items-center gap-1">
-                <span className="text-xs">45</span>
-                <div className="w-2 h-0.5 bg-muted-foreground/30"></div>
-              </div>
+    <div className="relative h-full">
+      <div id="calendar-wrapper" className="flex">
+        {/* Time Sidebar */}
+        <TimeSidebar startHour={9} endHour={20} />
+        
+        {/* Main Calendar Content */}
+        <div className="flex-1">
+          {timeSlots.map(slot => (
+            <div key={slot.time} className="flex time-slot" style={{ height: '84.75px' }}>
+              {stylists.map(stylist => renderStylistSlot(slot, stylist))}
             </div>
-          </div>
-          
-          <div className="flex flex-grow">
-            {stylists.map((stylist) => {
-              const timeSlotAppointments = getAppointmentsForTimeSlot(slot.time, stylist.id);
-              const isOff = isTimeSlotOff(slot.time, stylist.id);
-              
-              return (
-                <DroppableArea 
-                  droppableId={`stylist-${stylist.id}-slot-${slot.time}`}
-                  key={`${slot.time}-${stylist.id}`}
-                  isDropDisabled={isOff}
-                  direction="vertical"
-                >
-                  {(provided, snapshot) => {
-                    return (
-                      <div 
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`stylist-column relative h-[120px] border-r border-b border-border ${
-                          !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
-                        } ${snapshot.isDraggingOver ? 'bg-primary/20 outline outline-2 outline-amber-600/70' : ''}`}
-                        style={{ width: getColumnWidth() }}
-                        onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
-                      >
-                        {/* 15-minute grid lines */}
-                        {!isOff && <TimeSlotGrid>{null}</TimeSlotGrid>}
-                        
-                        {/* Visual indicator for when dragging over a time slot */}
-                        {snapshot.isDraggingOver && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="text-amber-600 font-bold text-xl opacity-30">
-                              {slot.formatted}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {isOff ? (
-                          <div className="h-full bg-muted text-center text-sm text-muted-foreground pt-2 font-medium">
-                            off
-                          </div>
-                        ) : (
-                          <>
-                            {/* Appointments */}
-                            {timeSlotAppointments.map((appointment, index) => {
-                              // Calculate top position based on start time
-                              const startTime = appointment.startTime;
-                              let topPosition = 0;
-                              
-                              try {
-                                // Parse 12-hour time (e.g., "1:00 pm")
-                                const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
-                                const startMatch = startTime.match(match12Hr);
-                                
-                                if (startMatch) {
-                                  let startHour = parseInt(startMatch[1]);
-                                  const startMinute = parseInt(startMatch[2]);
-                                  const startPeriod = startMatch[3].toLowerCase();
-                                  
-                                  // Convert to 24-hour
-                                  if (startPeriod === 'pm' && startHour < 12) startHour += 12;
-                                  if (startPeriod === 'am' && startHour === 12) startHour = 0;
-                                  
-                                  // Calculate top position relative to the time slot
-                                  const slotHour = parseInt(slot.time.split(':')[0]);
-                                  const slotMinute = parseInt(slot.time.split(':')[1]);
-                                  
-                                  // If the appointment starts before this time slot
-                                  if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
-                                    topPosition = 0;
-                                  } else {
-                                    // Calculate minutes from the start of the time slot
-                                    const minutesFromSlotStart = 
-                                      (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                                    
-                                    // Each 15 minutes is 30px in height (120px / 4 = 30px per 15 min)
-                                    topPosition = (minutesFromSlotStart * 30) / 15;
-                                  }
-                                } else {
-                                  // Try 24-hour format as fallback
-                                  const match24Hr = /(\d+):(\d+)/;
-                                  const startMatch = startTime.match(match24Hr);
-                                  
-                                  if (startMatch) {
-                                    const startHour = parseInt(startMatch[1]);
-                                    const startMinute = parseInt(startMatch[2]);
-                                    
-                                    // Calculate top position
-                                    const slotHour = parseInt(slot.time.split(':')[0]);
-                                    const slotMinute = parseInt(slot.time.split(':')[1]);
-                                    
-                                    if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
-                                      topPosition = 0;
-                                    } else {
-                                      const minutesFromSlotStart = 
-                                        (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                                      // Each 15 minutes is 30px in height (120px / 4 = 30px per 15 min)
-                                      topPosition = (minutesFromSlotStart * 30) / 15;
-                                    }
-                                  }
-                                }
-                              } catch (e) {
-                                console.error("Failed to calculate appointment position", e);
-                              }
-                              
-                              return (
-                                <div 
-                                  key={appointment.id}
-                                  className="absolute"
-                                  style={{
-                                    // Top position is calculated based on start time relative to the time slot
-                                    top: `${topPosition}px`,
-                                    // Add horizontal offset for overlapping appointments (simple approach)
-                                    left: '2%', 
-                                    width: '96%',
-                                    zIndex: 20 + index
-                                  }}
-                                >
-                                  <AppointmentComponent 
-                                    appointment={appointment}
-                                    onEditAppointment={onEditAppointment}
-                                    index={index}
-                                  />
-                                </div>
-                              );
-                            })}
-                            
-                            {/* Empty state */}
-                            {timeSlotAppointments.length === 0 && (
-                              <div className="h-full w-full flex items-center justify-center">
-                                <div className="text-sm text-muted-foreground border-2 border-dashed border-muted-foreground/50 rounded-md w-5/6 h-5/6 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                                  <span className="font-medium">+</span>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* This placeholder is important for dragging, and we'll add an additional backup in the DroppableArea component */}
-                            {provided.placeholder}
-                          </>
-                        )}
-                      </div>
-                    );
-                  }}
-                </DroppableArea>
-              );
-            })}
-          </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
   
