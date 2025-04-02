@@ -1,0 +1,67 @@
+import React from "react";
+
+const APPOINTMENT_HEIGHT = 21.1875; // height per 15 min
+
+const stylists = ["Jane", "Tom", "Anna"];
+
+const appointments = [
+  {
+    stylist: "Jane",
+    client: "Monica Walker",
+    service: "Blow Dry",
+    start: "10:00",
+    end: "11:00",
+    status: "arrived"
+  },
+  {
+    stylist: "Tom",
+    client: "Lisa P",
+    service: "HIGHLIGHTS parting",
+    start: "09:15",
+    end: "10:15",
+    status: "arrived"
+  }
+];
+
+function timeToOffset(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const totalMinutes = (hours - 9) * 60 + minutes;
+  return totalMinutes / 15 * APPOINTMENT_HEIGHT;
+}
+
+function durationToHeight(start, end) {
+  const [startH, startM] = start.split(":").map(Number);
+  const [endH, endM] = end.split(":").map(Number);
+  const duration = (endH * 60 + endM) - (startH * 60 + startM);
+  return (duration / 15) * APPOINTMENT_HEIGHT;
+}
+
+export default function CalendarGrid() {
+  return (
+    <div className="flex w-full h-[700px] relative">
+      {stylists.map((stylist, index) => (
+        <div key={stylist} className="flex-1 border-r relative">
+          <div className="text-center font-bold bg-gray-100 p-2 sticky top-0 z-10">
+            {stylist}
+          </div>
+          {appointments
+            .filter(a => a.stylist === stylist)
+            .map((appt, idx) => (
+              <div
+                key={idx}
+                className="absolute w-[calc(100%-8px)] mx-1 bg-blue-100 border border-blue-300 shadow-md rounded-md p-1 text-sm overflow-hidden"
+                style={{
+                  top: timeToOffset(appt.start),
+                  height: durationToHeight(appt.start, appt.end),
+                  backgroundColor: appt.status === "arrived" ? "#d1e7dd" : "#fff3cd"
+                }}
+              >
+                <div className="font-semibold">{appt.client}</div>
+                <div className="text-xs text-gray-600">{appt.service}</div>
+              </div>
+            ))}
+        </div>
+      ))}
+    </div>
+  );
+}

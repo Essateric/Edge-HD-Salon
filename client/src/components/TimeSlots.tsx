@@ -88,140 +88,146 @@ export default function TimeSlots({
     </div>
   );
   
-  // Render a single droppable time slot for a stylist
-  const renderStylistSlot = (slot: TimeSlot, stylist: Stylist) => {
-    const timeSlotAppointments = getAppointmentsForTimeSlot(slot.time, stylist.id);
-    const isOff = isTimeSlotOff(slot.time, stylist.id);
+  // Constants
+  const APPOINTMENT_HEIGHT = 21.1875; // height per 15 min
+  
+  // Function to convert time to top offset
+  const timeToOffset = (time: string): number => {
+    // Handle 12-hour format
+    let hours = 0;
+    let minutes = 0;
+    
+    const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
+    const match12Result = time.match(match12Hr);
+    
+    if (match12Result) {
+      hours = parseInt(match12Result[1]);
+      minutes = parseInt(match12Result[2]);
+      const period = match12Result[3].toLowerCase();
+      
+      // Convert to 24-hour
+      if (period === 'pm' && hours < 12) hours += 12;
+      if (period === 'am' && hours === 12) hours = 0;
+    } else {
+      // Try 24-hour format as fallback
+      const match24Hr = /(\d+):(\d+)/;
+      const match24Result = time.match(match24Hr);
+      
+      if (match24Result) {
+        hours = parseInt(match24Result[1]);
+        minutes = parseInt(match24Result[2]);
+      }
+    }
+    
+    const totalMinutes = (hours - 9) * 60 + minutes; // 9am is start time (offset 0)
+    return (totalMinutes / 15) * APPOINTMENT_HEIGHT;
+  };
+  
+  // Function to calculate appointment height based on duration
+  const durationToHeight = (start: string, end: string): number => {
+    // Convert to 24-hour format if needed
+    let startHours = 0, startMinutes = 0, endHours = 0, endMinutes = 0;
+    
+    // Process start time
+    const startMatch12Hr = start.match(/(\d+):(\d+)\s*(am|pm)/i);
+    if (startMatch12Hr) {
+      startHours = parseInt(startMatch12Hr[1]);
+      startMinutes = parseInt(startMatch12Hr[2]);
+      const startPeriod = startMatch12Hr[3].toLowerCase();
+      
+      if (startPeriod === 'pm' && startHours < 12) startHours += 12;
+      if (startPeriod === 'am' && startHours === 12) startHours = 0;
+    } else {
+      const startMatch24Hr = start.match(/(\d+):(\d+)/);
+      if (startMatch24Hr) {
+        startHours = parseInt(startMatch24Hr[1]);
+        startMinutes = parseInt(startMatch24Hr[2]);
+      }
+    }
+    
+    // Process end time
+    const endMatch12Hr = end.match(/(\d+):(\d+)\s*(am|pm)/i);
+    if (endMatch12Hr) {
+      endHours = parseInt(endMatch12Hr[1]);
+      endMinutes = parseInt(endMatch12Hr[2]);
+      const endPeriod = endMatch12Hr[3].toLowerCase();
+      
+      if (endPeriod === 'pm' && endHours < 12) endHours += 12;
+      if (endPeriod === 'am' && endHours === 12) endHours = 0;
+    } else {
+      const endMatch24Hr = end.match(/(\d+):(\d+)/);
+      if (endMatch24Hr) {
+        endHours = parseInt(endMatch24Hr[1]);
+        endMinutes = parseInt(endMatch24Hr[2]);
+      }
+    }
+    
+    const durationInMinutes = (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
+    return (durationInMinutes / 15) * APPOINTMENT_HEIGHT;
+  };
+  
+  // Render a column for each stylist with their appointments
+  const renderStylistColumn = (stylist: Stylist) => {
+    // Filter appointments for this stylist only
+    const stylistAppointments = appointments.filter(appointment => 
+      appointment.stylistId === stylist.id
+    );
     
     return (
-      <DroppableArea 
-        droppableId={`stylist-${stylist.id}-slot-${slot.time}`}
-        key={`${slot.time}-${stylist.id}`}
-        isDropDisabled={isOff}
+      <DroppableArea
+        droppableId={`stylist-${stylist.id}`}
+        key={stylist.id}
         direction="vertical"
       >
         {(provided, snapshot) => (
           <div 
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`stylist-column relative h-[84.75px] border-r border-b border-border ${
-              !isOff ? 'cursor-pointer hover:bg-primary/10' : ''
-            } ${snapshot.isDraggingOver ? 'bg-primary/20 outline outline-2 outline-amber-600/70' : ''}`}
-            style={{ width: getColumnWidth() }}
-            onClick={() => !isOff && onTimeSlotClick(stylist.id, slot.formatted)}
+            className="flex-1 border-r relative"
           >
-            {/* 15-minute grid lines */}
-            {!isOff && <TimeSlotGrid>{null}</TimeSlotGrid>}
+            {/* Stylist header - fixed at top */}
+            <div className="text-center font-medium bg-gray-100 p-2 sticky top-0 z-10 border-b border-border">
+              {stylist.name}
+            </div>
             
-            {/* Visual indicator for when dragging over */}
-            {snapshot.isDraggingOver && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-amber-600 font-bold text-lg opacity-30">
-                  {slot.formatted}
+            {/* Appointments */}
+            {stylistAppointments.map((appointment, index) => (
+              <div
+                key={`appointment-${appointment.id}`}
+                className="absolute w-[calc(100%-8px)] mx-1 bg-blue-100 border border-blue-300 shadow-md rounded-md p-2 text-sm overflow-hidden"
+                style={{
+                  top: `${timeToOffset(appointment.startTime)}px`,
+                  height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
+                  backgroundColor: appointment.status === 'confirmed' ? '#d1e7dd' : '#fff3cd',
+                  zIndex: 20 + index
+                }}
+                onClick={() => onEditAppointment && onEditAppointment(appointment)}
+              >
+                <div className="font-semibold truncate">
+                  {appointment.customerName || 'Walk-in'}
+                </div>
+                <div className="text-xs text-gray-600 truncate">
+                  {appointment.serviceName}
                 </div>
               </div>
-            )}
+            ))}
             
-            {isOff ? (
-              <div className="h-full bg-muted text-center text-sm text-muted-foreground pt-2 font-medium">
-                off
-              </div>
-            ) : (
-              <>
-                {/* Appointments */}
-                {timeSlotAppointments.map((appointment, index) => {
-                  // Calculate top position based on start time
-                  const startTime = appointment.startTime;
-                  let topPosition = 0;
-                  
-                  try {
-                    // Parse 12-hour time (e.g., "1:00 pm")
-                    const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
-                    const startMatch = startTime.match(match12Hr);
-                    
-                    if (startMatch) {
-                      let startHour = parseInt(startMatch[1]);
-                      const startMinute = parseInt(startMatch[2]);
-                      const startPeriod = startMatch[3].toLowerCase();
-                      
-                      // Convert to 24-hour
-                      if (startPeriod === 'pm' && startHour < 12) startHour += 12;
-                      if (startPeriod === 'am' && startHour === 12) startHour = 0;
-                      
-                      // Calculate top position relative to the time slot
-                      const slotHour = parseInt(slot.time.split(':')[0]);
-                      const slotMinute = parseInt(slot.time.split(':')[1]);
-                      
-                      // If the appointment starts before this time slot
-                      if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
-                        topPosition = 0;
-                      } else {
-                        // Calculate minutes from the start of the time slot
-                        const minutesFromSlotStart = 
-                          (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                        
-                        // Each 15 minutes is 21.19px in height (84.75px / 4 = 21.19px per 15 min)
-                        topPosition = (minutesFromSlotStart * 21.19) / 15;
-                      }
-                    } else {
-                      // Try 24-hour format as fallback
-                      const match24Hr = /(\d+):(\d+)/;
-                      const startMatch = startTime.match(match24Hr);
-                      
-                      if (startMatch) {
-                        const startHour = parseInt(startMatch[1]);
-                        const startMinute = parseInt(startMatch[2]);
-                        
-                        // Calculate top position
-                        const slotHour = parseInt(slot.time.split(':')[0]);
-                        const slotMinute = parseInt(slot.time.split(':')[1]);
-                        
-                        if (startHour < slotHour || (startHour === slotHour && startMinute < slotMinute)) {
-                          topPosition = 0;
-                        } else {
-                          const minutesFromSlotStart = 
-                            (startHour - slotHour) * 60 + (startMinute - slotMinute);
-                          // Each 15 minutes is 21.19px in height
-                          topPosition = (minutesFromSlotStart * 21.19) / 15;
-                        }
-                      }
-                    }
-                  } catch (e) {
-                    console.error("Failed to calculate appointment position", e);
-                  }
-                  
-                  return (
-                    <div 
-                      key={appointment.id}
-                      className="absolute"
-                      style={{
-                        top: `${topPosition}px`,
-                        left: '2%', 
-                        width: '96%',
-                        zIndex: 20 + index
-                      }}
-                    >
-                      <AppointmentComponent 
-                        appointment={appointment}
-                        onEditAppointment={onEditAppointment}
-                        index={index}
-                      />
-                    </div>
-                  );
-                })}
-                
-                {/* Empty state */}
-                {timeSlotAppointments.length === 0 && (
-                  <div className="h-full w-full flex items-center justify-center">
-                    <div className="text-sm text-muted-foreground border-2 border-dashed border-muted-foreground/50 rounded-md w-5/6 h-5/6 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors">
-                      <span className="font-medium">+</span>
-                    </div>
-                  </div>
-                )}
-                
-                {provided.placeholder}
-              </>
-            )}
+            {/* Time slot grid lines */}
+            {timeSlots.map(slot => (
+              <div 
+                key={`grid-${slot.time}`}
+                className="border-b border-gray-200 cursor-pointer hover:bg-primary/5"
+                style={{
+                  height: `${APPOINTMENT_HEIGHT}px`, 
+                  position: 'absolute',
+                  width: '100%',
+                  top: `${timeToOffset(slot.time)}px`
+                }}
+                onClick={() => onTimeSlotClick(stylist.id, slot.formatted)}
+              />
+            ))}
+            
+            {provided.placeholder}
           </div>
         )}
       </DroppableArea>
@@ -235,13 +241,9 @@ export default function TimeSlots({
         {/* Time Sidebar */}
         <TimeSidebar startHour={9} endHour={20} />
         
-        {/* Main Calendar Content */}
-        <div className="flex-1">
-          {timeSlots.map(slot => (
-            <div key={slot.time} className="flex time-slot" style={{ height: '84.75px' }}>
-              {stylists.map(stylist => renderStylistSlot(slot, stylist))}
-            </div>
-          ))}
+        {/* Main Calendar Content - new layout with vertical columns */}
+        <div className="flex flex-1 overflow-x-auto" style={{ height: '700px' }}>
+          {stylists.map(stylist => renderStylistColumn(stylist))}
         </div>
       </div>
     </div>
