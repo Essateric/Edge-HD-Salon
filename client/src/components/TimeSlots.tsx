@@ -179,59 +179,63 @@ export default function TimeSlots({
         {/* Keeping an empty div for spacing - removing the text */}
         <div className="sticky top-0 z-10"></div>
         
-        {/* Appointments */}
-        {stylistAppointments.map((appointment, index) => (
-          <div 
-            key={`appointment-wrapper-${appointment.id}`}
-            style={{
-              position: 'absolute',
-              top: `${timeToOffset(appointment.startTime)}px`,
-              width: '100%',
-              height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
-              zIndex: 20 + index
-            }}
-          >
-            <AppointmentComponent 
-              appointment={appointment}
-              onEditAppointment={onEditAppointment}
-              index={index} 
-            />
-          </div>
-        ))}
+        {/* Main droppable column for this stylist */}
+        <DroppableArea
+          droppableId={`stylist-${stylist.id}`}
+          direction="vertical"
+        >
+          {(provided, snapshot) => (
+            <div 
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="h-full w-full absolute"
+            >
+              {/* Appointments */}
+              {stylistAppointments.map((appointment, index) => (
+                <div 
+                  key={`appointment-wrapper-${appointment.id}`}
+                  style={{
+                    position: 'absolute',
+                    top: `${timeToOffset(appointment.startTime)}px`,
+                    width: '100%',
+                    height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
+                    zIndex: 20 + index
+                  }}
+                >
+                  <AppointmentComponent 
+                    appointment={appointment}
+                    onEditAppointment={onEditAppointment}
+                    index={index} 
+                  />
+                </div>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </DroppableArea>
         
-        {/* Time slot grid lines with individual droppable areas */}
+        {/* Time slot grid lines without droppables to avoid nesting issues */}
         {timeSlots.map(slot => (
-          <DroppableArea
-            key={`droppable-${stylist.id}-${slot.time}`}
-            droppableId={`stylist-${stylist.id}-slot-${slot.formatted}`}
-            direction="vertical"
-            isDropDisabled={false}
+          <div
+            key={`time-slot-${stylist.id}-${slot.time}`}
+            className="time-slot border-b border-gray-200 cursor-pointer hover:bg-primary/5 relative"
+            style={{
+              height: `${APPOINTMENT_HEIGHT}px`, 
+              position: 'absolute',
+              width: '100%',
+              top: `${timeToOffset(slot.time)}px`,
+              zIndex: 10 // Below appointment elements
+            }}
+            data-slot-id={`stylist-${stylist.id}-slot-${slot.formatted}`}
+            onClick={() => onTimeSlotClick(stylist.id, slot.formatted)}
           >
-            {(provided, snapshot) => (
-              <div 
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className={`time-slot border-b border-gray-200 cursor-pointer hover:bg-primary/5 relative ${
-                  snapshot.isDraggingOver ? 'edgesalon-droppable edgesalon-over bg-amber-100/30' : ''
-                }`}
-                style={{
-                  height: `${APPOINTMENT_HEIGHT}px`, 
-                  position: 'absolute',
-                  width: '100%',
-                  top: `${timeToOffset(slot.time)}px`
-                }}
-                onClick={() => onTimeSlotClick(stylist.id, slot.formatted)}
-              >
-                {/* Small time label at the left edge of each time slot */}
-                {slot.time.endsWith(':00') && (
-                  <div className="text-xs text-gray-500 absolute left-2 top-0 pt-0.5">
-                    {slot.formatted}
-                  </div>
-                )}
-                {provided.placeholder}
+            {/* Small time label at the left edge of each time slot */}
+            {slot.time.endsWith(':00') && (
+              <div className="text-xs text-gray-500 absolute left-2 top-0 pt-0.5">
+                {slot.formatted}
               </div>
             )}
-          </DroppableArea>
+          </div>
         ))}
       </div>
     );

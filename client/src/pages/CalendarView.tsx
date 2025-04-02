@@ -570,16 +570,64 @@ export default function CalendarView() {
       console.log("From:", source.droppableId);
       console.log("To:", destination.droppableId);
       
-      const match = destination.droppableId.match(/stylist-(\d+)-slot-([0-9:.]+\s*[APMapm]*)/);
+      // With the updated TimeSlots component, we now have the format "stylist-{id}"
+      const match = destination.droppableId.match(/stylist-(\d+)/);
       
       if (!match) {
         console.error("Invalid destination droppable ID format:", destination.droppableId);
-        console.log("Expected format: stylist-{id}-slot-{time}");
+        console.log("Expected format: stylist-{id}");
         return;
       }
       
       const newStylistId = parseInt(match[1]);
-      const newStartTime = match[2];
+      
+      // Since we don't have the time in the droppableId anymore, we need to calculate
+      // the time based on the drop position relative to the calendar
+      
+      // Find the closest time slot visually
+      const timeSlots = document.querySelectorAll(`[data-slot-id^="stylist-${newStylistId}-slot-"]`);
+      const calendarContainer = document.querySelector('.flex.flex-1.overflow-x-auto.relative');
+      if (!calendarContainer) {
+        console.error("Could not find calendar container");
+        return;
+      }
+      
+      // Get the drop position relative to the calendar container
+      const dropY = destination.index * 20; // Rough approximation
+      let closestSlot = null;
+      let closestDistance = Infinity;
+      
+      // Find the time slot closest to the drop position
+      timeSlots.forEach((slot) => {
+        const rect = slot.getBoundingClientRect();
+        const slotY = rect.top - calendarContainer.getBoundingClientRect().top;
+        const distance = Math.abs(slotY - dropY);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestSlot = slot;
+        }
+      });
+      
+      if (!closestSlot) {
+        console.error("Could not find a time slot near the drop position");
+        return;
+      }
+      
+      // Extract the time from the data-slot-id attribute
+      const slotId = closestSlot.getAttribute('data-slot-id');
+      if (!slotId) {
+        console.error("Time slot is missing data-slot-id attribute");
+        return;
+      }
+      
+      const timeMatch = slotId.match(/slot-([0-9:.]+\s*[APMapm]*)/);
+      if (!timeMatch) {
+        console.error("Could not extract time from slot ID:", slotId);
+        return;
+      }
+      
+      const newStartTime = timeMatch[1];
       
       if (isNaN(newStylistId)) {
         console.error("Invalid stylist ID:", match[1]);
