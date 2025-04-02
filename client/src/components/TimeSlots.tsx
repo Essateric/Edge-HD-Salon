@@ -175,47 +175,45 @@ export default function TimeSlots({
     );
     
     return (
-      <DroppableArea
-        droppableId={`stylist-${stylist.id}`}
-        key={stylist.id}
-        direction="vertical"
-      >
-        {(provided, snapshot) => (
+      <div key={`stylist-column-${stylist.id}`} className="flex-1 border-r relative">
+        {/* Keeping an empty div for spacing - removing the text */}
+        <div className="sticky top-0 z-10"></div>
+        
+        {/* Appointments */}
+        {stylistAppointments.map((appointment, index) => (
           <div 
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="flex-1 border-r relative"
+            key={`appointment-wrapper-${appointment.id}`}
+            style={{
+              position: 'absolute',
+              top: `${timeToOffset(appointment.startTime)}px`,
+              width: '100%',
+              height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
+              zIndex: 20 + index
+            }}
           >
-            {/* Keeping an empty div for spacing - removing the text */}
-            <div className="sticky top-0 z-10"></div>
-            
-            {/* Appointments */}
-            {stylistAppointments.map((appointment, index) => (
-              <div
-                key={`appointment-${appointment.id}`}
-                className="absolute w-[calc(100%-8px)] mx-1 bg-blue-100 border border-blue-300 shadow-md rounded-md p-2 text-sm overflow-hidden"
-                style={{
-                  top: `${timeToOffset(appointment.startTime)}px`,
-                  height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
-                  backgroundColor: appointment.status === 'confirmed' ? '#d1e7dd' : '#fff3cd',
-                  zIndex: 20 + index
-                }}
-                onClick={() => onEditAppointment && onEditAppointment(appointment)}
-              >
-                <div className="font-semibold truncate">
-                  {appointment.customerName || 'Walk-in'}
-                </div>
-                <div className="text-xs text-gray-600 truncate">
-                  {appointment.serviceName}
-                </div>
-              </div>
-            ))}
-            
-            {/* Time slot grid lines */}
-            {timeSlots.map(slot => (
+            <AppointmentComponent 
+              appointment={appointment}
+              onEditAppointment={onEditAppointment}
+              index={index} 
+            />
+          </div>
+        ))}
+        
+        {/* Time slot grid lines with individual droppable areas */}
+        {timeSlots.map(slot => (
+          <DroppableArea
+            key={`droppable-${stylist.id}-${slot.time}`}
+            droppableId={`stylist-${stylist.id}-slot-${slot.formatted}`}
+            direction="vertical"
+            isDropDisabled={false}
+          >
+            {(provided, snapshot) => (
               <div 
-                key={`grid-${slot.time}`}
-                className="border-b border-gray-200 cursor-pointer hover:bg-primary/5 relative"
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`time-slot border-b border-gray-200 cursor-pointer hover:bg-primary/5 relative ${
+                  snapshot.isDraggingOver ? 'edgesalon-droppable edgesalon-over bg-amber-100/30' : ''
+                }`}
                 style={{
                   height: `${APPOINTMENT_HEIGHT}px`, 
                   position: 'absolute',
@@ -230,13 +228,12 @@ export default function TimeSlots({
                     {slot.formatted}
                   </div>
                 )}
+                {provided.placeholder}
               </div>
-            ))}
-            
-            {provided.placeholder}
-          </div>
-        )}
-      </DroppableArea>
+            )}
+          </DroppableArea>
+        ))}
+      </div>
     );
   };
   
