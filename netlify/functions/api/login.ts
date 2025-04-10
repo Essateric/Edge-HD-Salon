@@ -41,17 +41,25 @@ export const handler: Handler = async (event, context) => {
     }
 
     // Find user by email
+    console.log(`Attempting to login with email: ${email}`);
     const user = await storage.getUserByEmail(email);
+    
     if (!user) {
+      console.log(`User not found: ${email}`);
       return {
         statusCode: 401,
         headers,
         body: JSON.stringify({ status: 'error', message: 'Invalid email or password' })
       };
     }
-
+    
+    console.log(`User found: ${user.username}, comparing passwords...`);
+    console.log(`DB Password: ${user.password.substring(0, 10)}...`);
+    
     // Compare password
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(`Password valid: ${isPasswordValid}`);
+    
     if (!isPasswordValid) {
       return {
         statusCode: 401,
