@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 import { Appointment } from '@/lib/types';
 import { ChevronUp, ChevronDown, Plus, Minus } from 'lucide-react';
+import dayjs from 'dayjs';
+
+// Type definitions for our drag and drop functionality
+type DraggingBooking = Appointment | null;
+type DraggingPosition = { y: number; startTime: dayjs.Dayjs } | null;
 
 interface AppointmentProps {
   appointment: Appointment;
@@ -17,6 +22,108 @@ export default function AppointmentComponent({
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [sizeAdjustment, setSizeAdjustment] = useState(0); // in 15-minute increments
+  
+  // For smooth drag and drop
+  const [draggingBooking, setDraggingBooking] = useState<DraggingBooking>(null);
+  const [draggingPosition, setDraggingPosition] = useState<DraggingPosition>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const gridRef = useRef<HTMLDivElement>(null);
+  
+  const slotHeight = 50; // 30min = 50px
+  const minutesPerSlot = 30; // each slot represents 30 minutes
+  
+  const startOfDay = dayjs().startOf('day').add(9, 'hour'); // Calendar starts at 9AM
+  
+  function handleDragStart(booking: Appointment): void {
+    setDraggingBooking(booking);
+    setIsDragging(true);
+  }
+  
+  function handleDrag(event: React.MouseEvent): void {
+    if (!gridRef.current || !draggingBooking) return;
+    
+    const gridTop = gridRef.current.getBoundingClientRect().top;
+    const mouseY = event.clientY;
+    const mouseYRelative = mouseY - gridTop;
+    
+    const slotsDown = Math.round(mouseYRelative / slotHeight);
+    const minutesFromTop = slotsDown * minutesPerSlot;
+    
+    const newStartTime = startOfDay.add(minutesFromTop, 'minute');
+    
+    setDraggingPosition({
+      y: slotsDown * slotHeight, // snap visually
+      startTime: newStartTime,
+    });
+  }
+  
+  function handleDrop(event: React.DragEvent): void {
+    event.preventDefault();
+    
+    if (!draggingBooking || !draggingPosition) return;
+    
+    // This would typically call a function to update the booking time on the server
+    // For now, we're just integrating with the existing react-beautiful-dnd system
+    
+    // Clean up
+    setDraggingBooking(null);
+    setDraggingPosition(null);
+    setIsDragging(false);
+  }
+  
+  function handleDragOver(event: React.DragEvent): void {
+    event.preventDefault(); // Allow drop
+  }
+  
+  function getBookingPosition(startTime: string): number {
+    const timeDate = parseTimeString(startTime);
+    if (!timeDate) return 0;
+    
+    const minutesSinceStart = dayjs(timeDate).diff(startOfDay, 'minute');
+    const slotsDown = minutesSinceStart / minutesPerSlot;
+    return slotsDown * slotHeight;
+  }
+  
+  // Helper to parse different time formats
+  function parseTimeString(timeStr: string): Date | null {
+    try {
+      // Try 12-hour format
+      const match12Hr = /(\d+):(\d+)\s*(am|pm)/i;
+      const match12Result = timeStr.match(match12Hr);
+      
+      if (match12Result) {
+        let hours = parseInt(match12Result[1]);
+        const minutes = parseInt(match12Result[2]);
+        const period = match12Result[3].toLowerCase();
+        
+        // Convert to 24-hour
+        if (period === 'pm' && hours < 12) hours += 12;
+        if (period === 'am' && hours === 12) hours = 0;
+        
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+      }
+      
+      // Try 24-hour format
+      const match24Hr = /(\d+):(\d+)/;
+      const match24Result = timeStr.match(match24Hr);
+      
+      if (match24Result) {
+        const hours = parseInt(match24Result[1]);
+        const minutes = parseInt(match24Result[2]);
+        
+        const date = new Date();
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+      }
+    } catch (error) {
+      console.error("Failed to parse time string:", timeStr, error);
+    }
+    
+    return null;
+  }
   
   // Calculate the height based on duration
   // Assuming each hour is 120px in height (30px per 15 min)
@@ -134,6 +241,9 @@ export default function AppointmentComponent({
     });
   }, [appointment.id, appointment.stylistId, appointment.startTime, appointment.endTime]);
 
+  // Decide which drag and drop method to use
+  // For this implementation, we'll continue using react-beautiful-dnd
+  // but incorporate the smooth animation concepts
   return (
     <Draggable 
       draggableId={`appointment-${appointment.id}`} 
@@ -141,7 +251,12 @@ export default function AppointmentComponent({
     >
       {(provided, snapshot) => (
         <div
-          ref={provided.innerRef}
+          ref={(element) => {
+            // Set both refs - one for react-beautiful-dnd and one for our custom implementation
+            provided.innerRef(element);
+            // @ts-ignore - This is fine since we're just setting a ref
+            gridRef.current = element;
+          }}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           data-appointment-id={`${appointment.id}`}
@@ -159,8 +274,12 @@ export default function AppointmentComponent({
             height: `${getHeight()}px`,
             ...provided.draggableProps.style,
             boxShadow: snapshot.isDragging ? '0 8px 16px rgba(0,0,0,0.2)' : '',
-            // Handle transform better to prevent positioning issues
-            transform: provided.draggableProps.style?.transform,
+            // Use the dragging position or the normal transform
+            transform: isDragging && draggingPosition 
+              ? `translate(0px, ${draggingPosition.y}px)` 
+              : provided.draggableProps.style?.transform,
+            // Add smooth transitions when not actively dragging
+            transition: snapshot.isDragging ? 'none' : 'transform 0.3s ease',
             // Force visibility to ensure appointment doesn't disappear during drag operations
             visibility: "visible",
             // Add a high z-index when dragging to ensure it stays on top
@@ -169,6 +288,10 @@ export default function AppointmentComponent({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleClick}
+          onDragStart={() => handleDragStart(appointment)}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onMouseMove={(e) => snapshot.isDragging && handleDrag(e)}
         >
           <div className="text-sm font-medium mb-1 flex justify-between">
             <span className={`${getStatusColorClass()} px-1 rounded text-xs`}>
