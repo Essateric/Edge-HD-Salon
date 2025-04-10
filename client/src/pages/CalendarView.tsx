@@ -489,66 +489,72 @@ export default function CalendarView() {
 
   // Enhanced drag start event handler with visual feedback
   const handleDragStart = (start: any) => {
-    // Add a class to the body to style during dragging
-    document.body.classList.add('is-dragging');
-    
-    // Add a class to all time slots to indicate draggable state
-    const timeSlotElements = document.querySelectorAll('.time-slot');
-    timeSlotElements.forEach(el => {
-      el.classList.add('edgesalon-droppable');
-    });
-    
-    // If we have the draggable ID, highlight it specially
-    if (start && start.draggableId) {
-      const appointmentId = start.draggableId.replace('appointment-', '');
-      const appointmentEl = document.querySelector(`[data-appointment-id="${appointmentId}"]`);
-      if (appointmentEl) {
-        appointmentEl.classList.add('edgesalon-dragging');
+    try {
+      // Add a class to the body to style during dragging
+      document.body.classList.add('is-dragging');
+      
+      // Add a class to all time slots to indicate draggable state
+      const timeSlotElements = document.querySelectorAll<HTMLElement>('.time-slot');
+      
+      // Apply classes inside the try block
+      timeSlotElements.forEach((el: HTMLElement) => {
+        el.classList.add('edgesalon-droppable');
+      });
+      
+      // If we have the draggable ID, highlight it specially
+      if (start && start.draggableId) {
+        const appointmentId = start.draggableId.replace('appointment-', '');
+        const appointmentEl = document.querySelector<HTMLElement>(`[data-appointment-id="${appointmentId}"]`);
+        if (appointmentEl) {
+          appointmentEl.classList.add('edgesalon-dragging');
+        }
       }
+      
+      // Save the start state for potential use in drag end
+      window.dragStartState = start;
+      
+      console.log("Drag started:", start);
+    } catch (error) {
+      console.error("Error in handleDragStart:", error);
     }
-    
-    // Save the start state for potential use in drag end
-    window.dragStartState = start;
-    
-    console.log("Drag started:", start);
   };
   
   // Enhanced drag end event with improved error handling
   const handleDragEnd = (result: DropResult) => {
-    // Clean up all drag-related classes
-    document.body.classList.remove('is-dragging');
-    
-    const timeSlotElements = document.querySelectorAll('.time-slot');
-    timeSlotElements.forEach(el => {
-      el.classList.remove('edgesalon-droppable');
-      el.classList.remove('edgesalon-over');
-    });
-    
-    // Remove any dragging indicators
-    const draggingEls = document.querySelectorAll('.edgesalon-dragging');
-    draggingEls.forEach(el => {
-      el.classList.remove('edgesalon-dragging');
-    });
-    
-    // Also add appropriate visual classes to elements with moveGrip/resizeGrip classes
-    const moveGrips = document.querySelectorAll('.moveGrip');
-    const resizeGrips = document.querySelectorAll('.resizeGrip');
-    
-    moveGrips.forEach(el => {
-      el.classList.remove('attached-to-drag');
-    });
-    
-    resizeGrips.forEach(el => {
-      el.classList.remove('attached-to-drag');
-    });
-    
-    // Early return if we don't have a destination
-    if (!result.destination) {
-      console.log("No destination provided, canceling drag operation");
-      return;
-    }
-    
     try {
+      // Clean up all drag-related classes
+      document.body.classList.remove('is-dragging');
+      
+      const timeSlotElements = document.querySelectorAll<HTMLElement>('.time-slot');
+      timeSlotElements.forEach((el: HTMLElement) => {
+        el.classList.remove('edgesalon-droppable');
+        el.classList.remove('edgesalon-over');
+      });
+      
+      // Remove any dragging indicators
+      const draggingEls = document.querySelectorAll<HTMLElement>('.edgesalon-dragging');
+      draggingEls.forEach((el: HTMLElement) => {
+        el.classList.remove('edgesalon-dragging');
+      });
+      
+      // Also clean up grip elements
+      const moveGrips = document.querySelectorAll<HTMLElement>('.moveGrip');
+      const resizeGrips = document.querySelectorAll<HTMLElement>('.resizeGrip');
+      
+      moveGrips.forEach((el: HTMLElement) => {
+        el.classList.remove('attached-to-drag');
+      });
+      
+      resizeGrips.forEach((el: HTMLElement) => {
+        el.classList.remove('attached-to-drag');
+      });
+      
+      // Early return if we don't have a destination
+      if (!result.destination) {
+        console.log("No destination provided, canceling drag operation");
+        return;
+      }
+      
       const { draggableId, destination, source } = result;
       
       if (source.droppableId === destination.droppableId) {
@@ -585,8 +591,8 @@ export default function CalendarView() {
       // the time based on the drop position relative to the calendar
       
       // Find the closest time slot visually
-      const timeSlots = document.querySelectorAll(`[data-slot-id^="stylist-${newStylistId}-slot-"]`);
-      const calendarContainer = document.querySelector('.non-scrollable-container');
+      const timeSlots = document.querySelectorAll<HTMLElement>(`[data-slot-id^="stylist-${newStylistId}-slot-"]`);
+      const calendarContainer = document.querySelector<HTMLElement>('.non-scrollable-container');
       if (!calendarContainer) {
         console.error("Could not find calendar container");
         return;
@@ -594,11 +600,11 @@ export default function CalendarView() {
       
       // Get the drop position relative to the calendar container
       const dropY = destination.index * 20; // Rough approximation
-      let closestSlot: Element | null = null;
+      let closestSlot: HTMLElement | null = null;
       let closestDistance = Infinity;
       
       // Find the time slot closest to the drop position
-      timeSlots.forEach((slot: Element) => {
+      timeSlots.forEach((slot: HTMLElement) => {
         const rect = slot.getBoundingClientRect();
         const slotY = rect.top - calendarContainer.getBoundingClientRect().top;
         const distance = Math.abs(slotY - dropY);
@@ -711,8 +717,7 @@ export default function CalendarView() {
         return newAppointments;
       });
       
-      // We already set this above, no need to set it again
-      
+      // Authentication check
       if (!currentUser) {
         toast({
           title: "Authentication required",
