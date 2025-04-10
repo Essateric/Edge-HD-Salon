@@ -126,17 +126,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login
   app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
+      console.log('Login attempt:', req.body);
       // Validate the input data
       const loginData = loginUserSchema.parse(req.body);
       
+      console.log('Login data validated, finding user with email:', loginData.email);
       // Find user by email
       const user = await storage.getUserByEmail(loginData.email);
       if (!user) {
+        console.log('User not found with email:', loginData.email);
         return res.status(400).json({ message: 'Invalid email or password' });
       }
       
+      console.log('User found:', user.username, 'comparing passwords');
+      console.log('Stored password hash:', user.password.substring(0, 10) + '...');
+      
       // Check if password is correct
       const isPasswordValid = await bcrypt.compare(loginData.password, user.password);
+      console.log('Password valid:', isPasswordValid);
+      
       if (!isPasswordValid) {
         return res.status(400).json({ message: 'Invalid email or password' });
       }
