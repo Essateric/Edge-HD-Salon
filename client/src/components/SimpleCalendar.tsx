@@ -4,6 +4,9 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
+// Import our custom CSS for FullCalendar
+import '@/styles/fullcalendar.css';
+
 const SimpleCalendar: React.FC = () => {
   const events = [
     { title: 'Haircut with Martin', date: '2025-04-10', start: '10:00', end: '11:00' },

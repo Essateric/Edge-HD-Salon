@@ -8,6 +8,9 @@ import { Appointment, Stylist } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
 
+// Import our custom CSS for FullCalendar
+import '@/styles/fullcalendar.css';
+
 interface FullCalendarComponentProps {
   onAppointmentClick?: (appointment: Appointment) => void;
 }

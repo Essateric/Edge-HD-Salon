@@ -4,6 +4,8 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { Appointment, Stylist } from '@/lib/types';
+
+// Import our custom CSS for FullCalendar
 import '@/styles/fullcalendar.css';
 
 interface FullCalendarViewProps {
