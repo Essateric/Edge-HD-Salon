@@ -56,7 +56,7 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-00`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-sm font-medium"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs font-medium"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
@@ -74,7 +74,7 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-15`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-xs"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs font-medium"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
@@ -92,7 +92,7 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-30`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-xs"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs font-medium"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
@@ -110,7 +110,7 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-45`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-xs"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs font-medium"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
