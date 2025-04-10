@@ -274,7 +274,20 @@ export default function AppointmentsDashboard() {
         </div>
       ) : viewMode === 'calendar' ? (
         <div className="mt-4">
-          <FullCalendarComponent onAppointmentClick={handleEditAppointment} />
+          <Tabs defaultValue="stylist-view" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="stylist-view">Stylist Columns View</TabsTrigger>
+              <TabsTrigger value="day-view">Day View</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="stylist-view" className="h-full">
+              <StylistCalendarView onAppointmentClick={handleEditAppointment} />
+            </TabsContent>
+            
+            <TabsContent value="day-view" className="h-full">
+              <FullCalendarComponent onAppointmentClick={handleEditAppointment} />
+            </TabsContent>
+          </Tabs>
         </div>
       ) : (
         sortedDates.map(date => (

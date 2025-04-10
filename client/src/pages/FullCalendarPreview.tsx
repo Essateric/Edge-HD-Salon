@@ -12,7 +12,7 @@ export default function FullCalendarPreview() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [stylists, setStylists] = useState<Stylist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('data-calendar');
+  const [activeTab, setActiveTab] = useState('stylist-calendar');
   
   useEffect(() => {
     // Fetch appointments
