@@ -18,7 +18,7 @@ export default function TimeSidebar({
     // Empty header to align with stylist headers
     slots.push(
       <div key="header" className="text-center p-2 border-b border-border bg-background font-medium">
-        Time
+        
       </div>
     );
     
