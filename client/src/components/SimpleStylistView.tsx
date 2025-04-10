@@ -157,9 +157,13 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
     const height = durationMinutes / 15 * 30;
     
     return {
-      backgroundColor: appointment.color,
+      backgroundColor: appointment.color || 'rgba(212, 183, 142, 0.9)',
       height: `${height}px`,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      borderLeft: '4px solid #8B734A',
+      borderRadius: '4px',
+      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+      transition: 'all 0.2s ease'
     };
   };
   
@@ -202,7 +206,7 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
             className={cn(
               "px-3 py-2 rounded-md",
               viewMode === 'day' 
-                ? "bg-gradient-to-r from-[#D4B78E] to-[#8B734A] text-white" 
+                ? "bg-gradient-to-b from-[#D4B78E] to-[#8B734A] text-white shadow-sm" 
                 : "border border-gray-300 hover:bg-gray-100"
             )}
           >
@@ -213,7 +217,7 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
             className={cn(
               "px-3 py-2 rounded-md",
               viewMode === 'week' 
-                ? "bg-gradient-to-r from-[#D4B78E] to-[#8B734A] text-white" 
+                ? "bg-gradient-to-b from-[#D4B78E] to-[#8B734A] text-white shadow-sm" 
                 : "border border-gray-300 hover:bg-gray-100"
             )}
           >
@@ -248,7 +252,7 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
             {stylists.map(stylist => (
               <div key={stylist.id} className="flex-1 min-w-[200px] border-r border-gray-200">
                 {/* Stylist header */}
-                <div className="h-10 bg-gradient-to-r from-[#D4B78E] to-[#8B734A] text-white flex items-center justify-center font-semibold sticky top-0">
+                <div className="h-10 bg-gradient-to-b from-[#D4B78E] to-[#8B734A] text-white flex items-center justify-center font-bold text-[1.1rem] uppercase sticky top-0 rounded-t-md shadow-sm px-4 tracking-wider">
                   {stylist.name}
                 </div>
                 
@@ -286,7 +290,7 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
             {getWeekDates().map((date, dateIndex) => (
               <div key={dateIndex} className="flex-1 min-w-[180px] border-r border-gray-200">
                 {/* Date header */}
-                <div className="h-10 bg-gradient-to-r from-[#D4B78E] to-[#8B734A] text-white flex flex-col items-center justify-center font-semibold sticky top-0">
+                <div className="h-10 bg-gradient-to-b from-[#D4B78E] to-[#8B734A] text-white flex flex-col items-center justify-center font-bold uppercase sticky top-0 rounded-t-md shadow-sm px-4 tracking-wider">
                   <div>{format(date, 'EEE')}</div>
                   <div className="text-xs">{format(date, 'MMM d')}</div>
                 </div>
@@ -296,7 +300,7 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
                   {stylists.map(stylist => (
                     <div key={`day-${dateIndex}-stylist-${stylist.id}`} className="flex-1 min-w-[60px] relative">
                       {/* Stylist sub-header */}
-                      <div className="h-8 text-xs border-b border-gray-300 flex items-center justify-center bg-gray-50 font-medium">
+                      <div className="h-8 text-xs border-b border-gray-300 flex items-center justify-center bg-gray-50 font-medium shadow-sm uppercase tracking-tight">
                         {stylist.name}
                       </div>
                       
@@ -313,7 +317,15 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
                           {index === dateIndex * 4 && stylist.id === (dateIndex % 3) + 1 && (
                             <div 
                               className="p-1 rounded-sm text-xs cursor-pointer"
-                              style={{ backgroundColor: "rgba(212, 183, 142, 0.9)", height: "60px", overflow: "hidden" }}
+                              style={{ 
+                                backgroundColor: "rgba(212, 183, 142, 0.9)", 
+                                height: "60px", 
+                                overflow: "hidden",
+                                borderLeft: '4px solid #8B734A',
+                                borderRadius: '4px',
+                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                                transition: 'all 0.2s ease'
+                              }}
                               onClick={() => handleAppointmentClick({
                                 customerName: "Week View Demo",
                                 serviceName: "Sample Service"
