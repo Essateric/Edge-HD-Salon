@@ -11,6 +11,7 @@ import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import UserManagement from "@/pages/UserManagement";
 import FullCalendarPreview from "@/pages/FullCalendarPreview";
+import StylistColumnView from "@/pages/StylistColumnView";
 import { useEffect, useState } from "react";
 
 // Protected route component
@@ -48,7 +49,7 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
 
 function Router() {
   const [location] = useLocation();
-  const isAuthRoute = location === '/login' || location === '/register' || location === '/public-calendar';
+  const isAuthRoute = location === '/login' || location === '/register' || location === '/public-calendar' || location === '/column-view';
 
   return (
     <Switch>
@@ -61,6 +62,8 @@ function Router() {
       <Route path="/register" component={RegisterPage} />
       {/* Public calendar view for testing */}
       <Route path="/public-calendar" component={FullCalendarPreview} />
+      {/* New stylist column view */}
+      <Route path="/column-view" component={StylistColumnView} />
       {/* Redirect old calendar route to new calendar */}
       <Route path="/calendar">
         <Redirect to="/calendar-preview" />
@@ -72,7 +75,7 @@ function Router() {
 
 function App() {
   const [location, setLocation] = useLocation();
-  const isAuthRoute = location === '/login' || location === '/register' || location === '/public-calendar';
+  const isAuthRoute = location === '/login' || location === '/register' || location === '/public-calendar' || location === '/column-view';
 
   // Redirect to calendar view by default
   useEffect(() => {
