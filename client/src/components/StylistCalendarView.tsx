@@ -30,9 +30,22 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     queryKey: ['/api/appointments'],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', '/api/appointments');
-        const data = await res.json();
-        return data.length > 0 ? data : getSampleAppointments();
+        // For authenticated routes
+        const res = await fetch('/api/appointments', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          return data.length > 0 ? data : getSampleAppointments();
+        } else {
+          console.warn('Could not fetch appointments, using sample data');
+          return getSampleAppointments();
+        }
       } catch (error) {
         console.error('Error fetching appointments:', error);
         return getSampleAppointments();
@@ -45,9 +58,22 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     queryKey: ['/api/stylists'],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', '/api/stylists');
-        const data = await res.json();
-        return data.length > 0 ? data : getSampleStylists();
+        // For authenticated routes
+        const res = await fetch('/api/stylists', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          return data.length > 0 ? data : getSampleStylists();
+        } else {
+          console.warn('Could not fetch stylists, using sample data');
+          return getSampleStylists();
+        }
       } catch (error) {
         console.error('Error fetching stylists:', error);
         return getSampleStylists();
@@ -218,7 +244,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
-          right: 'resourceTimeGridDay,resourceTimelineDay'
+          right: 'resourceTimeGridDay,resourceTimeGridWeek,resourceTimelineDay'
         }}
         resources={resources}
         events={validEvents}
@@ -245,7 +271,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
         }}
         displayEventTime={true}
         displayEventEnd={true}
-        height="700px"
+        height="auto"
         allDaySlot={false}
         nowIndicator={true}
         resourceLabelDidMount={(info: any) => {

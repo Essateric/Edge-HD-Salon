@@ -22,16 +22,40 @@ export default function FullCalendarPreview() {
         let stylistsData = [];
         
         try {
-          const apptsResponse = await apiRequest('GET', '/api/appointments');
-          apptsData = await apptsResponse.json();
+          const apptsResponse = await fetch('/api/appointments', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+          
+          if (apptsResponse.ok) {
+            apptsData = await apptsResponse.json();
+          } else {
+            console.warn('Could not fetch appointments, using sample data');
+            apptsData = [];
+          }
         } catch (error) {
           console.error('Error fetching appointments:', error);
           apptsData = [];
         }
         
         try {
-          const stylistsResponse = await apiRequest('GET', '/api/stylists');
-          stylistsData = await stylistsResponse.json();
+          const stylistsResponse = await fetch('/api/stylists', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+          });
+          
+          if (stylistsResponse.ok) {
+            stylistsData = await stylistsResponse.json();
+          } else {
+            console.warn('Could not fetch stylists, using sample data');
+            stylistsData = [];
+          }
         } catch (error) {
           console.error('Error fetching stylists:', error);
           stylistsData = [];
@@ -144,7 +168,7 @@ export default function FullCalendarPreview() {
           </div>
         </div>
         
-        <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-200px)]">
+        <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-180px)]">
           <Tabs defaultValue="stylist-calendar" onValueChange={setActiveTab}>
             <TabsList className="mb-4">
               <TabsTrigger value="stylist-calendar">Stylist-Based Calendar</TabsTrigger>

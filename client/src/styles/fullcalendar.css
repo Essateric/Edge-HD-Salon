@@ -97,17 +97,36 @@
 }
 
 /* Stylist column headers */
-.stylist-column-header {
+.stylist-column-header,
+.fc-resource-cell .fc-datagrid-cell-cushion {
   font-weight: bold;
   font-size: 1.1rem;
   text-transform: uppercase;
   background: linear-gradient(to bottom, #D4B78E, #8B734A);
-  color: white;
+  color: white !important;
   padding: 10px 4px;
   text-align: center;
   border-radius: 4px 4px 0 0;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+
+/* Better hover effect for stylist headers */
+.stylist-column-header:hover,
+.fc-resource-cell .fc-datagrid-cell-cushion:hover {
+  background: linear-gradient(to bottom, #c6a87d, #7c6539);
+  transform: translateY(-1px);
+}
+
+/* Make sure stylist column headers display correctly in all views */
+.fc-resource-timeline-divider .fc-timeline-lane-misc {
+  visibility: hidden;
 }
 
 /* Resource column styles */
@@ -117,10 +136,43 @@
   width: 1px !important; /* Thin divider */
 }
 
-/* Set minimum width for resource columns */
+/* Set appropriate width for resource columns */
 .fc-resource-timeline-divider,
-.fc-timegrid-col {
-  min-width: 250px !important; /* Ensure columns have enough space */
+.fc-timegrid-col,
+.fc-col-header-cell {
+  min-width: 200px !important; /* Ensure columns have space but all can fit */
+  max-width: 300px !important; /* Limit maximum width */
+}
+
+/* Make sure all stylist columns are shown by setting container width */
+.fc-resource-timegrid-day .fc-scrollgrid-sync-table,
+.fc-resource-timegrid-week .fc-scrollgrid-sync-table {
+  width: auto !important; /* Allow table to expand to show all columns */
+  min-width: 100% !important; /* Ensure it at least fills the container */
+}
+
+/* Make resource columns equal width and fit container better */
+.fc-resource-timegrid-day .fc-datagrid-cell-frame,
+.fc-resource-timegrid-week .fc-datagrid-cell-frame,
+.fc-resource-timegrid .fc-col-header-cell {
+  width: 100% !important;
+}
+
+/* Support smaller screens better */
+@media (max-width: 1200px) {
+  .fc-resource-timeline-divider,
+  .fc-timegrid-col,
+  .fc-col-header-cell {
+    min-width: 150px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .fc-resource-timeline-divider,
+  .fc-timegrid-col,
+  .fc-col-header-cell {
+    min-width: 120px !important;
+  }
 }
 
 /* Resource timeline header */
