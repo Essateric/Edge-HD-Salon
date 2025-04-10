@@ -30,10 +30,6 @@ export default function EdgeSalonTopBar({
 
       {/* Center Controls */}
       <div className="flex items-center space-x-2">
-        <Button variant="outline" size="icon">
-          <Printer className="h-5 w-5" />
-        </Button>
-
         <div className="flex items-center space-x-1">
           <Button variant="ghost" size="icon" onClick={onPrevious}>
             <ChevronLeft className="h-4 w-4" />

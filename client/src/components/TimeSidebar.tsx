@@ -107,7 +107,7 @@ export default function TimeSidebar({
     <div 
       id="times-container" 
       className="w-20 md:w-28 flex-shrink-0 border-r border-border bg-background sticky left-0 relative"
-      style={{ height: '700px' }}
+      style={{ height: 'calc(100vh - 200px)' }}
     >
       {renderTimeSlots()}
     </div>
