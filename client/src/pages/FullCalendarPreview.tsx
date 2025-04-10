@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import FullCalendarView from '@/components/FullCalendarView';
 import SimpleCalendar from '@/components/SimpleCalendar';
 import StylistCalendarView from '@/components/StylistCalendarView';
+import SimpleStylistView from '@/components/SimpleStylistView';
 import EdgeSalonTopBar from '@/components/EdgeSalonTopBar';
 import { Appointment, Stylist } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
@@ -169,12 +170,22 @@ export default function FullCalendarPreview() {
         </div>
         
         <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-180px)]">
-          <Tabs defaultValue="stylist-calendar" onValueChange={setActiveTab}>
+          <Tabs defaultValue="stylist-view" onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="stylist-calendar">Stylist-Based Calendar</TabsTrigger>
+              <TabsTrigger value="stylist-view">Column View (New)</TabsTrigger>
+              <TabsTrigger value="stylist-calendar">Resource Calendar</TabsTrigger>
               <TabsTrigger value="data-calendar">Day-Based Calendar</TabsTrigger>
               <TabsTrigger value="simple-calendar">Simple Example</TabsTrigger>
             </TabsList>
+            
+            {/* New simple stylist-based view that shows all columns */}
+            <TabsContent value="stylist-view" className="h-full">
+              {activeTab === 'stylist-view' && (
+                <SimpleStylistView 
+                  onAppointmentClick={handleEditAppointment}
+                />
+              )}
+            </TabsContent>
             
             <TabsContent value="stylist-calendar" className="h-full">
               {activeTab === 'stylist-calendar' && (
