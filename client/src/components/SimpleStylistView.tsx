@@ -5,16 +5,18 @@ import { cn } from '@/lib/utils';
 
 interface SimpleStylistViewProps {
   onAppointmentClick?: (appointment: any) => void;
+  stylists?: { id: number; name: string; imageUrl?: string }[];
 }
 
 const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({ 
-  onAppointmentClick
+  onAppointmentClick,
+  stylists: propStylists
 }) => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   
-  // Stylist data
-  const stylists = [
+  // Use provided stylists or fallback to default
+  const stylists = propStylists?.length ? propStylists : [
     { id: 1, name: "Martin" },
     { id: 2, name: "Darren" },
     { id: 3, name: "Annaliese" }
@@ -66,7 +68,17 @@ const SimpleStylistView: React.FC<SimpleStylistViewProps> = ({
       startTime: { hour: 14, minute: 0 },
       endTime: { hour: 16, minute: 0 },
       color: "rgba(164, 132, 85, 0.9)",
-    }
+    },
+    // Additional appointments for all stylists to ensure they're all visible
+    ...stylists.map((stylist, index) => ({
+      id: 100 + index,
+      stylistId: stylist.id,
+      customerName: `Test Client ${index+1}`,
+      serviceName: "Quick Appointment",
+      startTime: { hour: 12, minute: 0 },
+      endTime: { hour: 12, minute: 30 },
+      color: "rgba(164, 132, 85, 0.9)",
+    }))
   ];
   
   // Navigate to previous day/week

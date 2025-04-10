@@ -6,14 +6,46 @@ import { Loader2 } from 'lucide-react';
 
 export default function StylistColumnView() {
   const [loading, setLoading] = useState(true);
+  const [stylists, setStylists] = useState<Stylist[]>([]);
   
   useEffect(() => {
-    // Just a short delay to ensure the page is fully rendered
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    // Fetch stylists from the database
+    async function fetchData() {
+      try {
+        const stylistsResponse = await fetch('/api/stylists', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        if (stylistsResponse.ok) {
+          const stylistsData = await stylistsResponse.json();
+          setStylists(stylistsData);
+        } else {
+          console.warn('Could not fetch stylists, using sample data');
+          // Fallback sample data
+          setStylists([
+            { id: 1, name: "Martin", imageUrl: "" },
+            { id: 2, name: "Darren", imageUrl: "" },
+            { id: 3, name: "Annaliese", imageUrl: "" }
+          ]);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching stylists:', error);
+        // Fallback sample data
+        setStylists([
+          { id: 1, name: "Martin", imageUrl: "" },
+          { id: 2, name: "Darren", imageUrl: "" },
+          { id: 3, name: "Annaliese", imageUrl: "" }
+        ]);
+        setLoading(false);
+      }
+    }
     
-    return () => clearTimeout(timer);
+    fetchData();
   }, []);
 
   const handleEditAppointment = (appointment: any) => {
@@ -43,7 +75,10 @@ export default function StylistColumnView() {
         </div>
         
         <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-180px)]">
-          <SimpleStylistView onAppointmentClick={handleEditAppointment} />
+          <SimpleStylistView 
+            stylists={stylists}
+            onAppointmentClick={handleEditAppointment} 
+          />
         </div>
       </div>
     </div>
