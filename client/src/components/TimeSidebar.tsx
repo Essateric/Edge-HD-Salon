@@ -40,7 +40,7 @@ export default function TimeSidebar({
             width: '100%',
             top: `${(hour - startHour) * 4 * APPOINTMENT_HEIGHT}px`,
             paddingTop: '2px',
-            color: '#4B5563'
+            color: '#ffffff'
           }}
         >
           {displayHour12}:00 {amPm}
@@ -51,17 +51,17 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-15`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-xs text-gray-500"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
             width: '100%',
             top: `${(hour - startHour) * 4 * APPOINTMENT_HEIGHT + APPOINTMENT_HEIGHT}px`,
             paddingTop: '2px',
-            color: '#6B7280'
+            color: '#ffffff'
           }}
         >
-          :15
+          {displayHour12}:15 {amPm}
         </div>
       );
       
@@ -69,16 +69,17 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-30`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-xs text-gray-500"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
             width: '100%',
             top: `${(hour - startHour) * 4 * APPOINTMENT_HEIGHT + (APPOINTMENT_HEIGHT * 2)}px`,
-            paddingTop: '2px'
+            paddingTop: '2px',
+            color: '#ffffff'
           }}
         >
-          :30
+          {displayHour12}:30 {amPm}
         </div>
       );
       
@@ -86,16 +87,17 @@ export default function TimeSidebar({
       slots.push(
         <div 
           key={`hour-${hour}-45`}
-          className="border-b border-gray-200 px-2 text-right pr-4 text-xs text-gray-500"
+          className="border-b border-gray-200 px-2 text-right pr-4 text-xs"
           style={{ 
             height: `${APPOINTMENT_HEIGHT}px`,
             position: 'absolute',
             width: '100%',
             top: `${(hour - startHour) * 4 * APPOINTMENT_HEIGHT + (APPOINTMENT_HEIGHT * 3)}px`,
-            paddingTop: '2px'
+            paddingTop: '2px',
+            color: '#ffffff'
           }}
         >
-          :45
+          {displayHour12}:45 {amPm}
         </div>
       );
     }

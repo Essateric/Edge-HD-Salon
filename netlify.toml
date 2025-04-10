@@ -10,7 +10,7 @@
   status = 200
 
 [functions]
-  directory = "functions"
+  directory = "netlify/functions"
 
 [[headers]]
   for = "/assets/*"
