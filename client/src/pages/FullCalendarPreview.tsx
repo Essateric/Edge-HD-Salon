@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import FullCalendarView from '@/components/FullCalendarView';
+import SimpleCalendar from '@/components/SimpleCalendar';
 import EdgeSalonTopBar from '@/components/EdgeSalonTopBar';
 import { Appointment, Stylist } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function FullCalendarPreview() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [stylists, setStylists] = useState<Stylist[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('data-calendar');
   
   useEffect(() => {
     // Fetch appointments
@@ -57,18 +60,42 @@ export default function FullCalendarPreview() {
         <div className="mb-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">FullCalendar Preview</h1>
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-gradient-to-r from-[#D4B78E] to-[#8B734A] text-white rounded-md">
+            <button 
+              className="px-4 py-2 bg-gradient-to-r from-[#D4B78E] to-[#8B734A] text-white rounded-md"
+              onClick={() => {
+                // Navigate to today
+                const calendarApi = document.querySelector('.fc')?.querySelector('.fc-toolbar-chunk')?.querySelector('.fc-today-button');
+                if (calendarApi instanceof HTMLElement) {
+                  calendarApi.click();
+                }
+              }}
+            >
               Today
             </button>
           </div>
         </div>
         
         <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-200px)]">
-          <FullCalendarView 
-            appointments={appointments} 
-            stylists={stylists}
-            onEditAppointment={handleEditAppointment}
-          />
+          <Tabs defaultValue="data-calendar" onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="data-calendar">Data-Driven Calendar</TabsTrigger>
+              <TabsTrigger value="simple-calendar">Simple Example Calendar</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="data-calendar" className="h-full">
+              {activeTab === 'data-calendar' && (
+                <FullCalendarView 
+                  appointments={appointments} 
+                  stylists={stylists}
+                  onEditAppointment={handleEditAppointment}
+                />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="simple-calendar" className="h-full">
+              {activeTab === 'simple-calendar' && <SimpleCalendar />}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

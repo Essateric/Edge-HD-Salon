@@ -2,6 +2,7 @@ import React from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import { Appointment, Stylist } from '@/lib/types';
 import '@/styles/fullcalendar.css';
 
@@ -22,26 +23,48 @@ export default function FullCalendarView({
     const stylist = stylists.find(s => s.id === appointment.stylistId);
     
     // Parse start and end times if they're valid
-    let startDate = new Date(`${appointment.date} ${appointment.startTime}`);
-    let endDateTime = new Date(`${appointment.date} ${appointment.endTime}`);
+    let startDate: Date;
+    let endDateTime: Date;
     
-    // If parsing fails, calculate based on duration
-    if (isNaN(startDate.getTime()) || isNaN(endDateTime.getTime())) {
-      // If startTime is invalid, set default to noon
-      if (isNaN(startDate.getTime())) {
-        startDate = new Date(`${appointment.date} 12:00 pm`);
-      }
+    try {
+      // Try to standardize the time format first
+      const standardizedStartTime = appointment.startTime
+        .replace(/(\d+)(am|pm)/i, '$1 $2')  // Fix "2pm" to "2 pm"
+        .replace(/\s+/g, ' ');              // Normalize whitespace
+        
+      const standardizedEndTime = appointment.endTime
+        ?.replace(/(\d+)(am|pm)/i, '$1 $2')
+        ?.replace(/\s+/g, ' ');
       
-      // Use duration to calculate end time
-      if (isNaN(endDateTime.getTime())) {
+      // Attempt to parse with standardized format
+      startDate = new Date(`${appointment.date} ${standardizedStartTime}`);
+      
+      // If we have a valid end time, use it
+      if (standardizedEndTime && !standardizedEndTime.includes('NaN')) {
+        endDateTime = new Date(`${appointment.date} ${standardizedEndTime}`);
+      } else {
+        // Otherwise calculate from duration
         endDateTime = new Date(startDate.getTime() + ((appointment.duration || 30) * 60000));
       }
+      
+      // Final validity check
+      if (isNaN(startDate.getTime())) {
+        // Fall back to a default time (noon)
+        console.log('Using default time for appointment:', appointment.id);
+        startDate = new Date(`${appointment.date} 12:00 pm`);
+        endDateTime = new Date(startDate.getTime() + ((appointment.duration || 30) * 60000));
+      }
+    } catch (error) {
+      // If all parsing attempts fail, use default
+      console.log('Time parsing failed completely for appointment:', appointment.id);
+      startDate = new Date(`${appointment.date} 12:00 pm`);
+      endDateTime = new Date(startDate.getTime() + ((appointment.duration || 30) * 60000));
     }
     
-    // Create the event
+    // Create the event with properly formatted title for better display
     return {
       id: String(appointment.id),
-      title: `${stylist?.name || 'Stylist'}: ${appointment.customerName} - ${appointment.serviceName}`,
+      title: `${stylist?.name || 'Stylist'}: ${appointment.customerName}\n${appointment.serviceName}`,
       start: startDate,
       end: endDateTime,
       extendedProps: {
@@ -57,20 +80,22 @@ export default function FullCalendarView({
     };
   });
   
-  // Filter out any events with invalid dates
+  // Filter out any events with invalid dates (should be unnecessary with our improved parsing)
   const validEvents = events.filter(event => !isNaN(event.start.getTime()) && !isNaN(event.end.getTime()));
   
   const handleEventClick = (info: any) => {
     if (onEditAppointment) {
       const appointmentData = info.event.extendedProps.appointment;
       onEditAppointment(appointmentData);
+    } else {
+      alert(`Appointment: ${info.event.title}`);
     }
   };
   
   return (
     <div className="h-full w-full">
       <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridDay"
         headerToolbar={{
           left: 'prev,next today',
@@ -82,6 +107,8 @@ export default function FullCalendarView({
         slotDuration="00:15:00"
         events={validEvents}
         eventClick={handleEventClick}
+        editable={true}
+        selectable={true}
         slotLabelFormat={{
           hour: 'numeric',
           minute: '2-digit',
