@@ -3,7 +3,6 @@ import { TimeSlot, Stylist, Appointment, ViewMode } from '@/lib/types';
 import AppointmentComponent from '@/components/Appointment';
 import DroppableArea from '@/components/DroppableArea';
 import TimeSidebar from '@/components/TimeSidebar';
-import { useEffect, useState } from 'react';
 
 interface TimeSlotsProps {
   timeSlots: TimeSlot[];
@@ -240,29 +239,7 @@ export default function TimeSlots({
     );
   };
   
-  // Current time indicator
-  const [nowPosition, setNowPosition] = useState(0);
-  
-  // Update the current time indicator position
-  useEffect(() => {
-    const pixelsPerMinute = 1.4125;
-    const startHour = 9; // Calendar starts at 9:00 AM
-
-    function updateNowLine() {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const minutesSinceStart = (currentHour - startHour) * 60 + currentMinute;
-
-      const topPosition = minutesSinceStart * pixelsPerMinute;
-      setNowPosition(topPosition);
-    }
-
-    updateNowLine();
-    const interval = setInterval(updateNowLine, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, []);
+  // Current time indicator removed as requested
 
   // Day view - the default
   const renderDayView = () => (
@@ -279,17 +256,7 @@ export default function TimeSlots({
           minWidth: 'fit-content',
           width: '100%'
         }}>
-          {/* Enhanced current time line indicator */}
-          <div
-            id="now-line"
-            className="absolute left-0 w-full z-50 flex items-center"
-            style={{ top: `${nowPosition}px` }}
-          >
-            {/* Red vertical line indicator */}
-            <div className="h-0.5 w-full bg-red-600"></div>
-            {/* Circle indicator on the line */}
-            <div className="absolute left-0 w-2 h-2 rounded-full bg-red-600 transform -translate-y-1/2 -translate-x-1"></div>
-          </div>
+          {/* Current time line indicator removed as requested */}
           
           {stylists.map(stylist => renderStylistColumn(stylist))}
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface TimeSidebarProps {
   startHour?: number;
@@ -10,29 +10,6 @@ export default function TimeSidebar({
   endHour = 20, // 8pm
 }: TimeSidebarProps) {
   const APPOINTMENT_HEIGHT = 21.1875; // height per 15 min (same as in TimeSlots)
-  
-  // Current time indicator position
-  const [nowPosition, setNowPosition] = useState(0);
-  
-  // Update the current time indicator position
-  useEffect(() => {
-    const pixelsPerMinute = 1.4125;
-    
-    function updateNowLine() {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const minutesSinceStart = (currentHour - startHour) * 60 + currentMinute;
-
-      const topPosition = minutesSinceStart * pixelsPerMinute;
-      setNowPosition(topPosition);
-    }
-
-    updateNowLine();
-    const interval = setInterval(updateNowLine, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [startHour]);
   
   // Generate time slots from startHour to endHour
   const renderTimeSlots = () => {
@@ -134,16 +111,7 @@ export default function TimeSidebar({
       className="w-20 md:w-28 flex-shrink-0 border-r border-border bg-background sticky left-0 relative"
       style={{ height: 'calc(100vh - 200px)' }}
     >
-      {/* Current time indicator in sidebar */}
-      <div 
-        className="absolute right-0 z-50 flex items-center" 
-        style={{ top: `${nowPosition}px`, width: '100%' }}
-      >
-        <div className="flex w-full items-center justify-end">
-          <div className="h-0.5 bg-red-600 w-4 mr-0"></div>
-          <div className="w-2 h-2 rounded-full bg-red-600 mr-0"></div>
-        </div>
-      </div>
+      {/* Current time indicator removed as requested */}
       
       {renderTimeSlots()}
     </div>
