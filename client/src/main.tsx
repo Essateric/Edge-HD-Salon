@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { Router } from "wouter";
 import App from "./App";
 import "./index.css";
+import "./styles/fullcalendar.css";
 
 // Get the root element
 const rootElement = document.getElementById("root");

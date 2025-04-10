@@ -58,7 +58,8 @@ export default function FullCalendarPreview() {
               startTime: "10:00 am",
               endTime: "11:00 am",
               duration: 60,
-              notes: "First visit"
+              notes: "First visit",
+              isConsultation: false
             },
             {
               id: 2,
@@ -71,7 +72,8 @@ export default function FullCalendarPreview() {
               startTime: "11:15 am",
               endTime: "11:45 am",
               duration: 30,
-              notes: ""
+              notes: "",
+              isConsultation: false
             },
             {
               id: 3,
@@ -84,7 +86,8 @@ export default function FullCalendarPreview() {
               startTime: "14:00 pm",
               endTime: "16:00 pm",
               duration: 120,
-              notes: "Bring reference photo"
+              notes: "Bring reference photo",
+              isConsultation: false
             }
           ];
         }
