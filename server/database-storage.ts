@@ -316,8 +316,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteStylistServiceDuration(id: number): Promise<boolean> {
-    const result = await db.delete(stylistServiceDurations).where(eq(stylistServiceDurations.id, id));
-    return result.count > 0;
+    await db.delete(stylistServiceDurations).where(eq(stylistServiceDurations.id, id));
+    return true;
   }
 
   // Customer operations
@@ -346,8 +346,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCustomer(id: number): Promise<boolean> {
-    const result = await db.delete(customers).where(eq(customers.id, id));
-    return result.count > 0;
+    await db.delete(customers).where(eq(customers.id, id));
+    return true;
   }
 
   // Appointment operations
@@ -383,8 +383,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAppointment(id: number): Promise<boolean> {
-    const result = await db.delete(appointments).where(eq(appointments.id, id));
-    return result.count > 0;
+    await db.delete(appointments).where(eq(appointments.id, id));
+    return true;
   }
 
   // Stylist Schedule operations
@@ -443,8 +443,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteStylistSchedule(id: number): Promise<boolean> {
-    const result = await db.delete(stylistSchedules).where(eq(stylistSchedules.id, id));
-    return result.count > 0;
+    await db.delete(stylistSchedules).where(eq(stylistSchedules.id, id));
+    return true;
   }
 
   // Helper method for permissions by name

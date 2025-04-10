@@ -1,24 +1,6 @@
 import { Handler } from '@netlify/functions';
 import bcrypt from 'bcryptjs';
-
-// Mock user database for demo purposes
-// In production, you would connect to your actual database
-const users = [
-  {
-    id: 1,
-    username: 'shabnam',
-    email: 'essa@theedgesalon.com',
-    password: '$2a$10$XgzY7CcJH46QxfDOElSVu.eKbBWQol0PY8o/./hBKcjNfyS/.ZmjW', // password123
-    userRole: 1
-  },
-  {
-    id: 2,
-    username: 'martin',
-    email: 'martin@theedgesalon.com',
-    password: '$2a$10$XgzY7CcJH46QxfDOElSVu.eKbBWQol0PY8o/./hBKcjNfyS/.ZmjW', // password123
-    userRole: 2
-  }
-];
+import { storage } from '../../../server/storage';
 
 export const handler: Handler = async (event, context) => {
   // Set CORS headers
@@ -59,7 +41,7 @@ export const handler: Handler = async (event, context) => {
     }
 
     // Find user by email
-    const user = users.find(u => u.email === email);
+    const user = await storage.getUserByEmail(email);
     if (!user) {
       return {
         statusCode: 401,
@@ -78,8 +60,17 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
+    // Get user's role
+    const role = await storage.getRole(user.roleId);
+    
     // Strip password from user object before returning
     const { password: _, ...userWithoutPassword } = user;
+    
+    // Add role info to the response
+    const userWithRole = {
+      ...userWithoutPassword,
+      role: role || { name: 'unknown' }
+    };
 
     // Return success response
     return {
@@ -87,7 +78,7 @@ export const handler: Handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         status: 'success',
-        user: userWithoutPassword,
+        user: userWithRole,
         message: 'Login successful'
       })
     };
