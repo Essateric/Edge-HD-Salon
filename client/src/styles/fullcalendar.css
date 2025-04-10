@@ -93,3 +93,48 @@
   border-color: #ef4444;
   border-width: 2px;
 }
+
+/* Stylist column headers */
+.stylist-column-header {
+  font-weight: bold;
+  font-size: 1rem;
+  text-transform: uppercase;
+  background: linear-gradient(to right, #D4B78E, #8B734A);
+  color: white;
+  padding: 8px 4px;
+  text-align: center;
+  border-radius: 4px 4px 0 0;
+}
+
+/* Resource column styles */
+.fc-resource-timeline-divider,
+.fc-resource-timegrid-divider {
+  background-color: #f3f4f6 !important; /* Light gray background */
+  width: 1px !important; /* Thin divider */
+}
+
+/* Set minimum width for resource columns */
+.fc-resource-timeline-divider,
+.fc-timegrid-col {
+  min-width: 250px !important; /* Ensure columns have enough space */
+}
+
+/* Resource timeline header */
+.fc-resource-timeline-header,
+.fc-resource-timegrid-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Hover effects for better UX */
+.fc-event:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Better contrast for the current date */
+.fc-day-today {
+  background-color: rgba(212, 183, 142, 0.15) !important;
+  font-weight: bold;
+}

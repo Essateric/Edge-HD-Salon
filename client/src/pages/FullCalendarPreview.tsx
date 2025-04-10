@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import FullCalendarView from '@/components/FullCalendarView';
 import SimpleCalendar from '@/components/SimpleCalendar';
+import StylistCalendarView from '@/components/StylistCalendarView';
 import EdgeSalonTopBar from '@/components/EdgeSalonTopBar';
 import { Appointment, Stylist } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
@@ -76,11 +77,20 @@ export default function FullCalendarPreview() {
         </div>
         
         <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-200px)]">
-          <Tabs defaultValue="data-calendar" onValueChange={setActiveTab}>
+          <Tabs defaultValue="stylist-calendar" onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="data-calendar">Data-Driven Calendar</TabsTrigger>
-              <TabsTrigger value="simple-calendar">Simple Example Calendar</TabsTrigger>
+              <TabsTrigger value="stylist-calendar">Stylist-Based Calendar</TabsTrigger>
+              <TabsTrigger value="data-calendar">Day-Based Calendar</TabsTrigger>
+              <TabsTrigger value="simple-calendar">Simple Example</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="stylist-calendar" className="h-full">
+              {activeTab === 'stylist-calendar' && (
+                <StylistCalendarView 
+                  onAppointmentClick={handleEditAppointment}
+                />
+              )}
+            </TabsContent>
             
             <TabsContent value="data-calendar" className="h-full">
               {activeTab === 'data-calendar' && (
