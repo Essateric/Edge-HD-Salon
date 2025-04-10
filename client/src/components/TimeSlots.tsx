@@ -73,11 +73,8 @@ export default function TimeSlots({
     return hour < 10;
   };
   
-  // Calculate column width based on number of stylists
-  const getColumnWidth = () => {
-    // Equal width for all columns
-    return `calc((100% - 20px) / ${stylists.length})`;
-  };
+  // Each column should have a fixed minimum width to match StylistHeader
+  const minColumnWidth = '200px';
 
   // Adding 15-minute gridlines to each time slot
   const TimeSlotGrid = ({ children }: { children: React.ReactNode }) => (
@@ -175,7 +172,11 @@ export default function TimeSlots({
     );
     
     return (
-      <div key={`stylist-column-${stylist.id}`} className="flex-1 border-r relative">
+      <div 
+        key={`stylist-column-${stylist.id}`} 
+        className="flex-1 border-r relative"
+        style={{ minWidth: minColumnWidth }}
+      >
         {/* Keeping an empty div for spacing - removing the text */}
         <div className="sticky top-0 z-10"></div>
         

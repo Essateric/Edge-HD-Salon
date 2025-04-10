@@ -600,6 +600,7 @@ export default function CalendarView() {
       
       // Get the drop position relative to the calendar container
       const dropY = destination.index * 20; // Rough approximation
+      // Explicitly typed to ensure TypeScript recognizes it as an HTMLElement
       let closestSlot: HTMLElement | null = null;
       let closestDistance = Infinity;
       
@@ -621,7 +622,8 @@ export default function CalendarView() {
       }
       
       // Extract the time from the data-slot-id attribute
-      const slotId = closestSlot.getAttribute('data-slot-id');
+      // Using type assertion to tell TypeScript this is an HTML element
+      const slotId = (closestSlot as HTMLElement).getAttribute('data-slot-id');
       if (!slotId) {
         console.error("Time slot is missing data-slot-id attribute");
         return;
@@ -839,7 +841,7 @@ export default function CalendarView() {
 
         {/* Main Calendar Grid */}
         <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
-          <div className="p-4">
+          <div className="p-4 overflow-x-auto" style={{ maxWidth: '100%' }}>
             {isLoadingAppointments ? (
               <div className="flex justify-center items-center h-[500px]">
                 <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
