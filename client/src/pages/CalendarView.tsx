@@ -549,6 +549,20 @@ export default function CalendarView() {
         el.classList.remove('attached-to-drag');
       });
       
+      // Add smooth animation to the appointment being dropped
+      const draggedElementId = result.draggableId.replace('appointment-', '');
+      const appointmentEl = document.querySelector<HTMLElement>(`[data-appointment-id="${draggedElementId}"]`);
+      
+      if (appointmentEl) {
+        // Add a brief animation class for smooth transition
+        appointmentEl.classList.add('appointment-dropped');
+        
+        // Remove the class after animation completes
+        setTimeout(() => {
+          appointmentEl.classList.remove('appointment-dropped');
+        }, 300);
+      }
+      
       // Early return if we don't have a destination
       if (!result.destination) {
         console.log("No destination provided, canceling drag operation");
@@ -562,13 +576,15 @@ export default function CalendarView() {
         return;
       }
     
-      const appointmentId = parseInt(draggableId.replace('appointment-', ''));
+      // Parse the appointment ID from the draggable ID
+      const numericAppointmentId = parseInt(draggableId.replace('appointment-', ''));
       
-      const appointment = localAppointments.find(appt => appt.id === appointmentId) || 
-                        appointments.find(appt => appt.id === appointmentId);
+      // Find the appointment either in local state or server state
+      const appointment = localAppointments.find(appt => appt.id === numericAppointmentId) || 
+                        appointments.find(appt => appt.id === numericAppointmentId);
       
       if (!appointment) {
-        console.error("Could not find appointment with ID:", appointmentId);
+        console.error("Could not find appointment with ID:", numericAppointmentId);
         return;
       }
       
@@ -692,7 +708,7 @@ export default function CalendarView() {
       // First, keep a copy of the current state for potential rollback
       const previousAppointments = [...localAppointments];
       
-      console.log(`handleDragEnd: Moving appointment ${appointmentId} to stylist ${newStylistId} at ${formattedStartTime}`);
+      console.log(`handleDragEnd: Moving appointment ${numericAppointmentId} to stylist ${newStylistId} at ${formattedStartTime}`);
       
       // Save this appointment immediately to the global variable to ensure it doesn't disappear
       window.lastMovedAppointment = updatedAppointment;
@@ -702,7 +718,7 @@ export default function CalendarView() {
       setLocalAppointments(prev => {
         let updated = false;
         const newAppointments = prev.map(appt => {
-          if (appt.id === appointmentId) {
+          if (appt.id === numericAppointmentId) {
             updated = true;
             console.log("Updated existing appointment in local state:", appt.id);
             return updatedAppointment;
@@ -712,7 +728,7 @@ export default function CalendarView() {
         
         // If the appointment wasn't found in our array, add it
         if (!updated) {
-          console.log("Adding new appointment to local state:", appointmentId);
+          console.log("Adding new appointment to local state:", numericAppointmentId);
           newAppointments.push(updatedAppointment);
         }
         

@@ -74,6 +74,29 @@
     @apply ring-2 ring-primary ring-offset-2 shadow-lg scale-[1.02] z-50;
   }
   
+  /* Smooth animation when dropped */
+  .appointment-dropped {
+    animation: drop-bounce 0.3s ease-out;
+  }
+  
+  /* Keyframes for bounce animation */
+  @keyframes drop-bounce {
+    0% {
+      transform: translateY(-10px) scale(1.05);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+      transform: translateY(5px) scale(0.98);
+    }
+    75% {
+      transform: translateY(-2px) scale(1.01);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+  }
+  
   /* Drag handles and resize handles */
   .moveGrip {
     @apply cursor-move opacity-50 hover:opacity-100 transition-opacity;
