@@ -1,0 +1,67 @@
+/* Import FullCalendar styles */
+@import '@fullcalendar/core/main.css';
+@import '@fullcalendar/daygrid/main.css';
+@import '@fullcalendar/timegrid/main.css';
+
+/* Custom styles for FullCalendar */
+.fc {
+  --fc-border-color: #e2e8f0;
+  --fc-event-border-color: transparent;
+  --fc-today-bg-color: rgba(212, 183, 142, 0.1);
+  --fc-page-bg-color: white;
+  --fc-neutral-bg-color: #f8fafc;
+  --fc-list-event-hover-bg-color: rgba(212, 183, 142, 0.1);
+  --fc-highlight-color: rgba(212, 183, 142, 0.2);
+  --fc-now-indicator-color: #ef4444;
+  font-family: inherit;
+}
+
+.fc .fc-toolbar-title {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.fc .fc-button-primary {
+  background-color: #D4B78E;
+  border-color: #8B734A;
+}
+
+.fc .fc-button-primary:not(:disabled):hover {
+  background-color: #8B734A;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: #8B734A;
+  border-color: #8B734A;
+}
+
+.fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.fc-timegrid-event {
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.fc-timegrid-slots table {
+  font-size: 0.85rem;
+}
+
+.fc-timegrid-slot-label {
+  font-size: 0.85rem;
+}
+
+.fc-col-header-cell {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Custom styling for The Edge Salon */
+.fc-event-title {
+  font-weight: 500;
+}
