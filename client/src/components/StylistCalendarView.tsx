@@ -256,9 +256,9 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     }
   }));
   
-  // Debug logging
-  console.log('Stylists available:', allStylists);
-  console.log('Resources for calendar:', viewResources);
+  // Only for debugging - remove console logs that might be causing render issues
+  // console.log('Stylists available:', allStylists);
+  // console.log('Resources for calendar:', viewResources);
   
 
   return (
