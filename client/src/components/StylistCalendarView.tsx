@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -235,18 +235,62 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     setCurrentDate(dateInfo.view.currentStart);
   };
   
+  // Simplifying our approach - stick with the most basic view that works
+  const [calendarKey, setCalendarKey] = useState(Date.now());
+  
+  // Force calendar refresh when needed
+  useEffect(() => {
+    setCalendarKey(Date.now());
+  }, [stylists.length]);
+  
+  // Create direct custom columns
+  const allStylists = stylists.length > 0 ? stylists : getSampleStylists();
+  const viewResources = allStylists.map(stylist => ({
+    id: String(stylist.id),
+    title: stylist.name,
+    // Add extra properties to improve display
+    businessHours: {
+      startTime: '09:00',
+      endTime: '20:00',
+      daysOfWeek: [0, 1, 2, 3, 4, 5, 6]
+    }
+  }));
+  
+  // Debug logging
+  console.log('Stylists available:', allStylists);
+  console.log('Resources for calendar:', viewResources);
+  
+
   return (
-    <div className="h-full bg-white rounded-md shadow-sm p-4 border border-muted">
+    <div className="h-full bg-white rounded-md shadow-sm p-4 border border-muted overflow-x-auto">
       <FullCalendar
         plugins={[resourceTimeGridPlugin, resourceTimelinePlugin, dayGridPlugin, interactionPlugin]}
         initialView="resourceTimeGridDay"
         schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
+        views={{
+          resourceTimeGridDay: {
+            type: 'resourceTimeGrid',
+            duration: { days: 1 },
+            buttonText: 'Day'
+          },
+          resourceTimeGridWeek: {
+            type: 'resourceTimeGrid',
+            duration: { days: 7 },
+            buttonText: 'Week'
+          },
+          resourceTimelineDay: {
+            type: 'resourceTimeline',
+            duration: { days: 1 },
+            buttonText: 'Timeline'
+          }
+        }}
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
           right: 'resourceTimeGridDay,resourceTimeGridWeek,resourceTimelineDay'
         }}
-        resources={resources}
+        resources={viewResources}
+        key={calendarKey}
         events={validEvents}
         slotMinTime="09:00:00"
         slotMaxTime="20:00:00"

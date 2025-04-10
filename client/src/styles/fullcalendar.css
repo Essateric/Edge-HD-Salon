@@ -136,26 +136,59 @@
   width: 1px !important; /* Thin divider */
 }
 
-/* Set appropriate width for resource columns */
+/* Force appropriate width for resource columns - IMPORTANT FOR STYLIST DISPLAY */
 .fc-resource-timeline-divider,
 .fc-timegrid-col,
-.fc-col-header-cell {
-  min-width: 200px !important; /* Ensure columns have space but all can fit */
-  max-width: 300px !important; /* Limit maximum width */
+.fc-col-header-cell,
+.fc-datagrid-cell {
+  min-width: 170px !important; 
+  max-width: 250px !important;
+  width: 180px !important;
 }
 
-/* Make sure all stylist columns are shown by setting container width */
-.fc-resource-timegrid-day .fc-scrollgrid-sync-table,
-.fc-resource-timegrid-week .fc-scrollgrid-sync-table {
-  width: auto !important; /* Allow table to expand to show all columns */
-  min-width: 100% !important; /* Ensure it at least fills the container */
+/* Force resource table to be correct width */
+.fc-scrollgrid-sync-table {
+  width: auto !important;
+  min-width: 100% !important;
 }
 
-/* Make resource columns equal width and fit container better */
-.fc-resource-timegrid-day .fc-datagrid-cell-frame,
-.fc-resource-timegrid-week .fc-datagrid-cell-frame,
-.fc-resource-timegrid .fc-col-header-cell {
+/* CRITICAL: Make the resource area display properly */
+.fc-resource-timeline-divider,
+.fc-resource-timegrid-divider {
+  display: none !important;
+}
+
+/* Force grid headers to full width */
+.fc-resource-timegrid .fc-datagrid-body,
+.fc-resource-timegrid .fc-datagrid-body div,
+.fc-resource-timegrid .fc-datagrid-header,
+.fc-resource-timegrid .fc-datagrid-header div {
   width: 100% !important;
+}
+
+/* Ensure the resource area (stylist columns) is wide enough */
+.fc .fc-resource-timeline-divider,
+.fc .fc-resource-timegrid-divider,
+.fc .fc-timegrid-divider {
+  padding: 0 !important;
+  width: 0 !important;
+}
+
+/* Critical: Ensure horizontal scrolling works in resource area */
+.fc .fc-scroller-liquid-absolute {
+  overflow: visible !important;
+}
+
+/* Force proper display of all columns */
+.fc-resource-timegrid-day .fc-datagrid-body,
+.fc-resource-timegrid-week .fc-datagrid-body {
+  width: auto !important;
+  min-width: 100% !important;
+}
+
+/* Make columns visible by adjusting container */
+.fc-view-harness {
+  overflow-x: auto !important;
 }
 
 /* Support smaller screens better */
