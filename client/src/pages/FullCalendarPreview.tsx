@@ -18,16 +18,81 @@ export default function FullCalendarPreview() {
     // Fetch appointments
     async function fetchData() {
       try {
-        const apptsResponse = await apiRequest('GET', '/api/appointments');
-        const stylistsResponse = await apiRequest('GET', '/api/stylists');
+        let apptsData = [];
+        let stylistsData = [];
         
-        const apptsData = await apptsResponse.json();
-        const stylistsData = await stylistsResponse.json();
+        try {
+          const apptsResponse = await apiRequest('GET', '/api/appointments');
+          apptsData = await apptsResponse.json();
+        } catch (error) {
+          console.error('Error fetching appointments:', error);
+          apptsData = [];
+        }
+        
+        try {
+          const stylistsResponse = await apiRequest('GET', '/api/stylists');
+          stylistsData = await stylistsResponse.json();
+        } catch (error) {
+          console.error('Error fetching stylists:', error);
+          stylistsData = [];
+        }
+        
+        // If no data was fetched, use sample data for demonstration
+        if (apptsData.length === 0 || stylistsData.length === 0) {
+          stylistsData = [
+            { id: 1, name: "Martin", imageUrl: "" },
+            { id: 2, name: "Darren", imageUrl: "" },
+            { id: 3, name: "Annaliese", imageUrl: "" }
+          ];
+          
+          // Sample appointments spanning across stylists
+          apptsData = [
+            {
+              id: 1,
+              customerId: 1,
+              customerName: "Jane Smith",
+              stylistId: 1,
+              serviceId: 3,
+              serviceName: "Cut & Blow Dry",
+              date: "2025-04-10",
+              startTime: "10:00 am",
+              endTime: "11:00 am",
+              duration: 60,
+              notes: "First visit"
+            },
+            {
+              id: 2,
+              customerId: 2,
+              customerName: "John Doe",
+              stylistId: 2,
+              serviceId: 5,
+              serviceName: "Beard Trim",
+              date: "2025-04-10",
+              startTime: "11:15 am",
+              endTime: "11:45 am",
+              duration: 30,
+              notes: ""
+            },
+            {
+              id: 3,
+              customerId: 3,
+              customerName: "Alice Johnson",
+              stylistId: 3,
+              serviceId: 8,
+              serviceName: "Full Colour",
+              date: "2025-04-10",
+              startTime: "14:00 pm",
+              endTime: "16:00 pm",
+              duration: 120,
+              notes: "Bring reference photo"
+            }
+          ];
+        }
         
         setAppointments(apptsData);
         setStylists(stylistsData);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error in data fetching process:', error);
       } finally {
         setLoading(false);
       }

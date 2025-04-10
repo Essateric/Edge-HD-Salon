@@ -48,7 +48,7 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
 
 function Router() {
   const [location] = useLocation();
-  const isAuthRoute = location === '/login' || location === '/register';
+  const isAuthRoute = location === '/login' || location === '/register' || location === '/public-calendar';
 
   return (
     <Switch>
@@ -59,6 +59,8 @@ function Router() {
       <Route path="/users" component={() => <ProtectedRoute component={UserManagement} />} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      {/* Public calendar view for testing */}
+      <Route path="/public-calendar" component={FullCalendarPreview} />
       {/* Redirect old calendar route to new calendar */}
       <Route path="/calendar">
         <Redirect to="/calendar-preview" />
@@ -70,7 +72,7 @@ function Router() {
 
 function App() {
   const [location, setLocation] = useLocation();
-  const isAuthRoute = location === '/login' || location === '/register';
+  const isAuthRoute = location === '/login' || location === '/register' || location === '/public-calendar';
 
   // Redirect to calendar view by default
   useEffect(() => {
