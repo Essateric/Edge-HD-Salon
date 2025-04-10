@@ -33,8 +33,8 @@ const SimpleCalendar: React.FC = () => {
         slotMinTime="09:00:00"
         slotMaxTime="20:00:00"
         slotDuration="00:15:00"
-        slotLabelInterval="00:15:00"
-        snapDuration="00:15:00"
+        slotLabelInterval={{minutes: 15}}
+        snapDuration={{minutes: 15}}
         height="calc(100vh - 200px)"
         slotLabelFormat={{
           hour: 'numeric',
@@ -42,6 +42,8 @@ const SimpleCalendar: React.FC = () => {
           omitZeroMinute: false,
           meridiem: 'short'
         }}
+        displayEventTime={true}
+        displayEventEnd={true}
         eventTimeFormat={{
           hour: 'numeric',
           minute: '2-digit',

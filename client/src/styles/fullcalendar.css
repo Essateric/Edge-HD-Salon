@@ -63,3 +63,33 @@
 .fc-event-title {
   font-weight: 500;
 }
+
+/* 15-minute time slot styles */
+.fc-timegrid-slot {
+  height: 25px !important; /* Force consistent height for time slots */
+}
+
+.fc-timegrid-slot-minor {
+  border-top: 1px dashed #e2e8f0 !important; /* Dashed lines for 15-min increments */
+}
+
+.fc-timegrid-slot-label-cushion {
+  font-weight: 500;
+  padding: 2px 4px;
+}
+
+/* Ensure slot labels for 15-min increments are visible */
+.fc-timegrid-axis-cushion, .fc-timegrid-slot-label-cushion {
+  font-size: 0.75rem;
+}
+
+/* Make all 15-minute lines visible */
+.fc-timegrid-slots tr:not(.fc-time-label) {
+  border-top: 1px dotted rgba(212, 183, 142, 0.3);
+}
+
+/* Highlight current time more visibly */
+.fc-timegrid-now-indicator-line {
+  border-color: #ef4444;
+  border-width: 2px;
+}

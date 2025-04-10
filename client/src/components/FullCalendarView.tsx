@@ -107,8 +107,8 @@ export default function FullCalendarView({
         slotMinTime="09:00:00"
         slotMaxTime="20:00:00"
         slotDuration="00:15:00"
-        slotLabelInterval="00:15:00"
-        snapDuration="00:15:00"
+        slotLabelInterval={{minutes: 15}}
+        snapDuration={{minutes: 15}}
         events={validEvents}
         eventClick={handleEventClick}
         editable={true}
@@ -119,6 +119,8 @@ export default function FullCalendarView({
           omitZeroMinute: false,
           meridiem: 'short'
         }}
+        displayEventTime={true}
+        displayEventEnd={true}
         eventTimeFormat={{
           hour: 'numeric',
           minute: '2-digit',
