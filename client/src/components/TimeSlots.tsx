@@ -233,12 +233,7 @@ export default function TimeSlots({
             data-slot-id={`stylist-${stylist.id}-slot-${slot.formatted}`}
             onClick={() => onTimeSlotClick(stylist.id, slot.formatted)}
           >
-            {/* Small time label at the left edge of each time slot */}
-            {slot.time.endsWith(':00') && (
-              <div className="text-xs text-gray-500 absolute left-2 top-0 pt-0.5">
-                {slot.formatted}
-              </div>
-            )}
+            {/* Removed time labels from blocks */}
           </div>
         ))}
       </div>
@@ -284,12 +279,17 @@ export default function TimeSlots({
           minWidth: 'fit-content',
           width: '100%'
         }}>
-          {/* Current time line indicator */}
+          {/* Enhanced current time line indicator */}
           <div
             id="now-line"
-            className="absolute left-0 w-full border-t-2 border-red-500 z-50"
+            className="absolute left-0 w-full z-50 flex items-center"
             style={{ top: `${nowPosition}px` }}
-          ></div>
+          >
+            {/* Red vertical line indicator */}
+            <div className="h-0.5 w-full bg-red-600"></div>
+            {/* Circle indicator on the line */}
+            <div className="absolute left-0 w-2 h-2 rounded-full bg-red-600 transform -translate-y-1/2 -translate-x-1"></div>
+          </div>
           
           {stylists.map(stylist => renderStylistColumn(stylist))}
         </div>
