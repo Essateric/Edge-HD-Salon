@@ -76,7 +76,6 @@ export default function FullCalendarView({
       },
       slotMinTime: '09:00:00',
       slotMaxTime: '20:00:00',
-      allDaySlot: false,
       slotDuration: '00:15:00',
       events: validEvents,
       eventClick: function(info) {

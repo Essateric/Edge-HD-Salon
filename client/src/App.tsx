@@ -11,6 +11,7 @@ import AppointmentsDashboard from "@/pages/AppointmentsDashboard";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import UserManagement from "@/pages/UserManagement";
+import FullCalendarPreview from "@/pages/FullCalendarPreview";
 import { useEffect, useState } from "react";
 
 // Protected route component
@@ -54,6 +55,7 @@ function Router() {
     <Switch>
       <Route path="/" component={() => <ProtectedRoute component={Home} />} />
       <Route path="/calendar" component={() => <ProtectedRoute component={CalendarView} />} />
+      <Route path="/calendar-preview" component={() => <ProtectedRoute component={FullCalendarPreview} />} />
       <Route path="/services" component={() => <ProtectedRoute component={ServicesPage} />} />
       <Route path="/appointments" component={() => <ProtectedRoute component={AppointmentsDashboard} />} />
       <Route path="/users" component={() => <ProtectedRoute component={UserManagement} />} />

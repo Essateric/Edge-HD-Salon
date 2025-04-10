@@ -27,6 +27,13 @@ export default function AppHeader() {
               <span>Calendar</span>
             </span>
           </Link>
+          
+          <Link href="/calendar-preview">
+            <span className={`flex items-center cursor-pointer ${location === '/calendar-preview' ? 'text-[#B08D57] font-medium' : 'text-gray-400 hover:text-gray-200'} transition-colors`}>
+              <Calendar className="h-4 w-4 mr-2" />
+              <span>FullCalendar</span>
+            </span>
+          </Link>
 
           <Link href="/services">
             <span className={`flex items-center cursor-pointer ${location === '/services' ? 'text-[#B08D57] font-medium' : 'text-gray-400 hover:text-gray-200'} transition-colors`}>

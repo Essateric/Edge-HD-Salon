@@ -1,7 +1,5 @@
-/* Import FullCalendar styles */
-@import '@fullcalendar/core/main.css';
-@import '@fullcalendar/daygrid/main.css';
-@import '@fullcalendar/timegrid/main.css';
+/* Custom styles for FullCalendar */
+/* Note: We're not importing the CSS files directly since they're not available in this format */
 
 /* Custom styles for FullCalendar */
 .fc {
