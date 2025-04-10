@@ -75,7 +75,7 @@ function App() {
     if (location === '/') {
       setLocation('/calendar');
     }
-  }, [location]);
+  }, [location, setLocation]);
 
   return (
     <QueryClientProvider client={queryClient}>
