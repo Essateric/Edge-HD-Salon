@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parse, isValid, addDays } from 'date-fns';
-import { Search, Calendar, CheckCircle, XCircle, RefreshCw, MoreHorizontal, Edit } from 'lucide-react';
+import { Search, Calendar, CheckCircle, XCircle, RefreshCw, MoreHorizontal, Edit, LayoutGrid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +10,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Appointment, Stylist, Service } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
 import BookingModal from '@/components/BookingModal';
+import FullCalendarComponent from '@/components/FullCalendarComponent';
 
 export default function AppointmentsDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +24,7 @@ export default function AppointmentsDashboard() {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -219,21 +222,44 @@ export default function AppointmentsDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-5xl">
+    <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4B78E] to-[#8B734A]">
           Appointments Dashboard
         </h1>
-        <div className="relative w-1/3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search by customer name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-full"
-          />
+        <div className="flex items-center gap-4">
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search by customer name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+          
+          <div className="flex border rounded-md overflow-hidden">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              className={`px-3 py-2 rounded-none ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'bg-transparent hover:bg-muted'}`}
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4 mr-2" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              className={`px-3 py-2 rounded-none ${viewMode === 'calendar' ? 'bg-primary text-primary-foreground' : 'bg-transparent hover:bg-muted'}`}
+              onClick={() => setViewMode('calendar')}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Calendar
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -244,6 +270,10 @@ export default function AppointmentsDashboard() {
       ) : filteredAppointments.length === 0 ? (
         <div className="text-center p-10 bg-gray-50 rounded-lg">
           <p className="text-gray-500">No appointments found.</p>
+        </div>
+      ) : viewMode === 'calendar' ? (
+        <div className="mt-4">
+          <FullCalendarComponent onAppointmentClick={handleEditAppointment} />
         </div>
       ) : (
         sortedDates.map(date => (
