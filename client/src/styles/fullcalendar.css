@@ -39,11 +39,13 @@
   border-radius: 4px;
   font-size: 0.85rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #8B734A;
 }
 
 .fc-timegrid-event {
   border-radius: 4px;
-  padding: 2px 4px;
+  padding: 4px 6px;
+  font-weight: 500;
 }
 
 .fc-timegrid-slots table {
@@ -97,13 +99,15 @@
 /* Stylist column headers */
 .stylist-column-header {
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 1.1rem;
   text-transform: uppercase;
-  background: linear-gradient(to right, #D4B78E, #8B734A);
+  background: linear-gradient(to bottom, #D4B78E, #8B734A);
   color: white;
-  padding: 8px 4px;
+  padding: 10px 4px;
   text-align: center;
   border-radius: 4px 4px 0 0;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Resource column styles */

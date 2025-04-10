@@ -36,7 +36,11 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
 
   // Fetch stylists
   const { data: stylists = [], isLoading: isLoadingStylists } = useQuery<Stylist[]>({
-    queryKey: ['/api/stylists']
+    queryKey: ['/api/stylists'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/stylists');
+      return res.json();
+    }
   });
 
   // If data is loading, show a spinner
@@ -94,15 +98,15 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
       endDateTime = new Date(startDate.getTime() + ((appointment.duration || 30) * 60000));
     }
 
-    // Get a color based on service
+    // Get a color based on service - using the same colors as day-based calendar
     const getServiceColor = (serviceId: number) => {
       const colors = [
-        'rgba(212, 183, 142, 0.8)', // primary gold
-        'rgba(139, 115, 74, 0.8)',  // darker gold
-        'rgba(64, 134, 168, 0.8)',  // blue
-        'rgba(123, 104, 238, 0.8)', // purple
-        'rgba(75, 192, 192, 0.8)',  // teal
-        'rgba(255, 159, 64, 0.8)',  // orange
+        'rgba(212, 183, 142, 0.9)', // primary gold
+        'rgba(139, 115, 74, 0.9)',  // darker gold
+        'rgba(164, 132, 85, 0.9)',  // medium gold
+        'rgba(187, 156, 108, 0.9)', // light gold
+        'rgba(130, 106, 67, 0.9)',  // deep gold
+        'rgba(200, 173, 134, 0.9)', // soft gold
       ];
       return colors[serviceId % colors.length];
     };
@@ -111,7 +115,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     return {
       id: String(appointment.id),
       resourceId: String(appointment.stylistId), // Connect to the stylist column
-      title: `${appointment.customerName}: ${appointment.serviceName}`,
+      title: `${appointment.customerName || 'Guest'} - ${appointment.serviceName}`,
       start: startDate,
       end: endDateTime,
       backgroundColor: getServiceColor(appointment.serviceId || 0),
@@ -138,7 +142,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
   };
   
   return (
-    <div className="h-full bg-white rounded-md shadow-sm p-4">
+    <div className="h-full bg-white rounded-md shadow-sm p-4 border border-muted">
       <FullCalendar
         plugins={[resourceTimeGridPlugin, resourceTimelinePlugin, dayGridPlugin, interactionPlugin]}
         initialView="resourceTimeGridDay"
