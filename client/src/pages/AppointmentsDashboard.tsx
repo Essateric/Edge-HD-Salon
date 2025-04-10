@@ -15,6 +15,7 @@ import { Appointment, Stylist, Service } from '@/lib/types';
 import { apiRequest } from '@/lib/queryClient';
 import BookingModal from '@/components/BookingModal';
 import FullCalendarComponent from '@/components/FullCalendarComponent';
+import StylistCalendarView from '@/components/StylistCalendarView';
 
 export default function AppointmentsDashboard() {
   const [searchQuery, setSearchQuery] = useState('');

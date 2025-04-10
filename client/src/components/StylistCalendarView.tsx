@@ -11,6 +11,9 @@ import { apiRequest } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
 import '@/styles/fullcalendar.css';
 
+// FullCalendar event types
+import { EventClickArg, DatesSetArg } from '@fullcalendar/core';
+
 interface StylistCalendarViewProps {
   onAppointmentClick?: (appointment: Appointment) => void;
   selectedDate?: Date;
@@ -26,7 +29,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
   const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery<Appointment[]>({
     queryKey: ['/api/appointments'],
     queryFn: async () => {
-      const res = await apiRequest('/api/appointments', 'GET');
+      const res = await apiRequest('GET', '/api/appointments');
       return res.json();
     }
   });
@@ -123,14 +126,14 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     !isNaN(new Date(event.start).getTime()) && !isNaN(new Date(event.end).getTime())
   );
   
-  const handleEventClick = (info: any) => {
+  const handleEventClick = (info: EventClickArg) => {
     if (onAppointmentClick) {
       const appointmentData = info.event.extendedProps.appointment;
       onAppointmentClick(appointmentData);
     }
   };
 
-  const handleDateSet = (dateInfo: any) => {
+  const handleDateSet = (dateInfo: DatesSetArg) => {
     setCurrentDate(dateInfo.view.currentStart);
   };
   
@@ -139,6 +142,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
       <FullCalendar
         plugins={[resourceTimeGridPlugin, resourceTimelinePlugin, dayGridPlugin, interactionPlugin]}
         initialView="resourceTimeGridDay"
+        schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
