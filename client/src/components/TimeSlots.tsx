@@ -184,34 +184,37 @@ export default function TimeSlots({
           droppableId={`stylist-${stylist.id}`}
           direction="vertical"
         >
-          {(provided, snapshot) => (
-            <div 
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className="h-full w-full absolute"
-            >
-              {/* Appointments */}
-              {stylistAppointments.map((appointment, index) => (
-                <div 
-                  key={`appointment-wrapper-${appointment.id}`}
-                  style={{
-                    position: 'absolute',
-                    top: `${timeToOffset(appointment.startTime)}px`,
-                    width: '100%',
-                    height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
-                    zIndex: 20 + index
-                  }}
-                >
-                  <AppointmentComponent 
-                    appointment={appointment}
-                    onEditAppointment={onEditAppointment}
-                    index={index} 
-                  />
-                </div>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
+          {(provided, snapshot) => {
+            // Make sure to return a proper div element, not a fragment
+            return (
+              <div 
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="h-full w-full absolute"
+              >
+                {/* Appointments */}
+                {stylistAppointments.map((appointment, index) => (
+                  <div 
+                    key={`appointment-wrapper-${appointment.id}`}
+                    style={{
+                      position: 'absolute',
+                      top: `${timeToOffset(appointment.startTime)}px`,
+                      width: '100%',
+                      height: `${durationToHeight(appointment.startTime, appointment.endTime)}px`,
+                      zIndex: 20 + index
+                    }}
+                  >
+                    <AppointmentComponent 
+                      appointment={appointment}
+                      onEditAppointment={onEditAppointment}
+                      index={index} 
+                    />
+                  </div>
+                ))}
+                {provided.placeholder}
+              </div>
+            );
+          }}
         </DroppableArea>
         
         {/* Time slot grid lines without droppables to avoid nesting issues */}
