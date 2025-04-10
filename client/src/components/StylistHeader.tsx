@@ -7,10 +7,10 @@ interface StylistHeaderProps {
 
 export default function StylistHeader({ stylists }: StylistHeaderProps) {
   // Each column should have a fixed minimum width
-  const minColumnWidth = '200px';
+  const minColumnWidth = '250px';
   
   return (
-    <div className="flex border-b border-border sticky top-0 bg-background z-10">
+    <div className="flex border-b border-border sticky top-0 bg-background z-10" style={{ minWidth: 'fit-content', width: '100%' }}>
       <div className="w-20 md:w-28 flex-shrink-0 border-r border-border"></div>
       {stylists.map((stylist) => (
         <div 

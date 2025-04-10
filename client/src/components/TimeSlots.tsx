@@ -74,7 +74,7 @@ export default function TimeSlots({
   };
   
   // Each column should have a fixed minimum width to match StylistHeader
-  const minColumnWidth = '200px';
+  const minColumnWidth = '250px';
 
   // Adding 15-minute gridlines to each time slot
   const TimeSlotGrid = ({ children }: { children: React.ReactNode }) => (
@@ -277,7 +277,13 @@ export default function TimeSlots({
         <TimeSidebar startHour={9} endHour={20} />
         
         {/* Main Calendar Content - new layout with vertical columns */}
-        <div className="flex flex-1 relative non-scrollable-container" style={{ height: 'calc(100vh - 200px)', overflowX: 'auto', overflowY: 'hidden' }}>
+        <div className="flex relative non-scrollable-container" style={{ 
+          height: 'calc(100vh - 200px)', 
+          overflowX: 'auto', 
+          overflowY: 'hidden',
+          minWidth: 'fit-content',
+          width: '100%'
+        }}>
           {/* Current time line indicator */}
           <div
             id="now-line"

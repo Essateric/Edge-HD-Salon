@@ -780,7 +780,7 @@ export default function CalendarView() {
   };
   
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full w-full bg-gray-50">
       {/* Edge Salon Top Bar */}
       <EdgeSalonTopBar 
         currentDate={currentDate}
@@ -790,7 +790,7 @@ export default function CalendarView() {
       />
       
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-w-full overflow-y-auto overflow-x-auto">
         {/* Login Form - Show if not logged in and when needed */}
         {isLoggingIn && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -841,7 +841,12 @@ export default function CalendarView() {
 
         {/* Main Calendar Grid */}
         <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
-          <div className="p-4 overflow-x-auto" style={{ maxWidth: '100%' }}>
+          <div className="p-4" style={{ 
+            width: '100%', 
+            minWidth: 'fit-content',
+            overflowX: 'visible', 
+            overflowY: 'hidden' 
+          }}>
             {isLoadingAppointments ? (
               <div className="flex justify-center items-center h-[500px]">
                 <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
