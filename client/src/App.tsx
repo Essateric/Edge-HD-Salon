@@ -54,13 +54,16 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={() => <ProtectedRoute component={Home} />} />
-      <Route path="/calendar" component={() => <ProtectedRoute component={CalendarView} />} />
       <Route path="/calendar-preview" component={() => <ProtectedRoute component={FullCalendarPreview} />} />
       <Route path="/services" component={() => <ProtectedRoute component={ServicesPage} />} />
       <Route path="/appointments" component={() => <ProtectedRoute component={AppointmentsDashboard} />} />
       <Route path="/users" component={() => <ProtectedRoute component={UserManagement} />} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      {/* Redirect old calendar route to new calendar */}
+      <Route path="/calendar">
+        <Redirect to="/calendar-preview" />
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -73,7 +76,7 @@ function App() {
   // Redirect to calendar view by default
   useEffect(() => {
     if (location === '/') {
-      setLocation('/calendar');
+      setLocation('/calendar-preview');
     }
   }, [location, setLocation]);
 
