@@ -172,13 +172,13 @@ export default function FullCalendarPreview() {
         <div className="bg-background rounded-lg shadow-sm border border-border p-4 h-[calc(100vh-180px)]">
           <Tabs defaultValue="stylist-view" onValueChange={setActiveTab}>
             <TabsList className="mb-4">
-              <TabsTrigger value="stylist-view">Column View (New)</TabsTrigger>
-              <TabsTrigger value="stylist-calendar">Resource Calendar</TabsTrigger>
+              <TabsTrigger value="stylist-view">Column View</TabsTrigger>
+              <TabsTrigger value="stylist-calendar">Stylist Calendar</TabsTrigger>
               <TabsTrigger value="data-calendar">Day-Based Calendar</TabsTrigger>
               <TabsTrigger value="simple-calendar">Simple Example</TabsTrigger>
             </TabsList>
             
-            {/* New simple stylist-based view that shows all columns */}
+            {/* Stylist-based view that shows all stylists in columns */}
             <TabsContent value="stylist-view" className="h-full">
               {activeTab === 'stylist-view' && (
                 <SimpleStylistView 
