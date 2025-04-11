@@ -137,6 +137,15 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     ];
   }
 
+  // Initialize state at the top level
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarKey, setCalendarKey] = useState(Date.now());
+  
+  // Force calendar refresh when needed
+  useEffect(() => {
+    setCalendarKey(Date.now());
+  }, [stylists.length]);
+
   // If data is loading, show a spinner
   if (isLoadingAppointments || isLoadingStylists) {
     return (
