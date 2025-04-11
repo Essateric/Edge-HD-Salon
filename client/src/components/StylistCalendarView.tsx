@@ -23,7 +23,9 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
   onAppointmentClick,
   selectedDate = new Date()
 }) => {
+  // Core state
   const [currentDate, setCurrentDate] = useState<Date>(selectedDate);
+  const [calendarKey, setCalendarKey] = useState(Date.now());
   
   // Fetch all appointments with fallback to sample data
   const { data: appointments = [], isLoading: isLoadingAppointments } = useQuery<Appointment[]>({
@@ -137,9 +139,7 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
     ];
   }
 
-  // Initialize state at the top level
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [calendarKey, setCalendarKey] = useState(Date.now());
+  // Force refresh of calendar when stylists change
   
   // Force calendar refresh when needed
   useEffect(() => {
@@ -243,14 +243,6 @@ const StylistCalendarView: React.FC<StylistCalendarViewProps> = ({
   const handleDateSet = (dateInfo: DatesSetArg) => {
     setCurrentDate(dateInfo.view.currentStart);
   };
-  
-  // Simplifying our approach - stick with the most basic view that works
-  const [calendarKey, setCalendarKey] = useState(Date.now());
-  
-  // Force calendar refresh when needed
-  useEffect(() => {
-    setCalendarKey(Date.now());
-  }, [stylists.length]);
   
   // Create direct custom columns
   const allStylists = stylists.length > 0 ? stylists : getSampleStylists();
