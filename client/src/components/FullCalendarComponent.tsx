@@ -128,6 +128,87 @@ const FullCalendarComponent: React.FC<FullCalendarComponentProps> = ({
     }
   };
   
+  // Function to draw the now line
+  const drawNowLine = () => {
+    const timeGridDiv = document.querySelector('.fc-timegrid-body');
+    const existingCanvas = document.getElementById('nowLineCanvas');
+    
+    if (timeGridDiv) {
+      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Only show line if we're viewing today
+      const currentViewDate = currentDate || new Date();
+      const isToday = currentViewDate.toDateString() === today.toDateString();
+      
+      if (!isToday) {
+        if (existingCanvas) existingCanvas.remove();
+        return;
+      }
+
+      // Calculate position
+      const minutes = now.getHours() * 60 + now.getMinutes();
+      const businessStart = 9 * 60; // 9 AM
+      const businessEnd = 20 * 60; // 8 PM
+      const totalMinutes = businessEnd - businessStart;
+      
+      if (minutes < businessStart || minutes > businessEnd) {
+        if (existingCanvas) existingCanvas.remove();
+        return;
+      }
+
+      const timeGridHeight = timeGridDiv.clientHeight;
+      const position = ((minutes - businessStart) / totalMinutes) * timeGridHeight;
+
+      // Create or get canvas
+      let canvas = existingCanvas;
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.id = 'nowLineCanvas';
+        timeGridDiv.appendChild(canvas);
+      }
+
+      // Set canvas size and style
+      canvas.style.position = 'absolute';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.pointerEvents = 'none';
+      canvas.width = timeGridDiv.clientWidth;
+      canvas.height = timeGridHeight;
+
+      // Draw line
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.moveTo(0, position);
+        ctx.lineTo(canvas.width, position);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Add time label
+        const timeText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText(timeText, 5, position - 5);
+      }
+    }
+  };
+
+  // Set up interval to update the line
+  React.useEffect(() => {
+    const interval = setInterval(drawNowLine, 60000); // Update every minute
+    drawNowLine(); // Initial draw
+    
+    return () => {
+      clearInterval(interval);
+      const canvas = document.getElementById('nowLineCanvas');
+      if (canvas) canvas.remove();
+    };
+  }, [currentDate]);
+
   return (
     <div className="h-full bg-white rounded-md shadow-sm p-4">
       <FullCalendar
